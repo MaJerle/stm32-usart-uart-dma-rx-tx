@@ -1,8 +1,9 @@
-
 # Examples
 
 All examples were originally developed on `NUCLEO-F413ZH` development board in configuration:
 
+- Developed in TrueSTUDIO and may be directly opened there
+- Use of LL drivers
 - USART settings
     - `USART3`, `115200` bauds, `1` stop bit, no-parity
     - STM32 TX pin: `PD8`
