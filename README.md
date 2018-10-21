@@ -1,5 +1,77 @@
 # Use DMA to receive UART data on STM32 with unknown data length
 
+This repository may give you information about how to read data on UART by using DMA when number of bytes to receive is now known in advance.
+
+In STM32 microcontroller family, U(S)ART reception can work in different modes:
+
+- Polling mode (no DMA, no IRQ): Application must poll for status bits to check if new character has been received and read it fast enough in order to get all bytes
+	- PROS
+		- Very easy implementation
+	- CONS
+		- Very easy to loose receive characters
+		- Works only in low baudrates
+- Interrupt mode (no DMA): UART triggers interrupt and CPU jumps to service routine to handle data reception
+	- PROS
+		- Most commonly used approach across all applications today
+		- Works well in common baudrate, `115200` bauds
+	- CONS
+		- Interrupt service routing is executed for every received character
+		- May stall other tasks in high-performance MCUs with many interrupts
+		- May stall operating system when receiving burst of data at a time
+- DMA mode: DMA is used to transfer data from USART RX data register to user memory on hardware level. No application interaction is needed at this point except processing received data by application once necessary
+	- PROS
+		- Transfer from USART peripheral to memory is done on hardware level without CPU interaction
+		- Can work very easily with operating systems
+	- CONS
+		- Number of bytes to transfer must be known in advance by DMA hardware
+		- If communication fails, DMA may not notify application about all bytes transferred
+
+This article focuses only on *DMA mode* with unknown data length to receive.
+
+### Important facts about DMA
+
+DMA in STM32 can work in `normal` or `circular` mode. For each mode, it requires number of *elements* to transfer before events are triggered.
+
+- *Normal mode*: In this mode, DMA starts transferring data and when it transfers all elements, it stops.
+- *Circular mode*: In this mode, DMA starts with transfer, but when it reaches to the end, it jumps back on top of memory and continues to write
+
+While transfer is active, `2` of many interrupts may be triggered:
+
+- *Half-Transfer complete (HT)* interrupt: Executed when half of elements were transferred by DMA hardware
+- *Transfer-Complete (TC)* interrupt: Executed when all elements transferred by DMA hardware
+	- When DMA operates in *circular* mode, these interrupts are executed periodically
+
+*Number of elements to transfer by DMA hardware must be written to relevant DMA registers!*
+
+As you can see, we get notification by DMA on *HT* or *TC* events. Imagine application assumes it will receive `20` bytes, but it receives only `14`:
+- Application would write `20` to relevant register for number of bytes to receive
+- Application would be notfified after first `10` bytes are received (HT event)
+- **Application is never notified for the rest of `4` bytes**
+    - **Application must solve this case!**
+
+### Important facts about U(S)ART
+
+Most of STM32 series have U(S)ARTs with IDLE line detection. If IDLE line detection is not available, some of them have *Receiver Timeout* feature with programmable delay. If even this is not available, then application may use only *polling modes with DMA*, with examples provided below.
+
+IDLE line detection (or Receiver Timeout) can trigger USART interrupt when receive line is steady without any communication for at least *1* character for reception.
+Practicle example: Imagine we received *10* bytes at *115200* bauds. Each byte at *115200* bauds takes about `10us` on UART line, total `100us`. IDLE line interrupt will notify application when it will detect for `1` character inactivity on RX line, meaning after `10us` after last character. Application may react on this event and process data accordingly.
+
+### Connect DMA + USARTs together
+
+Now it is time to use all these features of DMA and USARTs in single application.
+If we move to previous example of expecting to receive `20` bytes by application (and actually receiving only `14`), we can now:
+- Application would write `20` to relevant register for number of bytes to receive
+- Application would be notfified after first `10` bytes are received (HT event)
+- Application would be notified after the rest `4` bytes because of USART IDLE line detection (IDLE LINE)
+
+### Final configuration
+
+- Put DMA to `circular` mode to avoid race conditions after DMA transfer completes and before user starts a new transfer
+- Set memory length big enough to be able to receive all bytes while processing another.
+    - Imagine you receive data at `115200` bauds, bursts of `100` bytes at a time.
+    - It is good to set receive buffer to at least `100` bytes unless you can make sure your processing approach is faster than burst of data
+    - At `115200` bauds, `100` bytes means `1ms` time
+
 # Examples
 
 All examples were originally developed on `NUCLEO-F413ZH` development board in configuration:
@@ -13,8 +85,9 @@ All examples were originally developed on `NUCLEO-F413ZH` development board in c
 - DMA settings
     - `DMA1`, `STREAM1`, `CHANNEL4`
     - Circular mode
+- All examples implement loop-back terminology with polling approach
 
-Examples show `3` different use cases:
+Examples show different use cases:
 
 ### Polling for changes
 
