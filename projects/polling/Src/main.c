@@ -69,7 +69,7 @@ usart_rx_check(void) {
     /* Calculate current position in buffer */
     pos = ARRAY_LEN(usart_rx_dma_buffer) - LL_DMA_GetDataLength(DMA1, LL_DMA_STREAM_1);
     if (pos != old_pos) {                       /* Check change in received data */
-        if (pos > old_pos) {                    /* CUrrent position is over previous one */
+        if (pos > old_pos) {                    /* Current position is over previous one */
             /* We are in "linear" mode */
             /* Process data directly by subtracting "pointers" */
             usart_process_data(&usart_rx_dma_buffer[old_pos], pos - old_pos);
