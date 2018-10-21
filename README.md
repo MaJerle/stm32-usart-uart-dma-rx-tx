@@ -10,6 +10,7 @@ In STM32 microcontroller family, U(S)ART reception can work in different modes:
 	- CONS
 		- Very easy to loose receive characters
 		- Works only in low baudrates
+		- Application must very fast check for new character
 - Interrupt mode (no DMA): UART triggers interrupt and CPU jumps to service routine to handle data reception
 	- PROS
 		- Most commonly used approach across all applications today
@@ -22,6 +23,8 @@ In STM32 microcontroller family, U(S)ART reception can work in different modes:
 	- PROS
 		- Transfer from USART peripheral to memory is done on hardware level without CPU interaction
 		- Can work very easily with operating systems
+		- Optimized for highest baudrates `> 1Mbps` and low-power applications
+		- In case of big bursts of data, increasing data buffer size can improve functionality
 	- CONS
 		- Number of bytes to transfer must be known in advance by DMA hardware
 		- If communication fails, DMA may not notify application about all bytes transferred
