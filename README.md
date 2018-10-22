@@ -6,7 +6,7 @@ In STM32 microcontroller family, U(S)ART reception can work in different modes:
 
 - Polling mode (no DMA, no IRQ): Application must poll for status bits to check if new character has been received and read it fast enough in order to get all bytes
 	- PROS
-		- Very easy implementation
+		- Very easy implementation, but no-one is using it in real-life scenario
 	- CONS
 		- Very easy to loose receive characters
 		- Works only in low baudrates
@@ -83,7 +83,7 @@ This section describes possible `4` possible cases and one additional which expl
 
 Abbrevations used on image:
 - `old_ptr`: Information about last used position to read data
-- `new_ptr`: Information where will DMA save next byte in memory
+- `new_ptr`: Information where DMA will save next byte in memory
 - `HT`: Half-Transfer event triggered by DMA
 - `TC`: Transfer-Complete event triggered by DMA
 - `IDLE`: IDLE line detection by USART peripheral
@@ -94,18 +94,18 @@ DMA information:
 
 Possible cases:
 - *P1*: DMA transfered `10` bytes. Application is notified by `HT` event and can read/process data, received by UART
-- *P2*: DMA transfered `10` next `10` bytes. In this case, reading/processing starts from last known position until the end of memory
-    - DMA is in circular mode, it will go automatically on beginning on memory to transfer more data
+- *P2*: DMA transfered next `10` bytes. In this case, reading/processing starts from last known position until the end of memory
+    - DMA is in circular mode, it will go automatically to the beginning of memory to transfer more data, coming from UART
 - *P3*: DMA transfered `10` bytes, but not aligned with `HT` nor `TC` events
     - Application will get `HT` event when first `6` bytes are received
-    - Application will get `IDLE` event when next `4` bytes are received. By using `IDLE` interrupt, we can prevent application to think there was no data on USART and can possibly return `timeout` to other side in case of packet communication
+    - Application will get `IDLE` event when next `4` bytes are received. By using `IDLE` interrupt, we can prevent application to think there is no data on USART and can possibly return `timeout` to other side in case of packet communication
 - *P4*: DMA transfered `10` bytes in *overflow* mode, but not alighed with `HT` nor `TC events`
     - Application will get `TC` event when first `4` bytes are received
-    - Application will get `IDLE` event when next `6` bytes are received. By using `IDLE` interrupt, we can prevent application to think there was no data on USART and can possibly return `timeout` to other side in case of packet communication
+    - Application will get `IDLE` event when next `6` bytes are received. By using `IDLE` interrupt, we can prevent application to think there was is data on USART and can possibly return `timeout` to other side in case of packet communication
 - *P5*: In case we rely only on *IDLE* line detection. What would happen if we receive more bytes in a burst than DMA can hold? In this case we can hold `20` bytes, but we received `30` bytes in burst
     - Application will get IDLE line event once there is steady RX line for `1` byte timeframe
     - Red part of data represents last data which overflowed previous one = *we lost `10` bytes*
-    - Option is to poll for DMA changes faster than receiving burst of data may happen
+    - Option to avoid such scenario is to poll for DMA changes faster than receiving burst of data may happen, or by using `HT/TC` events
 
 For cases *P1-4*, below snippet shows how to get DMA positions and how much data to process.
 
