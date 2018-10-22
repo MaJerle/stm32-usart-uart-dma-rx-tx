@@ -105,6 +105,43 @@ Possible cases:
 - *P5*: In case we rely only on *IDLE* line detection. What would happen if we receive more bytes in a burst than DMA can hold? In this case we can hold `20` bytes, but we received `30` bytes in burst
     - Application will get IDLE line event once there is steady RX line for `1` byte timeframe
     - Red part of data represents last data which overflowed previous one = *we lost `10` bytes*
+    - Option is to poll for DMA changes faster than receiving burst of data may happen
+
+For cases *P1-4*, below snippet shows how to get DMA positions and how much data to process.
+
+```c
+/**
+ * \brief           Check for new data received with DMA
+ * \note            This function must be called from DMA HT/TC and USART IDLE events
+ */
+void
+usart_rx_check(void) {
+    static size_t old_pos;
+    size_t pos;
+
+    /* Calculate current position in buffer */
+    pos = ARRAY_LEN(usart_rx_dma_buffer) - LL_DMA_GetDataLength(DMA1, LL_DMA_STREAM_1);
+    if (pos != old_pos) {                       /* Check change in received data */
+        if (pos > old_pos) {                    /* Current position is over previous one */
+            /* We are in "linear" mode, case P1, P2, P3 */
+            /* Process data directly by subtracting "pointers" */
+            usart_process_data(&usart_rx_dma_buffer[old_pos], pos - old_pos);
+        } else {
+            /* We are in "overflow" mode, case P4 */
+            /* First process data to the end of buffer */
+            usart_process_data(&usart_rx_dma_buffer[old_pos], ARRAY_LEN(usart_rx_dma_buffer) - old_pos);
+            /* Continue with beginning of buffer */
+            usart_process_data(&usart_rx_dma_buffer[0], pos);
+        }
+    }
+    old_pos = pos;                              /* Save current position as old */
+
+    /* Check and manually update if we reached end of buffer */
+    if (old_pos == ARRAY_LEN(usart_rx_dma_buffer)) {
+        old_pos = 0;
+    }
+}
+```
 
 # Examples
 
