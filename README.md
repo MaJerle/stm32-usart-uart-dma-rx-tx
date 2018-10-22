@@ -113,6 +113,7 @@ For cases *P1-4*, below snippet shows how to get DMA positions and how much data
 /**
  * \brief           Check for new data received with DMA
  * \note            This function must be called from DMA HT/TC and USART IDLE events
+ * \note            Full source code is available in examples
  */
 void
 usart_rx_check(void) {
