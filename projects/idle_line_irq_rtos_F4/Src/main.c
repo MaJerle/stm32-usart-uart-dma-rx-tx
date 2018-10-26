@@ -67,7 +67,7 @@ main(void) {
 
 /**
  * \brief           Init thread
- * \param[in]       arg: Customer argument
+ * \param[in]       arg: Thread argument
  */
 void
 init_thread(void const* arg) {
@@ -203,7 +203,7 @@ usart_init(void) {
     LL_DMA_DisableFifoMode(DMA1, LL_DMA_STREAM_1);
 
     LL_DMA_SetPeriphAddress(DMA1, LL_DMA_STREAM_1, (uint32_t)&USART3->DR);
-    LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_1, (uint32_t)&usart_rx_dma_buffer);
+    LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_1, (uint32_t)usart_rx_dma_buffer);
     LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_1, ARRAY_LEN(usart_rx_dma_buffer));
 
     /* Enable HT & TC interrupts */

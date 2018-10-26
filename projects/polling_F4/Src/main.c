@@ -3,7 +3,6 @@
 #include "stdint.h"
 #include "stdlib.h"
 #include "string.h"
-#include "cmsis_os.h"
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -26,20 +25,6 @@ void usart_send_string(const char* str);
 static
 uint8_t usart_rx_dma_buffer[64];
 
-/* Thread function entry point */
-void init_thread(void const* arg);
-void usart_rx_dma_thread(void const* arg);
-
-/* Define thread */
-osThreadDef(init, init_thread, osPriorityNormal, 0, 128);
-osThreadDef(usart_rx_dma, usart_rx_dma_thread, osPriorityHigh, 0, 128);
-
-/* Message queue ID */
-osMessageQId usart_rx_dma_queue_id;
-
-/* Define message queue */
-osMessageQDef(usart_rx_dma, 10, sizeof(void *));
-
 /**
  * \brief           Application entry point
  */
@@ -55,53 +40,21 @@ main(void) {
     /* Configure the system clock */
     SystemClock_Config();
 
-    /* Create init thread */
-    osThreadCreate(osThread(init), NULL);
-
-    /* Start scheduler */
-    osKernelStart();
-
-    /* Infinite loop */
-    while (1) { }
-}
-
-/**
- * \brief           Init thread
- * \param[in]       arg: Customer argument
- */
-void
-init_thread(void const* arg) {
     /* Initialize all configured peripherals */
     usart_init();
-
-    /* Do other initializations if needed */
-
-    /* Create message queue */
-    usart_rx_dma_queue_id = osMessageCreate(osMessageQ(usart_rx_dma), NULL);
-
-    /* Create new thread for USART RX DMA processing */
-    osThreadCreate(osThread(usart_rx_dma), NULL);
-
-    /* Terminate this thread */
-    osThreadTerminate(NULL);
-}
-
-/**
- * \brief           USART DMA check thread
- * \param[in]       arg: Thread argument
- */
-void
-usart_rx_dma_thread(void const* arg) {
-    /* Notify user to start sending data */
-    usart_send_string("USART DMA example: Polling + RTOS\r\n");
+    usart_send_string("USART DMA example: Polling\r\n");
     usart_send_string("Start sending data to STM32\r\n");
 
+    /* Infinite loop */
     while (1) {
-        /* Simply call processing function */
+        /* Process USART data */
         usart_rx_check();
 
-        /* Delay to allow other tasks to process */
-        osDelay(1);
+        /* Do task 1 */
+        /* Do task 2 */
+        /* Do task 3 */
+        /* Do task 4 */
+        /* Do task 5 */
     }
 }
 
@@ -199,8 +152,12 @@ usart_init(void) {
     LL_DMA_DisableFifoMode(DMA1, LL_DMA_STREAM_1);
 
     LL_DMA_SetPeriphAddress(DMA1, LL_DMA_STREAM_1, (uint32_t)&USART3->DR);
-    LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_1, (uint32_t)&usart_rx_dma_buffer);
+    LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_1, (uint32_t)usart_rx_dma_buffer);
     LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_1, ARRAY_LEN(usart_rx_dma_buffer));
+
+    /* DMA interrupt init */
+    NVIC_SetPriority(DMA1_Stream1_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
+    NVIC_EnableIRQ(DMA1_Stream1_IRQn);
 
     /* USART configuration */
     USART_InitStruct.BaudRate = 115200;
@@ -213,6 +170,10 @@ usart_init(void) {
     LL_USART_Init(USART3, &USART_InitStruct);
     LL_USART_ConfigAsyncMode(USART3);
     LL_USART_EnableDMAReq_RX(USART3);
+
+    /* USART interrupt */
+    NVIC_SetPriority(USART3_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 1));
+    NVIC_EnableIRQ(USART3_IRQn);
 
     /* Enable USART and DMA */
     LL_USART_Enable(USART3);
