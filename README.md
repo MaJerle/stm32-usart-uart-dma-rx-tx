@@ -151,15 +151,14 @@ All examples were originally developed on `NUCLEO-F413ZH` development board in c
 - Developed in TrueSTUDIO and may be directly opened there
 - Use of LL drivers
 - USART common settings: `115200` bauds, `1` stop bit, no-parity
-    - STM32 TX pin: `PD8`
-    - STM32 RX pin: `PD9`
 - DMA common settings: Circular mode
 - All examples implement loop-back terminology with polling approach
 
-| Board             | USART     | STM32 TX  | STM32 RX pin  | DMA settings                          |
-|-------------------|-----------|-----------|---------------|---------------------------------------|
-| `NUCLEO-F413ZH`   | `USART3`  | `PD8`     | `PD9`         | *`DMA1`, `Stream1`, `Channel 4`*      |
-| `NUCLEO-L432KC`   | `USART2`  | `PA2`     | `PA15`        | *`DMA1`, `Channel 6`, `Request 2`*    |
+| Board name        | USART     | STM32 TX  | STM32 RX  | DMA settings                          |
+|-------------------|-----------|-----------|-----------|---------------------------------------|
+| `NUCLEO-F413ZH`   | `USART3`  | `PD8`     | `PD9`     | *`DMA1`, `Stream1`, `Channel 4`*      |
+| `NUCLEO-L432KC`   | `USART2`  | `PA2`     | `PA15`    | *`DMA1`, `Channel 6`, `Request 2`*    |
+| `BluePill-F103C8` | `USART1`  | `PA9`     | `PA10`    | *`DMA1`, `Channel 5`*                 |
 
 Examples show different use cases:
 
