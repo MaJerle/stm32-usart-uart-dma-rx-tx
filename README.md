@@ -154,11 +154,11 @@ All examples were originally developed on `NUCLEO-F413ZH` development board in c
 - DMA common settings: Circular mode
 - All examples implement loop-back terminology with polling approach
 
-| Board name        | USART     | STM32 TX  | STM32 RX  | DMA settings                          |
-|-------------------|-----------|-----------|-----------|---------------------------------------|
-| `NUCLEO-F413ZH`   | `USART3`  | `PD8`     | `PD9`     | *`DMA1`, `Stream1`, `Channel 4`*      |
-| `NUCLEO-L432KC`   | `USART2`  | `PA2`     | `PA15`    | *`DMA1`, `Channel 6`, `Request 2`*    |
-| `BluePill-F103C8` | `USART1`  | `PA9`     | `PA10`    | *`DMA1`, `Channel 5`*                 |
+| STM32 family | Board name        | USART     | STM32 TX  | STM32 RX  | DMA settings                          |
+|--------------|-------------------|-----------|-----------|-----------|---------------------------------------|
+| STM32F4xx    | `NUCLEO-F413ZH`   | `USART3`  | `PD8`     | `PD9`     | *`DMA1`, `Stream 1`, `Channel 4`*     |
+| STM32L4xx    | `NUCLEO-L432KC`   | `USART2`  | `PA2`     | `PA15`    | *`DMA1`, `Channel 6`, `Request 2`*    |
+| STM32F1xx    | `BluePill-F103C8` | `USART1`  | `PA9`     | `PA10`    | *`DMA1`, `Channel 5`*                 |
 
 Examples show different use cases:
 
