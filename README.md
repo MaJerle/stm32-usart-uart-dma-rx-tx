@@ -146,10 +146,8 @@ usart_rx_check(void) {
 
 # Examples
 
-All examples were originally developed on `NUCLEO-F413ZH` development board in configuration:
-
-- Developed in TrueSTUDIO and may be directly opened there
-- Use of LL drivers
+- Developed in TrueSTUDIO for easier evaluation
+- No HAL, LL drivers are used instead
 - USART common settings: `115200` bauds, `1` stop bit, no-parity
 - DMA common settings: Circular mode
 - All examples implement loop-back terminology with polling approach
