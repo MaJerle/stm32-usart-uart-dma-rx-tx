@@ -1,6 +1,6 @@
 # STM32 + UART + DMA RX + unknown length
 
-This repository may give you information about how to read data on UART by using DMA when number of bytes to receive is now known in advance.
+This repository may give you information about how to read data on UART by using DMA when number of bytes to receive is not known in advance.
 
 In STM32 microcontroller family, U(S)ART reception can work in different modes:
 
