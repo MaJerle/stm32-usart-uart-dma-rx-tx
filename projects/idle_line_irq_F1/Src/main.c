@@ -31,13 +31,13 @@ uint8_t usart_rx_dma_buffer[64];
  */
 int
 main(void) {
-	/* MCU Configuration----------------------------------------------------------*/
+    /* MCU Configuration----------------------------------------------------------*/
 
-	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-	LL_Init();
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+    LL_Init();
 
-	/* Configure the system clock */
-	SystemClock_Config();
+    /* Configure the system clock */
+    SystemClock_Config();
 
     /* Initialize all configured peripherals */
     usart_init();
