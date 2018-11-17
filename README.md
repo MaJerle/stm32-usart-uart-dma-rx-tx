@@ -8,15 +8,15 @@ In STM32 microcontroller family, U(S)ART reception can work in different modes:
 	- PROS
 		- Very easy implementation, but no-one is using it in real-life scenario
 	- CONS
-		- Very easy to loose receive characters
-		- Works only in low baudrates
+		- Very easy to miss received characters in bursts of data
+		- Works only for low baudrates
 		- Application must very fast check for new character
 - Interrupt mode (no DMA): UART triggers interrupt and CPU jumps to service routine to handle data reception
 	- PROS
 		- Most commonly used approach across all applications today
 		- Works well in common baudrate, `115200` bauds
 	- CONS
-		- Interrupt service routing is executed for every received character
+		- Interrupt service routine gets executed for every received character
 		- May stall other tasks in high-performance MCUs with many interrupts
 		- May stall operating system when receiving burst of data at a time
 - DMA mode: DMA is used to transfer data from USART RX data register to user memory on hardware level. No application interaction is needed at this point except processing received data by application once necessary
