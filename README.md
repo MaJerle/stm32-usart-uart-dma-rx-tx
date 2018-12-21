@@ -99,7 +99,7 @@ Possible cases:
 - *P3*: DMA transfered `10` bytes, but not aligned with `HT` nor `TC` events
     - Application will get `HT` event when first `6` bytes are received
     - Application will get `IDLE` event when next `4` bytes are received. By using `IDLE` interrupt, we can prevent application to think there is no data on USART and can possibly return `timeout` to other side in case of packet communication
-- *P4*: DMA transfered `10` bytes in *overflow* mode, but not alighed with `HT` nor `TC events`
+- *P4*: DMA transfered `10` bytes in *overflow* mode, but not aligned with `HT` nor `TC events`
     - Application will get `TC` event when first `4` bytes are received
     - Application will get `IDLE` event when next `6` bytes are received. By using `IDLE` interrupt, we can prevent application to think there was is data on USART and can possibly return `timeout` to other side in case of packet communication
 - *P5*: In case we rely only on *IDLE* line detection. What would happen if we receive more bytes in a burst than DMA can hold? In this case we can hold `20` bytes, but we received `30` bytes in burst
