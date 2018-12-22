@@ -23,8 +23,8 @@ void usart_send_string(const char* str);
  * \brief           Buffer for USART DMA
  * \note            Contains RAW unprocessed data received by UART and transfered by DMA
  */
-static
-uint8_t usart_rx_dma_buffer[64];
+static uint8_t
+usart_rx_dma_buffer[64];
 
 /**
  * \brief           Application entry point
@@ -202,8 +202,8 @@ usart_init(void) {
     NVIC_EnableIRQ(USART1_IRQn);
 
     /* Enable USART and DMA */
-    LL_USART_Enable(USART1);
     LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_5);
+    LL_USART_Enable(USART1);
 }
 
 /* Interrupt handlers here */
