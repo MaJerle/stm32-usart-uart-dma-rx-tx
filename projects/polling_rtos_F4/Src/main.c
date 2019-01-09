@@ -62,7 +62,7 @@ main(void) {
     osKernelStart();
 
     /* Infinite loop */
-    while (1) { }
+    while (1) {}
 }
 
 /**
@@ -124,7 +124,7 @@ usart_rx_check(void) {
             /* We are in "overflow" mode */
             /* First process data to the end of buffer */
             usart_process_data(&usart_rx_dma_buffer[old_pos], ARRAY_LEN(usart_rx_dma_buffer) - old_pos);
-            /* Continue with beginning of buffer */
+            /* Continue from beginning of buffer */
             usart_process_data(&usart_rx_dma_buffer[0], pos);
         }
     }
@@ -224,29 +224,33 @@ usart_init(void) {
  */
 void
 SystemClock_Config(void) {
+    /* Configure flash latency */
     LL_FLASH_SetLatency(LL_FLASH_LATENCY_3);
-
     if (LL_FLASH_GetLatency() != LL_FLASH_LATENCY_3) {
-        while (1) { }
+        while (1) {}
     }
+
+    /* Configure voltage scaling */
     LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE1);
+
+    /* Configure HSI */
     LL_RCC_HSI_SetCalibTrimming(16);
     LL_RCC_HSI_Enable();
+    while (LL_RCC_HSI_IsReady() != 1) {}
 
-    /* Wait till HSI is ready */
-    while (LL_RCC_HSI_IsReady() != 1) { }
+    /* Configure PLL */
     LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI, LL_RCC_PLLM_DIV_8, 100, LL_RCC_PLLP_DIV_2);
     LL_RCC_PLL_Enable();
+    while (LL_RCC_PLL_IsReady() != 1) {}
 
-    /* Wait till PLL is ready */
-    while (LL_RCC_PLL_IsReady() != 1) { }
+    /* Configure system prescalers */
     LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
     LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
     LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
     LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
+    while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL) {}
 
-    /* Wait till System clock is ready */
-    while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL) { }
+    /* Configure systick */
     LL_Init1msTick(100000000);
     LL_SYSTICK_SetClkSource(LL_SYSTICK_CLKSOURCE_HCLK);
     LL_SYSTICK_EnableIT();

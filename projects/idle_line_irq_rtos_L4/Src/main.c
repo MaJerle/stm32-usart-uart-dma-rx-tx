@@ -62,7 +62,7 @@ main(void) {
     osKernelStart();
 
     /* Infinite loop */
-    while (1) { }
+    while (1) {}
 }
 
 /**
@@ -128,7 +128,7 @@ usart_rx_check(void) {
             /* We are in "overflow" mode */
             /* First process data to the end of buffer */
             usart_process_data(&usart_rx_dma_buffer[old_pos], ARRAY_LEN(usart_rx_dma_buffer) - old_pos);
-            /* Continue with beginning of buffer */
+            /* Continue from beginning of buffer */
             usart_process_data(&usart_rx_dma_buffer[0], pos);
         }
     }
@@ -253,17 +253,17 @@ void
 DMA1_Channel6_IRQHandler(void) {
     /* Check half-transfer complete interrupt */
     if (LL_DMA_IsEnabledIT_HT(DMA1, LL_DMA_CHANNEL_6) && LL_DMA_IsActiveFlag_HT6(DMA1)) {
-        LL_DMA_ClearFlag_HT6(DMA1);             /* CLear half-transfer complete flag */
+        LL_DMA_ClearFlag_HT6(DMA1);             /* Clear half-transfer complete flag */
         osMessagePut(usart_rx_dma_queue_id, 0, 0);  /* Write data to queue. Do not use wait function! */
     }
 
     /* Check transfer-complete interrupt */
     if (LL_DMA_IsEnabledIT_TC(DMA1, LL_DMA_CHANNEL_6) && LL_DMA_IsActiveFlag_TC6(DMA1)) {
-        LL_DMA_ClearFlag_TC6(DMA1);             /* CLear half-transfer complete flag */
+        LL_DMA_ClearFlag_TC6(DMA1);             /* Clear half-transfer complete flag */
         osMessagePut(usart_rx_dma_queue_id, 0, 0);  /* Write data to queue. Do not use wait function! */
     }
 
-    /* Possibly implement other events if needed */
+    /* Implement other events when needed */
 }
 
 
@@ -278,7 +278,7 @@ USART2_IRQHandler(void) {
         osMessagePut(usart_rx_dma_queue_id, 0, 0);  /* Write data to queue. Do not use wait function! */
     }
 
-    /* Possibly implement other events if needed */
+    /* Implement other events when needed */
 }
 
 /**
@@ -286,26 +286,30 @@ USART2_IRQHandler(void) {
  */
 void
 SystemClock_Config(void) {
+    /* Configure flash latency */
     LL_FLASH_SetLatency(LL_FLASH_LATENCY_4);
-
     if (LL_FLASH_GetLatency() != LL_FLASH_LATENCY_4) {
-        while (1) { }
+        while (1) {}
     }
-    LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE1);
-    LL_RCC_MSI_Enable();
 
-    /* Wait till MSI is ready */
-    while (LL_RCC_MSI_IsReady() != 1) { }
+    /* Configure voltage scaling */
+    LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE1);
+
+    /* Configure MSI */
+    LL_RCC_MSI_Enable();
+    while (LL_RCC_MSI_IsReady() != 1) {}
     LL_RCC_MSI_EnableRangeSelection();
     LL_RCC_MSI_SetRange(LL_RCC_MSIRANGE_11);
     LL_RCC_MSI_SetCalibTrimming(0);
-    LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_MSI);
 
-    /* Wait till System clock is ready */
-    while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_MSI) { }
+    /* Configure system clock */
+    LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_MSI);
+    while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_MSI) {}
     LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
     LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
     LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
+
+    /* Configure systick */
     LL_Init1msTick(48000000);
     LL_SYSTICK_SetClkSource(LL_SYSTICK_CLKSOURCE_HCLK);
     LL_SetSystemCoreClock(48000000);

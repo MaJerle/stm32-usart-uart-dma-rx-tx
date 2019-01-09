@@ -76,7 +76,7 @@ usart_rx_check(void) {
             /* We are in "overflow" mode */
             /* First process data to the end of buffer */
             usart_process_data(&usart_rx_dma_buffer[old_pos], ARRAY_LEN(usart_rx_dma_buffer) - old_pos);
-            /* Continue with beginning of buffer */
+            /* Continue from beginning of buffer */
             usart_process_data(&usart_rx_dma_buffer[0], pos);
         }
     }
@@ -198,17 +198,17 @@ void
 DMA1_Channel1_IRQHandler(void) {
     /* Check half-transfer complete interrupt */
     if (LL_DMA_IsEnabledIT_HT(DMA1, LL_DMA_CHANNEL_1) && LL_DMA_IsActiveFlag_HT1(DMA1)) {
-        LL_DMA_ClearFlag_HT1(DMA1);             /* CLear half-transfer complete flag */
+        LL_DMA_ClearFlag_HT1(DMA1);             /* Clear half-transfer complete flag */
         usart_rx_check();                       /* Check for data to process */
     }
 
     /* Check transfer-complete interrupt */
     if (LL_DMA_IsEnabledIT_TC(DMA1, LL_DMA_CHANNEL_1) && LL_DMA_IsActiveFlag_TC1(DMA1)) {
-        LL_DMA_ClearFlag_TC1(DMA1);             /* CLear half-transfer complete flag */
+        LL_DMA_ClearFlag_TC1(DMA1);             /* Clear half-transfer complete flag */
         usart_rx_check();                       /* Check for data to process */
     }
 
-    /* Possibly implement other events if needed */
+    /* Implement other events when needed */
 }
 
 /**
@@ -222,7 +222,7 @@ USART2_IRQHandler(void) {
         usart_rx_check();                       /* Check for data to process */
     }
 
-    /* Possibly implement other events if needed */
+    /* Implement other events when needed */
 }
 
 /**
@@ -230,31 +230,29 @@ USART2_IRQHandler(void) {
  */
 void
 SystemClock_Config(void) {
+    /* Configure flash latency */
     LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
     if (LL_FLASH_GetLatency() != LL_FLASH_LATENCY_2) {
-        while (1) { }
+        while (1) {}
     }
 
-    /* HSI configuration and activation */
+    /* Configure HSI */
     LL_RCC_HSI_Enable();
-    while (LL_RCC_HSI_IsReady() != 1) { }
+    while (LL_RCC_HSI_IsReady() != 1) {}
 
-    /* Main PLL configuration and activation */
+    /* Configure PLL */
     LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI, LL_RCC_PLLM_DIV_1, 8, LL_RCC_PLLR_DIV_2);
     LL_RCC_PLL_Enable();
     LL_RCC_PLL_EnableDomain_SYS();
-    while (LL_RCC_PLL_IsReady() != 1) { }
+    while (LL_RCC_PLL_IsReady() != 1) {}
 
-    /* Set AHB prescaler*/
+    /* Configure system clock */
     LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-
-    /* Sysclk activation on the main PLL */
     LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-    while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL) { }
-
-    /* Set APB1 prescaler */
+    while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL) {}
     LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
 
+    /* Configure systick */
     LL_Init1msTick(64000000);
     LL_SYSTICK_SetClkSource(LL_SYSTICK_CLKSOURCE_HCLK);
     LL_SYSTICK_EnableIT();
