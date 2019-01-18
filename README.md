@@ -57,7 +57,7 @@ As you can see, we get notification by DMA on *HT* or *TC* events. Imagine appli
 Most of STM32 series have U(S)ARTs with IDLE line detection. If IDLE line detection is not available, some of them have *Receiver Timeout* feature with programmable delay. If even this is not available, then application may use only *polling modes with DMA*, with examples provided below.
 
 IDLE line detection (or Receiver Timeout) can trigger USART interrupt when receive line is steady without any communication for at least *1* character for reception.
-Practicle example: Imagine we received *10* bytes at *115200* bauds. Each byte at *115200* bauds takes about `10us` on UART line, total `100us`. IDLE line interrupt will notify application when it will detect for `1` character inactivity on RX line, meaning after `10us` after last character. Application may react on this event and process data accordingly.
+Practicle example: Imagine we received *10* bytes at *115200* bauds. Each byte at *115200* bauds takes about `100us` on UART line, total `1ms`. IDLE line interrupt will notify application when it will detect for `1` character inactivity on RX line, meaning after `100us` after last character. Application may react on this event and process data accordingly.
 
 ### Connect DMA + USARTs together
 
@@ -73,7 +73,7 @@ If we move to previous example of expecting to receive `20` bytes by application
 - Set memory length big enough to be able to receive all bytes while processing another.
     - Imagine you receive data at `115200` bauds, bursts of `100` bytes at a time.
     - It is good to set receive buffer to at least `100` bytes unless you can make sure your processing approach is faster than burst of data
-    - At `115200` bauds, `100` bytes means `1ms` time
+    - At `115200` bauds, `100` bytes means `10ms` time
 
 ### DMA HT/TC and USART IDLE explanation
 
