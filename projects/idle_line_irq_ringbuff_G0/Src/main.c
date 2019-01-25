@@ -36,7 +36,7 @@ usart_tx_dma_ringbuff;
  * \brief           Ring buffer data array for TX DMA
  */
 static uint8_t
-usart_tx_dma_ringbuff_data[64];
+usart_tx_dma_ringbuff_data[128];
 
 /**
  * \brief           Length of TX DMA transfer
@@ -127,9 +127,20 @@ usart_start_dma_transfer(void) {
         /* Check if something to send  */
         usart_tx_dma_current_len = ringbuff_get_linear_block_length(&usart_tx_dma_ringbuff);
         if (usart_tx_dma_current_len) {
+            /* Disable channel if enabled */
+            LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
+
+            /* Clear all flags */
+            LL_DMA_ClearFlag_TC3(DMA1);
+            LL_DMA_ClearFlag_HT3(DMA1);
+            LL_DMA_ClearFlag_GI3(DMA1);
+            LL_DMA_ClearFlag_TE3(DMA1);
+
             /* Start DMA transfer */
             LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, usart_tx_dma_current_len);
             LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)ringbuff_get_linear_block_address(&usart_tx_dma_ringbuff));
+
+            /* Start new transfer */
             LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
             started = 1;
         }
@@ -240,6 +251,7 @@ usart_init(void) {
     LL_USART_DisableFIFO(USART2);
     LL_USART_ConfigAsyncMode(USART2);
     LL_USART_EnableDMAReq_RX(USART2);
+    LL_USART_EnableDMAReq_TX(USART2);
     LL_USART_EnableIT_IDLE(USART2);
 
     /* USART interrupt, same priority as DMA channel */
