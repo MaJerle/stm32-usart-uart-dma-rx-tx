@@ -204,3 +204,7 @@ Similar to `polling` except in this case user gets notification from `3` differe
 - CONS
 	- Memory usage for separate thread + message queue (or semaphore)
 	- Increases RAM footprint
+
+## How to use repository
+
+1. run `git clone --include-submodules https://github.com/MaJerle/STM32_USART_DMA_RX` to clone repository including submodules
