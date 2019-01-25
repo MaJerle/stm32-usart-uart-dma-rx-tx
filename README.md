@@ -208,3 +208,4 @@ Similar to `polling` except in this case user gets notification from `3` differe
 ## How to use repository
 
 1. run `git clone --include-submodules https://github.com/MaJerle/STM32_USART_DMA_RX` to clone repository including submodules
+2. run examples from `projects` directory using Atollic TrueSTUDIO
