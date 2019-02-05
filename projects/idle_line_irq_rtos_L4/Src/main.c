@@ -182,6 +182,7 @@ usart_init(void) {
 
     /*
      * USART2 GPIO Configuration
+	 *
      * PA2   ------> USART2_TX
      * PA15  ------> USART2_RX
      */
@@ -307,6 +308,8 @@ SystemClock_Config(void) {
     /* Configure system clock */
     LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_MSI);
     while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_MSI) {}
+	
+	/* Configure prescalers */
     LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
     LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
     LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);

@@ -193,6 +193,7 @@ usart_init(void) {
 
     /*
      * USART2 GPIO Configuration
+	 *
      * PA2   ------> USART2_TX
      * PA3   ------> USART2_RX
      */
