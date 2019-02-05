@@ -137,7 +137,7 @@ usart_send_string(const char* str) {
 }
 
 /**
- * @brief           USART1 Initialization Function
+ * \brief           USART1 Initialization Function
  */
 void
 usart_init(void) {
