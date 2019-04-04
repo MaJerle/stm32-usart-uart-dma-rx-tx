@@ -99,7 +99,7 @@ usart_rx_dma_thread(void const* arg) {
     usart_send_string("Start sending data to STM32\r\n");
 
     while (1) {
-        /* BLock thread and wait for event to process USART data */
+        /* Block thread and wait for event to process USART data */
         evt = osMessageGet(usart_rx_dma_queue_id, osWaitForever);
 
         /* Simply call processing function */

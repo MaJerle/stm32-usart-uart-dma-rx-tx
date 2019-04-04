@@ -127,7 +127,7 @@ usart_start_dma_transfer(void) {
 
     if (!usart_tx_dma_current_len) {
         /* Check if something to send  */
-        usart_tx_dma_current_len = ringbuff_get_linear_block_length(&usart_tx_dma_ringbuff);
+        usart_tx_dma_current_len = ringbuff_get_linear_block_read_length(&usart_tx_dma_ringbuff);
         if (usart_tx_dma_current_len) {
             /* Disable channel if enabled */
             LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
@@ -140,7 +140,7 @@ usart_start_dma_transfer(void) {
 
             /* Start DMA transfer */
             LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, usart_tx_dma_current_len);
-            LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)ringbuff_get_linear_block_address(&usart_tx_dma_ringbuff));
+            LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)ringbuff_get_linear_block_read_address(&usart_tx_dma_ringbuff));
 
             /* Start new transfer */
             LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
