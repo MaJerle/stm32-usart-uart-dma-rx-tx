@@ -83,7 +83,7 @@ This section describes possible `4` possible cases and one additional which expl
 
 Abbrevations used on image:
 - `old_ptr`: Information about last used position to read data
-- `new_ptr`: Information where DMA will save next byte in memory
+- `new_ptr`: Information where DMA will write next byte in memory
 - `HT`: Half-Transfer event triggered by DMA
 - `TC`: Transfer-Complete event triggered by DMA
 - `IDLE`: IDLE line detection by USART peripheral
