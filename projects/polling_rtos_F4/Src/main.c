@@ -34,12 +34,6 @@ void usart_rx_dma_thread(void const* arg);
 osThreadDef(init, init_thread, osPriorityNormal, 0, 128);
 osThreadDef(usart_rx_dma, usart_rx_dma_thread, osPriorityHigh, 0, 128);
 
-/* Message queue ID */
-osMessageQId usart_rx_dma_queue_id;
-
-/* Define message queue */
-osMessageQDef(usart_rx_dma, 10, sizeof(void *));
-
 /**
  * \brief           Application entry point
  */
@@ -75,9 +69,6 @@ init_thread(void const* arg) {
     usart_init();
 
     /* Do other initializations if needed */
-
-    /* Create message queue */
-    usart_rx_dma_queue_id = osMessageCreate(osMessageQ(usart_rx_dma), NULL);
 
     /* Create new thread for USART RX DMA processing */
     osThreadCreate(osThread(usart_rx_dma), NULL);
