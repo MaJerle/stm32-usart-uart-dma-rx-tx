@@ -182,7 +182,7 @@ usart_init(void) {
 
     /*
      * USART3 GPIO Configuration
-	 *
+     *
      * PD8   ------> USART3_TX
      * PD9   ------> USART3_RX
      */

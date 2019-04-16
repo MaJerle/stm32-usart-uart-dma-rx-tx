@@ -6,7 +6,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void	LL_Init(void);
+static void    LL_Init(void);
 
 /* USART related functions */
 void usart_init(void);
@@ -58,24 +58,24 @@ main(void) {
 }
 
 /**
- * \brief			Low-level init
+ * \brief            Low-level init
  */
 static void
 LL_Init(void) {
-	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_AFIO);
-	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
-	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOD);
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_AFIO);
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_GPIOD);
 
-	NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+    NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
 
-	/* System interrupt init*/
-	NVIC_SetPriority(MemoryManagement_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
-	NVIC_SetPriority(BusFault_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
-	NVIC_SetPriority(UsageFault_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
-	NVIC_SetPriority(SVCall_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
-	NVIC_SetPriority(DebugMonitor_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
-	NVIC_SetPriority(PendSV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
-	NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 15, 0));
+    /* System interrupt init*/
+    NVIC_SetPriority(MemoryManagement_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
+    NVIC_SetPriority(BusFault_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
+    NVIC_SetPriority(UsageFault_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
+    NVIC_SetPriority(SVCall_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
+    NVIC_SetPriority(DebugMonitor_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
+    NVIC_SetPriority(PendSV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
+    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 15, 0));
 }
 
 /**
@@ -151,7 +151,7 @@ usart_init(void) {
 
     /*
      * USART1 GPIO Configuration
-	 *
+     *
      * PA9   ------> USART1_TX
      * PA10  ------> USART1_RX
      */
