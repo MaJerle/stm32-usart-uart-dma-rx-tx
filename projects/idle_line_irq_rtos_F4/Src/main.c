@@ -71,13 +71,14 @@ main(void) {
  */
 void
 init_thread(void const* arg) {
+    /* Create message queue before initializing UART */
+    /* This is to make sure message queue is ready before UART interrupts are enabled */
+    usart_rx_dma_queue_id = osMessageCreate(osMessageQ(usart_rx_dma), NULL);
+    
     /* Initialize all configured peripherals */
     usart_init();
 
     /* Do other initializations if needed */
-
-    /* Create message queue */
-    usart_rx_dma_queue_id = osMessageCreate(osMessageQ(usart_rx_dma), NULL);
 
     /* Create new thread for USART RX DMA processing */
     osThreadCreate(osThread(usart_rx_dma), NULL);
