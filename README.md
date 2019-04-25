@@ -149,7 +149,7 @@ usart_rx_check(void) {
 
 # Examples
 
-- Developed in TrueSTUDIO for easier evaluation on STM32 boards
+- Developed in STM32CubeIDE for easier evaluation on STM32 boards
 - Fully developed using LL drivers
 - USART common configuration: `115200` bauds, `1` stop bit, no-parity
 - DMA common configuration: Circular mode, `TC` and `HT` events enabled
