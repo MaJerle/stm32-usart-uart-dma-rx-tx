@@ -66,9 +66,11 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
+		<nature>com.st.stm32cube.ide.mcu.MCUProjectNature</nature>
 		<nature>org.eclipse.cdt.core.cnature</nature>
-		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
+		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
+		<nature>com.st.stm32cube.ide.mcu.MCUTSConvertedProjectNature</nature>
 	</natures>
 	<linkedResources>
 		<link>
