@@ -99,7 +99,7 @@ usart_rx_check(void) {
             /* First process data to the end of buffer */
             usart_process_data(&usart_rx_dma_buffer[old_pos], ARRAY_LEN(usart_rx_dma_buffer) - old_pos);
             /* Check and continue with beginning of buffer */
-            if (pos) {
+            if (pos > 0) {
                 usart_process_data(&usart_rx_dma_buffer[0], pos);
             }
         }
