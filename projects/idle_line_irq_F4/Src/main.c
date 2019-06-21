@@ -1,7 +1,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include <stdint.h>
-#include "stdlib.h"
+#include <stdlib.h>
 #include <string.h>
 
 /* Private function prototypes -----------------------------------------------*/
