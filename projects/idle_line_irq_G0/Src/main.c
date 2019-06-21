@@ -1,8 +1,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stdint.h"
+#include <stdint.h>
 #include "stdlib.h"
-#include "string.h"
+#include <string.h>
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
