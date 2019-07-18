@@ -263,7 +263,7 @@ DMA1_Channel6_IRQHandler(void) {
 
     /* Check transfer-complete interrupt */
     if (LL_DMA_IsEnabledIT_TC(DMA1, LL_DMA_CHANNEL_6) && LL_DMA_IsActiveFlag_TC6(DMA1)) {
-        LL_DMA_ClearFlag_TC6(DMA1);             /* Clear half-transfer complete flag */
+        LL_DMA_ClearFlag_TC6(DMA1);             /* Clear transfer complete flag */
         osMessagePut(usart_rx_dma_queue_id, 0, 0);  /* Write data to queue. Do not use wait function! */
     }
 

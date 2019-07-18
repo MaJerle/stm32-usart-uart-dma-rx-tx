@@ -195,11 +195,13 @@ Examples show different use cases:
 - Application has to process data only when it receives any of the `3` events
 - PROS
 	- Application does not need to poll for new changes
-	- Application receives interrupts on event
+	- Application receives interrupts on events
 	- Application may enter low-power modes to increase battery life (if operated on battery)
 - CONS
 	- Processing of data in this mode is in interrupt
 	- Long interrupt execution may break other compatibility in the application
+
+*Processing of incoming data happens from 2 interrupt vectors, hence it is important that they do not preempt each-other. Set both to the same preemption priority!*
 
 ### USART Idle line detection + DMA HT&TC interrupts with RTOS
 

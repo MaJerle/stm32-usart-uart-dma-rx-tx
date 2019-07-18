@@ -203,7 +203,7 @@ DMA1_Stream1_IRQHandler(void) {
 
     /* Check transfer-complete interrupt */
     if (LL_DMA_IsEnabledIT_TC(DMA1, LL_DMA_STREAM_1) && LL_DMA_IsActiveFlag_TC1(DMA1)) {
-        LL_DMA_ClearFlag_TC1(DMA1);             /* Clear half-transfer complete flag */
+        LL_DMA_ClearFlag_TC1(DMA1);             /* Clear transfer complete flag */
         usart_rx_check();                       /* Check for data to process */
     }
 

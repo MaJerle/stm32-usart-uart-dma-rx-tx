@@ -224,7 +224,7 @@ DMA1_Channel5_IRQHandler(void) {
 
     /* Check transfer-complete interrupt */
     if (LL_DMA_IsEnabledIT_TC(DMA1, LL_DMA_CHANNEL_5) && LL_DMA_IsActiveFlag_TC5(DMA1)) {
-        LL_DMA_ClearFlag_TC5(DMA1);             /* Clear half-transfer complete flag */
+        LL_DMA_ClearFlag_TC5(DMA1);             /* Clear transfer complete flag */
         usart_rx_check();                       /* Check for data to process */
     }
 
