@@ -201,7 +201,7 @@ usart_init(void) {
     LL_USART_EnableIT_IDLE(USART1);
 
     /* USART interrupt */
-    NVIC_SetPriority(USART1_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 1));
+    NVIC_SetPriority(USART1_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
     NVIC_EnableIRQ(USART1_IRQn);
 
     /* Enable USART and DMA */

@@ -236,7 +236,7 @@ usart_init(void) {
     LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_3);
 
     /* DMA interrupt init */
-    NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0);
+    NVIC_SetPriority(DMA1_Channel2_3_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
     NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
 
     /* Configure USART2 */
@@ -258,7 +258,7 @@ usart_init(void) {
     LL_USART_EnableIT_IDLE(USART2);
 
     /* USART interrupt, same priority as DMA channel */
-    NVIC_SetPriority(USART2_IRQn, 0);
+    NVIC_SetPriority(USART2_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
     NVIC_EnableIRQ(USART2_IRQn);
 
     /* Enable USART and DMA RX */
