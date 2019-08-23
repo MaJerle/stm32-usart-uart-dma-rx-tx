@@ -219,7 +219,6 @@ DMA1_Channel6_IRQHandler(void) {
     /* Implement other events when needed */
 }
 
-
 /**
  * \brief           USART2 global interrupt handler
  */
