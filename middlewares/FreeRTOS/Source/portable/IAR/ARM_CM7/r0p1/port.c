@@ -1,77 +1,35 @@
 /*
-    FreeRTOS V9.0.0 - Copyright (C) 2016 Real Time Engineers Ltd.
-    All rights reserved
-
-    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
-
-    This file is part of the FreeRTOS distribution.
-
-    FreeRTOS is free software; you can redistribute it and/or modify it under
-    the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation >>>> AND MODIFIED BY <<<< the FreeRTOS exception.
-
-    ***************************************************************************
-    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
-    >>!   distribute a combined work that includes FreeRTOS without being   !<<
-    >>!   obliged to provide the source code for proprietary components     !<<
-    >>!   outside of the FreeRTOS kernel.                                   !<<
-    ***************************************************************************
-
-    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  Full license text is available on the following
-    link: http://www.freertos.org/a00114.html
-
-    ***************************************************************************
-     *                                                                       *
-     *    FreeRTOS provides completely free yet professionally developed,    *
-     *    robust, strictly quality controlled, supported, and cross          *
-     *    platform software that is more than just the market leader, it     *
-     *    is the industry's de facto standard.                               *
-     *                                                                       *
-     *    Help yourself get started quickly while simultaneously helping     *
-     *    to support the FreeRTOS project by purchasing a FreeRTOS           *
-     *    tutorial book, reference manual, or both:                          *
-     *    http://www.FreeRTOS.org/Documentation                              *
-     *                                                                       *
-    ***************************************************************************
-
-    http://www.FreeRTOS.org/FAQHelp.html - Having a problem?  Start by reading
-    the FAQ page "My application does not run, what could be wrong?".  Have you
-    defined configASSERT()?
-
-    http://www.FreeRTOS.org/support - In return for receiving this top quality
-    embedded software for free we request you assist our global community by
-    participating in the support forum.
-
-    http://www.FreeRTOS.org/training - Investing in training allows your team to
-    be as productive as possible as early as possible.  Now you can receive
-    FreeRTOS training directly from Richard Barry, CEO of Real Time Engineers
-    Ltd, and the world's leading authority on the world's leading RTOS.
-
-    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
-    compatible FAT file system, and our tiny thread aware UDP/IP stack.
-
-    http://www.FreeRTOS.org/labs - Where new FreeRTOS products go to incubate.
-    Come and try FreeRTOS+TCP, our new open source TCP/IP stack for FreeRTOS.
-
-    http://www.OpenRTOS.com - Real Time Engineers ltd. license FreeRTOS to High
-    Integrity Systems ltd. to sell under the OpenRTOS brand.  Low cost OpenRTOS
-    licenses offer ticketed support, indemnification and commercial middleware.
-
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
-    engineered and independently SIL3 certified version for use in safety and
-    mission critical applications that require provable dependability.
-
-    1 tab == 4 spaces!
-*/
+ * FreeRTOS Kernel V10.2.1
+ * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * http://www.FreeRTOS.org
+ * http://aws.amazon.com/freertos
+ *
+ * 1 tab == 4 spaces!
+ */
 
 /*-----------------------------------------------------------
  * Implementation of functions defined in portable.h for the ARM CM4F port.
  *----------------------------------------------------------*/
 
-/* Compiler includes. */
+/* IAR includes. */
 #include <intrinsics.h>
 
 /* Scheduler includes. */
@@ -82,7 +40,7 @@
 	#error This port can only be used when the project options are configured to enable hardware floating point support.
 #endif
 
-#if configMAX_SYSCALL_INTERRUPT_PRIORITY == 0
+#if( configMAX_SYSCALL_INTERRUPT_PRIORITY == 0 )
 	#error configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to 0.  See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html
 #endif
 
@@ -130,7 +88,7 @@
 
 /* Constants required to set up the initial stack. */
 #define portINITIAL_XPSR					( 0x01000000 )
-#define portINITIAL_EXEC_RETURN				( 0xfffffffd )
+#define portINITIAL_EXC_RETURN				( 0xfffffffd )
 
 /* The systick is a 24-bit counter. */
 #define portMAX_24_BIT_NUMBER				( 0xffffffUL )
@@ -143,10 +101,6 @@ calculations. */
 /* For strict compliance with the Cortex-M spec the task start address should
 have bit-0 clear, as it is loaded into the PC on exit from an ISR. */
 #define portSTART_ADDRESS_MASK				( ( StackType_t ) 0xfffffffeUL )
-
-/* Each task maintains its own interrupt status in the critical nesting
-variable. */
-static UBaseType_t uxCriticalNesting = 0xaaaaaaaa;
 
 /*
  * Setup the timer to generate the tick interrupts.  The implementation in this
@@ -177,10 +131,14 @@ static void prvTaskExitError( void );
 
 /*-----------------------------------------------------------*/
 
+/* Each task maintains its own interrupt status in the critical nesting
+variable. */
+static UBaseType_t uxCriticalNesting = 0xaaaaaaaa;
+
 /*
  * The number of SysTick increments that make up one tick period.
  */
-#if configUSE_TICKLESS_IDLE == 1
+#if( configUSE_TICKLESS_IDLE == 1 )
 	static uint32_t ulTimerCountsForOneTick = 0;
 #endif /* configUSE_TICKLESS_IDLE */
 
@@ -188,7 +146,7 @@ static void prvTaskExitError( void );
  * The maximum number of tick periods that can be suppressed is limited by the
  * 24 bit resolution of the SysTick timer.
  */
-#if configUSE_TICKLESS_IDLE == 1
+#if( configUSE_TICKLESS_IDLE == 1 )
 	static uint32_t xMaximumPossibleSuppressedTicks = 0;
 #endif /* configUSE_TICKLESS_IDLE */
 
@@ -196,7 +154,7 @@ static void prvTaskExitError( void );
  * Compensate for the CPU cycles that pass while the SysTick is stopped (low
  * power functionality only.
  */
-#if configUSE_TICKLESS_IDLE == 1
+#if( configUSE_TICKLESS_IDLE == 1 )
 	static uint32_t ulStoppedTimerCompensation = 0;
 #endif /* configUSE_TICKLESS_IDLE */
 
@@ -205,7 +163,7 @@ static void prvTaskExitError( void );
  * FreeRTOS API functions are not called from interrupts that have been assigned
  * a priority above configMAX_SYSCALL_INTERRUPT_PRIORITY.
  */
-#if ( configASSERT_DEFINED == 1 )
+#if( configASSERT_DEFINED == 1 )
 	 static uint8_t ucMaxSysCallPriority = 0;
 	 static uint32_t ulMaxPRIGROUPValue = 0;
 	 static const volatile uint8_t * const pcInterruptPriorityRegisters = ( const volatile uint8_t * const ) portNVIC_IP_REGISTERS_OFFSET_16;
@@ -238,7 +196,7 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 	/* A save method is being used that requires each task to maintain its
 	own exec return value. */
 	pxTopOfStack--;
-	*pxTopOfStack = portINITIAL_EXEC_RETURN;
+	*pxTopOfStack = portINITIAL_EXC_RETURN;
 
 	pxTopOfStack -= 8;	/* R11, R10, R9, R8, R7, R6, R5 and R4. */
 
@@ -265,6 +223,10 @@ static void prvTaskExitError( void )
  */
 BaseType_t xPortStartScheduler( void )
 {
+	/* configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to 0.
+	See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html */
+	configASSERT( configMAX_SYSCALL_INTERRUPT_PRIORITY );
+
 	#if( configASSERT_DEFINED == 1 )
 	{
 		volatile uint32_t ulOriginalPriority;
@@ -297,6 +259,24 @@ BaseType_t xPortStartScheduler( void )
 			ulMaxPRIGROUPValue--;
 			ucMaxPriorityValue <<= ( uint8_t ) 0x01;
 		}
+
+		#ifdef __NVIC_PRIO_BITS
+		{
+			/* Check the CMSIS configuration that defines the number of
+			priority bits matches the number of priority bits actually queried
+			from the hardware. */
+			configASSERT( ( portMAX_PRIGROUP_BITS - ulMaxPRIGROUPValue ) == __NVIC_PRIO_BITS );
+		}
+		#endif
+
+		#ifdef configPRIO_BITS
+		{
+			/* Check the FreeRTOS configuration that defines the number of
+			priority bits matches the number of priority bits actually queried
+			from the hardware. */
+			configASSERT( ( portMAX_PRIGROUP_BITS - ulMaxPRIGROUPValue ) == configPRIO_BITS );
+		}
+		#endif
 
 		/* Shift the priority group value back to its position within the AIRCR
 		register. */
@@ -390,11 +370,11 @@ void xPortSysTickHandler( void )
 }
 /*-----------------------------------------------------------*/
 
-#if configUSE_TICKLESS_IDLE == 1
+#if( configUSE_TICKLESS_IDLE == 1 )
 
 	__weak void vPortSuppressTicksAndSleep( TickType_t xExpectedIdleTime )
 	{
-	uint32_t ulReloadValue, ulCompleteTickPeriods, ulCompletedSysTickDecrements, ulSysTickCTRL;
+	uint32_t ulReloadValue, ulCompleteTickPeriods, ulCompletedSysTickDecrements;
 	TickType_t xModifiableIdleTime;
 
 		/* Make sure the SysTick reload value does not overflow the counter. */
@@ -461,32 +441,50 @@ void xPortSysTickHandler( void )
 			should not be executed again.  However, the original expected idle
 			time variable must remain unmodified, so a copy is taken. */
 			xModifiableIdleTime = xExpectedIdleTime;
-			configPRE_SLEEP_PROCESSING( &xModifiableIdleTime );
+			configPRE_SLEEP_PROCESSING( xModifiableIdleTime );
 			if( xModifiableIdleTime > 0 )
 			{
 				__DSB();
 				__WFI();
 				__ISB();
 			}
-			configPOST_SLEEP_PROCESSING( &xExpectedIdleTime );
+			configPOST_SLEEP_PROCESSING( xExpectedIdleTime );
 
-			/* Stop SysTick.  Again, the time the SysTick is stopped for is
-			accounted for as best it can be, but using the tickless mode will
-			inevitably result in some tiny drift of the time maintained by the
-			kernel with respect to calendar time. */
-			ulSysTickCTRL = portNVIC_SYSTICK_CTRL_REG;
-			portNVIC_SYSTICK_CTRL_REG = ( ulSysTickCTRL & ~portNVIC_SYSTICK_ENABLE_BIT );
-
-			/* Re-enable interrupts - see comments above __disable_interrupt()
-			call above. */
+			/* Re-enable interrupts to allow the interrupt that brought the MCU
+			out of sleep mode to execute immediately.  see comments above
+			__disable_interrupt() call above. */
 			__enable_interrupt();
+			__DSB();
+			__ISB();
 
-			if( ( ulSysTickCTRL & portNVIC_SYSTICK_COUNT_FLAG_BIT ) != 0 )
+			/* Disable interrupts again because the clock is about to be stopped
+			and interrupts that execute while the clock is stopped will increase
+			any slippage between the time maintained by the RTOS and calendar
+			time. */
+			__disable_interrupt();
+			__DSB();
+			__ISB();
+			
+			/* Disable the SysTick clock without reading the 
+			portNVIC_SYSTICK_CTRL_REG register to ensure the
+			portNVIC_SYSTICK_COUNT_FLAG_BIT is not cleared if it is set.  Again, 
+			the time the SysTick is stopped for is accounted for as best it can 
+			be, but using the tickless mode will inevitably result in some tiny 
+			drift of the time maintained by the kernel with respect to calendar 
+			time*/
+			portNVIC_SYSTICK_CTRL_REG = ( portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT );
+
+			/* Determine if the SysTick clock has already counted to zero and
+			been set back to the current reload value (the reload back being
+			correct for the entire expected idle time) or if the SysTick is yet
+			to count to zero (in which case an interrupt other than the SysTick
+			must have brought the system out of sleep mode). */
+			if( ( portNVIC_SYSTICK_CTRL_REG & portNVIC_SYSTICK_COUNT_FLAG_BIT ) != 0 )
 			{
 				uint32_t ulCalculatedLoadValue;
 
-				/* The tick interrupt has already executed, and the SysTick
-				count reloaded with ulReloadValue.  Reset the
+				/* The tick interrupt is already pending, and the SysTick count
+				reloaded with ulReloadValue.  Reset the
 				portNVIC_SYSTICK_LOAD_REG with whatever remains of this tick
 				period. */
 				ulCalculatedLoadValue = ( ulTimerCountsForOneTick - 1UL ) - ( ulReloadValue - portNVIC_SYSTICK_CURRENT_VALUE_REG );
@@ -501,11 +499,9 @@ void xPortSysTickHandler( void )
 
 				portNVIC_SYSTICK_LOAD_REG = ulCalculatedLoadValue;
 
-				/* The tick interrupt handler will already have pended the tick
-				processing in the kernel.  As the pending tick will be
-				processed as soon as this function exits, the tick value
-				maintained by the tick is stepped forward by one less than the
-				time spent waiting. */
+				/* As the pending tick will be processed as soon as this
+				function exits, the tick value maintained by the tick is stepped
+				forward by one less than the time spent waiting. */
 				ulCompleteTickPeriods = xExpectedIdleTime - 1UL;
 			}
 			else
@@ -527,21 +523,18 @@ void xPortSysTickHandler( void )
 
 			/* Restart SysTick so it runs from portNVIC_SYSTICK_LOAD_REG
 			again, then set portNVIC_SYSTICK_LOAD_REG back to its standard
-			value.  The critical section is used to ensure the tick interrupt
-			can only execute once in the case that the reload register is near
-			zero. */
+			value. */
 			portNVIC_SYSTICK_CURRENT_VALUE_REG = 0UL;
-			portENTER_CRITICAL();
-			{
-				portNVIC_SYSTICK_CTRL_REG |= portNVIC_SYSTICK_ENABLE_BIT;
-				vTaskStepTick( ulCompleteTickPeriods );
-				portNVIC_SYSTICK_LOAD_REG = ulTimerCountsForOneTick - 1UL;
-			}
-			portEXIT_CRITICAL();
+			portNVIC_SYSTICK_CTRL_REG |= portNVIC_SYSTICK_ENABLE_BIT;
+			vTaskStepTick( ulCompleteTickPeriods );
+			portNVIC_SYSTICK_LOAD_REG = ulTimerCountsForOneTick - 1UL;
+
+			/* Exit with interrpts enabled. */
+			__enable_interrupt();
 		}
 	}
 
-#endif /* #if configUSE_TICKLESS_IDLE */
+#endif /* configUSE_TICKLESS_IDLE */
 /*-----------------------------------------------------------*/
 
 /*
@@ -559,6 +552,10 @@ __weak void vPortSetupTimerInterrupt( void )
 	}
 	#endif /* configUSE_TICKLESS_IDLE */
 
+	/* Stop and clear the SysTick. */
+	portNVIC_SYSTICK_CTRL_REG = 0UL;
+	portNVIC_SYSTICK_CURRENT_VALUE_REG = 0UL;
+
 	/* Configure SysTick to interrupt at the requested rate. */
 	portNVIC_SYSTICK_LOAD_REG = ( configSYSTICK_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL;
 	portNVIC_SYSTICK_CTRL_REG = ( portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT | portNVIC_SYSTICK_ENABLE_BIT );
@@ -573,7 +570,7 @@ __weak void vPortSetupTimerInterrupt( void )
 	uint8_t ucCurrentPriority;
 
 		/* Obtain the number of the currently executing interrupt. */
-		__asm volatile( "mrs %0, ipsr" : "=r"( ulCurrentInterrupt ) );
+		__asm volatile( "mrs %0, ipsr" : "=r"( ulCurrentInterrupt ) :: "memory" );
 
 		/* Is the interrupt number a user defined interrupt? */
 		if( ulCurrentInterrupt >= portFIRST_USER_INTERRUPT_NUMBER )
@@ -619,7 +616,7 @@ __weak void vPortSetupTimerInterrupt( void )
 		devices by calling NVIC_SetPriorityGrouping( 0 ); before starting the
 		scheduler.  Note however that some vendor specific peripheral libraries
 		assume a non-zero priority group setting, in which cases using a value
-		of zero will result in unpredicable behaviour. */
+		of zero will result in unpredictable behaviour. */
 		configASSERT( ( portAIRCR_REG & portPRIORITY_GROUP_MASK ) <= ulMaxPRIGROUPValue );
 	}
 

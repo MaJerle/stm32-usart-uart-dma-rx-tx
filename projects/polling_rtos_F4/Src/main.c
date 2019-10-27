@@ -27,12 +27,8 @@ static uint8_t
 usart_rx_dma_buffer[64];
 
 /* Thread function entry point */
-void init_thread(void const* arg);
-void usart_rx_dma_thread(void const* arg);
-
-/* Define thread */
-osThreadDef(init, init_thread, osPriorityNormal, 0, 128);
-osThreadDef(usart_rx_dma, usart_rx_dma_thread, osPriorityHigh, 0, 128);
+void init_thread(void* arg);
+void usart_rx_dma_thread(void* arg);
 
 /**
  * \brief           Application entry point
@@ -49,13 +45,11 @@ main(void) {
     /* Configure the system clock */
     SystemClock_Config();
 
-    /* Create init thread */
-    osThreadCreate(osThread(init), NULL);
-
-    /* Start scheduler */
+    /* Init kernel, create thread(s) and start it */
+    osKernelInitialize();
+    osThreadNew(init_thread, NULL, NULL);
     osKernelStart();
 
-    /* Infinite loop */
     while (1) {}
 }
 
@@ -64,17 +58,17 @@ main(void) {
  * \param[in]       arg: Thread argument
  */
 void
-init_thread(void const* arg) {
+init_thread(void* arg) {
     /* Initialize all configured peripherals */
     usart_init();
 
     /* Do other initializations if needed */
 
     /* Create new thread for USART RX DMA processing */
-    osThreadCreate(osThread(usart_rx_dma), NULL);
+    osThreadNew(usart_rx_dma_thread, NULL, NULL);
 
     /* Terminate this thread */
-    osThreadTerminate(NULL);
+    osThreadExit();
 }
 
 /**
@@ -82,7 +76,7 @@ init_thread(void const* arg) {
  * \param[in]       arg: Thread argument
  */
 void
-usart_rx_dma_thread(void const* arg) {
+usart_rx_dma_thread(void* arg) {
     /* Notify user to start sending data */
     usart_send_string("USART DMA example: Polling + RTOS\r\n");
     usart_send_string("Start sending data to STM32\r\n");

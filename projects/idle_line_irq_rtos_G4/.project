@@ -64,9 +64,9 @@
 			<locationURI>PARENT-2-PROJECT_LOC/drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_utils.c</locationURI>
 		</link>
 		<link>
-			<name>Middleware/FreeRTOS/cmsis_os.c</name>
+			<name>Middleware/FreeRTOS/cmsis_os2.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/middlewares/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/middlewares/FreeRTOS/Source/CMSIS_RTOS/cmsis_os2.c</locationURI>
 		</link>
 		<link>
 			<name>Middleware/FreeRTOS/croutine.c</name>

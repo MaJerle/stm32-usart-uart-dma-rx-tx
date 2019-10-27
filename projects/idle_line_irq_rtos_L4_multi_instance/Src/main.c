@@ -58,15 +58,8 @@ void usart_irq_handler(const uart_desc_t* uart);
 #define ARRAY_LEN(x)            (sizeof(x) / sizeof((x)[0]))
 
 /* Thread function entry point */
-void init_thread(void const* arg);
-void usart_rx_dma_thread(void const* arg);
-
-/* Define thread */
-osThreadDef(init, init_thread, osPriorityNormal, 0, 128);
-osThreadDef(usart_rx_dma, usart_rx_dma_thread, osPriorityNormal, 0, 128);
-
-/* Define message queue */
-osMessageQDef(usart_rx_dma, 10, sizeof(void *));
+void init_thread(void* arg);
+void usart_rx_dma_thread(void* arg);
 
 /**
  * \brief           USART volatile data
@@ -149,13 +142,11 @@ main(void) {
     /* Configure the system clock */
     SystemClock_Config();
 
-    /* Create init thread */
-    osThreadCreate(osThread(init), NULL);
-
-    /* Start scheduler */
+    /* Init kernel, create thread(s) and start it */
+    osKernelInitialize();
+    osThreadNew(init_thread, NULL, NULL);
     osKernelStart();
 
-    /* Infinite loop */
     while (1) {}
 }
 
@@ -164,7 +155,7 @@ main(void) {
  * \param[in]       arg: Thread argument
  */
 void
-init_thread(void const* arg) {
+init_thread(void* arg) {
     /* Initialize all configured peripherals */
 
     /* Initialize both UARTs */
@@ -175,7 +166,7 @@ init_thread(void const* arg) {
     /* Do other initializations if needed */
 
     /* Terminate this thread */
-    osThreadTerminate(NULL);
+    osThreadExit();
 }
 
 /**
@@ -183,8 +174,9 @@ init_thread(void const* arg) {
  * \param[in]       arg: Thread argument
  */
 void
-usart_rx_dma_thread(void const* arg) {
-    uart_desc_t* uart = (void *)arg;
+usart_rx_dma_thread(void* arg) {
+    uart_desc_t* uart = arg;
+    void* d;
 
     /* Notify user to start sending data */
     usart_send_string(uart, "USART DMA example: DMA HT & TC + USART IDLE LINE IRQ + RTOS processing\r\n");
@@ -192,10 +184,12 @@ usart_rx_dma_thread(void const* arg) {
 
     while (1) {
         /* Block thread and wait for event to process USART data */
-        osMessageGet(uart->data->queue, osWaitForever);
+        osMessageQueueGet(uart->data->queue, &d, NULL, osWaitForever);
 
         /* Simply call processing function */
         usart_rx_check(uart);
+
+        (void)d;
     }
 }
 
@@ -335,14 +329,14 @@ usart_init(const uart_desc_t* uart) {
 
     /* Create message queue before enabling UART or DMA */
     /* This is to make sure message queue is ready before UART/DMA interrupts are enabled */
-    uart->data->queue = osMessageCreate(osMessageQ(usart_rx_dma), NULL);
+    uart->data->queue = osMessageQueueNew(10, sizeof(void *), NULL);
 
     /* Enable USART and DMA */
     LL_DMA_EnableChannel(uart->dma_rx, uart->dma_rx_ch);
     LL_USART_Enable(uart->uart);
 
     /* Create new thread for USART RX DMA processing */
-    osThreadCreate(osThread(usart_rx_dma), (void *)uart);
+    osThreadNew(usart_rx_dma_thread, (void *)uart, NULL);
 }
 
 /**
@@ -358,13 +352,13 @@ usart_dma_irq_handler(const uart_desc_t* uart) {
     /* Check half-transfer complete interrupt */
     if (LL_DMA_IsEnabledIT_HT(uart->dma_rx, uart->dma_rx_ch) && uart->dma_rx_is_ht_fn(uart->dma_rx)) {
         uart->dma_rx_clear_ht_fn(uart->dma_rx); /* Clear half-transfer complete flag */
-        osMessagePut(uart->data->queue, 0, 0);  /* Write data to queue. Do not use wait function! */
+        osMessageQueuePut(uart->data->queue, (void *)1, 0, 0);  /* Write data to queue. Do not use wait function! */
     }
 
     /* Check transfer-complete interrupt */
     if (LL_DMA_IsEnabledIT_TC(uart->dma_rx, uart->dma_rx_ch) && uart->dma_rx_is_tc_fn(uart->dma_rx)) {
         uart->dma_rx_clear_tc_fn(uart->dma_rx); /* Clear transfer complete flag */
-        osMessagePut(uart->data->queue, 0, 0);  /* Write data to queue. Do not use wait function! */
+        osMessageQueuePut(uart->data->queue, (void *)1, 0, 0);  /* Write data to queue. Do not use wait function! */
     }
 }
 
@@ -381,7 +375,7 @@ usart_irq_handler(const uart_desc_t* uart) {
     /* Check for IDLE line interrupt */
     if (LL_USART_IsEnabledIT_IDLE(uart->uart) && LL_USART_IsActiveFlag_IDLE(uart->uart)) {
         LL_USART_ClearFlag_IDLE(uart->uart);    /* Clear IDLE line flag */
-        osMessagePut(uart->data->queue, 0, 0);  /* Write data to queue. Do not use wait function! */
+        osMessageQueuePut(uart->data->queue, (void *)1, 0, 0);  /* Write data to queue. Do not use wait function! */
     }
 }
 
