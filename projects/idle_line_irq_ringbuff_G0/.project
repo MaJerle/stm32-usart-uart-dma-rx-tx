@@ -109,7 +109,7 @@
 			<locationURI>PARENT-2-PROJECT_LOC/drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_utils.c</locationURI>
 		</link>
 		<link>
-			<name>Src/ringbuff.c</name>
+			<name>ringbuff/ringbuff.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/middlewares/ringbuff/ringbuff/src/ringbuff/ringbuff.c</locationURI>
 		</link>

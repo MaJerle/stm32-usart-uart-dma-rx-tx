@@ -31,7 +31,7 @@ void init_thread(void* arg);
 void usart_rx_dma_thread(void* arg);
 
 /* Message queue ID */
-osMessageQId usart_rx_dma_queue_id;
+osMessageQueueId_t usart_rx_dma_queue_id;
 
 /**
  * \brief           Application entry point
@@ -246,16 +246,18 @@ usart_init(void) {
  */
 void
 DMA1_Channel6_IRQHandler(void) {
+    void* d = (void *)1;
+
     /* Check half-transfer complete interrupt */
     if (LL_DMA_IsEnabledIT_HT(DMA1, LL_DMA_CHANNEL_6) && LL_DMA_IsActiveFlag_HT6(DMA1)) {
         LL_DMA_ClearFlag_HT6(DMA1);             /* Clear half-transfer complete flag */
-        osMessageQueuePut(usart_rx_dma_queue_id, (void *)1, 0, 0);  /* Write data to queue. Do not use wait function! */
+        osMessageQueuePut(usart_rx_dma_queue_id, &d, 0, 0);  /* Write data to queue. Do not use wait function! */
     }
 
     /* Check transfer-complete interrupt */
     if (LL_DMA_IsEnabledIT_TC(DMA1, LL_DMA_CHANNEL_6) && LL_DMA_IsActiveFlag_TC6(DMA1)) {
         LL_DMA_ClearFlag_TC6(DMA1);             /* Clear transfer complete flag */
-        osMessageQueuePut(usart_rx_dma_queue_id, (void *)1, 0, 0);  /* Write data to queue. Do not use wait function! */
+        osMessageQueuePut(usart_rx_dma_queue_id, &d, 0, 0);  /* Write data to queue. Do not use wait function! */
     }
 
     /* Implement other events when needed */
@@ -267,10 +269,12 @@ DMA1_Channel6_IRQHandler(void) {
  */
 void
 USART2_IRQHandler(void) {
+    void* d = (void *)1;
+
     /* Check for IDLE line interrupt */
     if (LL_USART_IsEnabledIT_IDLE(USART2) && LL_USART_IsActiveFlag_IDLE(USART2)) {
         LL_USART_ClearFlag_IDLE(USART2);        /* Clear IDLE line flag */
-        osMessageQueuePut(usart_rx_dma_queue_id, (void *)1, 0, 0);  /* Write data to queue. Do not use wait function! */
+        osMessageQueuePut(usart_rx_dma_queue_id, &d, 0, 0);  /* Write data to queue. Do not use wait function! */
     }
 
     /* Implement other events when needed */

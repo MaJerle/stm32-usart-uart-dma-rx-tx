@@ -10,7 +10,7 @@ void SystemClock_Config(void);
 
 typedef struct {
     /* OS queue */
-    osMessageQId queue;                         /*!< Message queue */
+    osMessageQueueId_t queue;                   /*!< Message queue */
 
     /* Raw data buffer */
     uint8_t dma_rx_buffer[64];                  /*!< DMA buffer for receive data */
@@ -349,16 +349,18 @@ usart_init(const uart_desc_t* uart) {
  */
 void
 usart_dma_irq_handler(const uart_desc_t* uart) {
+    void* d = (void *)1;
+
     /* Check half-transfer complete interrupt */
     if (LL_DMA_IsEnabledIT_HT(uart->dma_rx, uart->dma_rx_ch) && uart->dma_rx_is_ht_fn(uart->dma_rx)) {
         uart->dma_rx_clear_ht_fn(uart->dma_rx); /* Clear half-transfer complete flag */
-        osMessageQueuePut(uart->data->queue, (void *)1, 0, 0);  /* Write data to queue. Do not use wait function! */
+        osMessageQueuePut(uart->data->queue, &d, 0, 0); /* Write data to queue. Do not use wait function! */
     }
 
     /* Check transfer-complete interrupt */
     if (LL_DMA_IsEnabledIT_TC(uart->dma_rx, uart->dma_rx_ch) && uart->dma_rx_is_tc_fn(uart->dma_rx)) {
         uart->dma_rx_clear_tc_fn(uart->dma_rx); /* Clear transfer complete flag */
-        osMessageQueuePut(uart->data->queue, (void *)1, 0, 0);  /* Write data to queue. Do not use wait function! */
+        osMessageQueuePut(uart->data->queue, &d, 0, 0); /* Write data to queue. Do not use wait function! */
     }
 }
 
@@ -372,10 +374,12 @@ usart_dma_irq_handler(const uart_desc_t* uart) {
  */
 void
 usart_irq_handler(const uart_desc_t* uart) {
+    void* d = (void *)1;
+
     /* Check for IDLE line interrupt */
     if (LL_USART_IsEnabledIT_IDLE(uart->uart) && LL_USART_IsActiveFlag_IDLE(uart->uart)) {
         LL_USART_ClearFlag_IDLE(uart->uart);    /* Clear IDLE line flag */
-        osMessageQueuePut(uart->data->queue, (void *)1, 0, 0);  /* Write data to queue. Do not use wait function! */
+        osMessageQueuePut(uart->data->queue, &d, 0, 0);  /* Write data to queue. Do not use wait function! */
     }
 }
 
