@@ -144,11 +144,11 @@ usart_rx_check(void) {
 void
 usart_process_data(const void* data, size_t len) {
     const uint8_t* d = data;
-    while (len--) {
-        LL_LPUART_TransmitData8(LPUART1, *d++);
-        while (!LL_LPUART_IsActiveFlag_TXE(LPUART1));
+    for (; len > 0; --len, ++d) {
+        LL_LPUART_TransmitData8(LPUART1, *d);
+        while (!LL_LPUART_IsActiveFlag_TXE(LPUART1)) {}
     }
-    while (!LL_LPUART_IsActiveFlag_TC(LPUART1));
+    while (!LL_LPUART_IsActiveFlag_TC(LPUART1)) {}
 }
 
 /**

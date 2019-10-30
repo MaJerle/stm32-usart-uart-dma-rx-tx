@@ -8,6 +8,11 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 
+/**
+ * \brief           Volatile data structure
+ *
+ * Variables declared using this structure can not be put to non-volatile memory (such as flash, EEPROM, ..)
+ */
 typedef struct {
     /* OS queue */
     osMessageQueueId_t queue;                   /*!< Message queue */
@@ -17,6 +22,12 @@ typedef struct {
     size_t old_pos;                             /*!< Position for data */
 } uart_desc_volatile_t;
 
+/**
+ * \brief           Non-Volatile data structure
+ *
+ * Variables declared using this structure may be put to non-volative memory.
+ * This is to avoid using RAM for constant data
+ */
 typedef struct {
     /* UART config */
     USART_TypeDef* uart;                        /*!< UART/USART/LPUART instance */
@@ -234,11 +245,11 @@ usart_rx_check(const uart_desc_t* uart) {
 void
 usart_process_data(const uart_desc_t* uart, const void* data, size_t len) {
     const uint8_t* d = data;
-    while (len--) {
-        LL_USART_TransmitData8(uart->uart, *d++);
-        while (!LL_USART_IsActiveFlag_TXE(uart->uart));
+    for (; len > 0; --len, ++d) {
+        LL_USART_TransmitData8(uart->uart, *d);
+        while (!LL_USART_IsActiveFlag_TXE(uart->uart)) {}
     }
-    while (!LL_USART_IsActiveFlag_TC(uart->uart));
+    while (!LL_USART_IsActiveFlag_TC(uart->uart)) {}
 }
 
 /**

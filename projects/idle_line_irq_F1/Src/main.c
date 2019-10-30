@@ -120,11 +120,11 @@ usart_rx_check(void) {
 void
 usart_process_data(const void* data, size_t len) {
     const uint8_t* d = data;
-    while (len--) {
-        LL_USART_TransmitData8(USART1, *d++);
-        while (!LL_USART_IsActiveFlag_TXE(USART1));
+    for (; len > 0; --len, ++d) {
+        LL_USART_TransmitData8(USART1, *d);
+        while (!LL_USART_IsActiveFlag_TXE(USART1)) {}
     }
-    while (!LL_USART_IsActiveFlag_TC(USART1));
+    while (!LL_USART_IsActiveFlag_TC(USART1)) {}
 }
 
 /**
