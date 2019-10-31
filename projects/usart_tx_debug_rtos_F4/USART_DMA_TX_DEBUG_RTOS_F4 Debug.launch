@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<launchConfiguration type="com.st.stm32cube.ide.mcu.debug.launch.launchConfigurationType">
+<stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.access_port_id" value="0"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.enable_live_expr" value="true"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.enable_swv" value="false"/>
+<intAttribute key="com.st.stm32cube.ide.mcu.debug.launch.formatVersion" value="2"/>
+<stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.ip_address_local" value="localhost"/>
+<stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.loadList" value="{&quot;fItems&quot;:[{&quot;fIsFromMainTab&quot;:true,&quot;fPath&quot;:&quot;Debug\\USART_DMA_TX_DEBUG_RTOS_F4.elf&quot;,&quot;fProjectName&quot;:&quot;USART_DMA_TX_DEBUG_RTOS_F4&quot;,&quot;fPerformBuild&quot;:true,&quot;fDownload&quot;:true,&quot;fLoadSymbols&quot;:true}]}"/>
+<stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.remoteCommand" value="target remote"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.startServer" value="true"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.startuptab.exception.divby0" value="true"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.startuptab.exception.unaligned" value="false"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.startuptab.haltonexception" value="true"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.swd_mode" value="true"/>
+<stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.swv_port" value="61235"/>
+<stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.swv_trace_div" value="8"/>
+<stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.swv_trace_hclk" value="16000000"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.swv_wait_for_sync" value="true"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.useRemoteTarget" value="true"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.verify_flash_download" value="true"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.stlink.cti_allow_halt" value="false"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.stlink.cti_signal_halt" value="false"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.stlink.enable_external_loader" value="false"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.stlink.enable_logging" value="false"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.stlink.enable_shared_stlink" value="false"/>
+<stringAttribute key="com.st.stm32cube.ide.mcu.debug.stlink.external_loader" value=""/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.stlink.halt_all_on_reset" value="false"/>
+<stringAttribute key="com.st.stm32cube.ide.mcu.debug.stlink.log_file" value="D:\_WORK\embedded\STM32_USART_DMA_RX\projects\usart_tx_debug_rtos_F4\Debug\st-link_gdbserver_log.txt"/>
+<stringAttribute key="com.st.stm32cube.ide.mcu.debug.stlink.reset_strategy" value="system_reset"/>
+<booleanAttribute key="com.st.stm32cube.ide.mcu.debug.stlink.stlink_check_serial_number" value="false"/>
+<stringAttribute key="com.st.stm32cube.ide.mcu.debug.stlink.stlink_txt_serial_number" value=""/>
+<booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.doHalt" value="false"/>
+<booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.doReset" value="false"/>
+<stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.initCommands" value=""/>
+<stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.ipAddress" value="localhost"/>
+<stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.jtagDevice" value="ST-LINK (ST-LINK GDB server)"/>
+<stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.pcRegister" value=""/>
+<intAttribute key="org.eclipse.cdt.debug.gdbjtag.core.portNumber" value="61234"/>
+<stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.runCommands" value=""/>
+<booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setPcRegister" value="false"/>
+<booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setResume" value="true"/>
+<booleanAttribute key="org.eclipse.cdt.debug.gdbjtag.core.setStopAt" value="true"/>
+<stringAttribute key="org.eclipse.cdt.debug.gdbjtag.core.stopAt" value="main"/>
+<stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="${TOOLCHAIN_PATH}/arm-none-eabi-gdb"/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.NON_STOP" value="true"/>
+<booleanAttribute key="org.eclipse.cdt.dsf.gdb.UPDATE_THREADLIST_ON_SUSPEND" value="false"/>
+<intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2"/>
+<stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value=""/>
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_START_MODE" value="remote"/>
+<booleanAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN" value="true"/>
+<stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN_SYMBOL" value="main"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug\USART_DMA_TX_DEBUG_RTOS_F4.elf"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="USART_DMA_TX_DEBUG_RTOS_F4"/>
+<booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.401649126"/>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/USART_DMA_TX_DEBUG_RTOS_F4"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="4"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&#13;&#10;&lt;memoryBlockExpressionList context=&quot;reserved-for-future-use&quot;/&gt;&#13;&#10;"/>
+<stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
+</launchConfiguration>
