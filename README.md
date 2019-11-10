@@ -91,14 +91,13 @@ While transfer is active, `2` (among others) interrupts may get triggered:
 Now it is time to understand which features to use to receive data with UART and DMA to offload CPU.
 As for the sake of this example, we use memory buffer array of `20` bytes. DMA will transfer data received from UART to this buffer.
 
-Steps to start. We assume that UART has been initialized and partially DMA:
+Listed are steps to begin. Initial assumption is that UART has been initialized prior reaching this step, same for basic DMA setup, the rest:
 
 - Application writes `20` to relevant DMA register for data length
 - Application writes memory & peripheral addresses to relevant DMA registers
 - Application sets DMA direction to *peripheral-to-memory* mode
 - Application puts DMA to *circular* mode. This is to assure DMA does not stop transferring data after it reaches end of memory. Instead, it will roll over and continue with transferring possible more data from UART to memory
 - Application enables DMA & UART in reception mode. Receive can not start & DMA will wait UART to receive first character and transmit it to array. This is done for every received byte
-
 - Application is notified by DMA `HT` event (or interrupt) after first `10` have been transferred from UART to memory
 - Application is notified by DMA `TC` event (or interrupt) after `20` bytes are transferred from UART to memory
 - Application is notified by UART IDLE line (or RTO) in case of IDLE line or timeout detected on RX line
