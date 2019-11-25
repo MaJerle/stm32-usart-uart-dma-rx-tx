@@ -1,3 +1,12 @@
+/*
+ * This example shows how can application implement RX and TX DMA for UART.
+ * It uses simple packet example approach and 3 separate buffers:
+ *
+ * - Raw DMA RX buffer where DMA transfers data from UART to memory
+ * - Ringbuff for RX data which are processed by application
+ * - Ringbuff for TX data to send using TX DMA
+ */
+
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include <stdint.h>
@@ -13,6 +22,7 @@ void usart_init(void);
 void usart_rx_check(void);
 void usart_process_data(const void* data, size_t len);
 void usart_send_string(const char* str);
+uint8_t usart_start_tx_dma_transfer(void);
 
 /**
  * \brief           Calculate length of statically allocated array
@@ -20,11 +30,23 @@ void usart_send_string(const char* str);
 #define ARRAY_LEN(x)            (sizeof(x) / sizeof((x)[0]))
 
 /**
- * \brief           Buffer for USART DMA
+ * \brief           Buffer for USART DMA RX
  * \note            Contains RAW unprocessed data received by UART and transfered by DMA
  */
 static uint8_t
 usart_rx_dma_buffer[64];
+
+/**
+ * \brief           Create ring buffer for received data
+ */
+static ringbuff_t
+usart_rx_dma_ringbuff;
+
+/**
+ * \brief           Ring buffer data array for RX DMA
+ */
+static uint8_t
+usart_rx_dma_ringbuff_data[128];
 
 /**
  * \brief           Create ring buffer for TX DMA
@@ -49,6 +71,7 @@ usart_tx_dma_current_len;
  */
 int
 main(void) {
+    uint8_t state, cmd, len;
     /* MCU Configuration--------------------------------------------------------*/
 
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -58,24 +81,78 @@ main(void) {
     /* Configure the system clock */
     SystemClock_Config();
 
-    /* Initialize ringbuff for TX */
+    /* Initialize ringbuff for TX & RX */
     ringbuff_init(&usart_tx_dma_ringbuff, usart_tx_dma_ringbuff_data, sizeof(usart_tx_dma_ringbuff_data));
+    ringbuff_init(&usart_rx_dma_ringbuff, usart_rx_dma_ringbuff_data, sizeof(usart_rx_dma_ringbuff_data));
 
     /* Initialize all configured peripherals */
     usart_init();
     usart_send_string("USART DMA example: DMA HT & TC + USART IDLE LINE interrupts\r\n");
     usart_send_string("Start sending data to STM32\r\n");
 
-    /* Infinite loop */
-    while (1) {
-        /* Nothing to process here */
-        /* Everything is processed either by DMA or USART interrupts */
+    /* After this point, do not use usart_send_string function anymore */
+    /* Send packet data over UART from PC (or other STM32 device) */
 
-        /* Do task 1 */
-        /* Do task 2 */
-        /* Do task 3 */
-        /* Do task 4 */
-        /* Do task 5 */
+    /* Infinite loop */
+    state = 0;
+    while (1) {
+        uint8_t b;
+
+        /* Process RX ringbuffer */
+
+        /* Packet format: START_BYTE, CMD, LEN[, DATA[0], DATA[len - 1]], STOP BYTE */
+        /* DATA bytes are included only if LEN > 0 */
+
+        /* Read byte by byte */
+
+        if (ringbuff_read(&usart_rx_dma_ringbuff, &b, 1) == 1) {
+            switch (state) {
+                case 0: {           /* Wait for start byte */
+                    if (b == 0x55) {
+                        ++state;
+                    }
+                    break;
+                }
+                case 1: {           /* Check packet command */
+                    cmd = b;
+                    ++state;
+                }
+                case 2: {           /* Packet data length */
+                    len = b;
+                    ++state;
+                    if (len == 0) {
+                        ++state;    /* Ignore data part if len = 0 */
+                    }
+                }
+                case 3: {           /* Data for command */
+                    --len;          /* Decrease for received character */
+                    if (len == 0) {
+                        ++state;
+                    }
+                }
+                case 4: {           /* End of packet */
+                    if (b == 0xAA) {
+                        /* Packet is valid */
+
+                        /* Send out response with CMD = 0xFF */
+                        b = 0x55;   /* Start byte */
+                        ringbuff_write(&usart_tx_dma_ringbuff, &b, 1);
+                        cmd = 0xFF; /* Command = 0xFF = OK response */
+                        ringbuff_write(&usart_tx_dma_ringbuff, &cmd, 1);
+                        b = 0x00;   /* Len = 0 */
+                        ringbuff_write(&usart_tx_dma_ringbuff, &b, 1);
+                        b = 0xAA;   /* Stop byte */
+                        ringbuff_write(&usart_tx_dma_ringbuff, &b, 1);
+
+                        /* Flush everything */
+                        usart_start_tx_dma_transfer();
+                    }
+                    state = 0;
+                }
+            }
+        }
+
+        /* Do other tasks ... */
     }
 }
 
@@ -154,26 +231,23 @@ usart_start_tx_dma_transfer(void) {
 
 /**
  * \brief           Process received data over UART
- * \note            Either process them directly or copy to other bigger buffer
+ * Data are written to RX ringbuffer for application processing at latter stage
  * \param[in]       data: Data to process
  * \param[in]       len: Length in units of bytes
  */
 void
 usart_process_data(const void* data, size_t len) {
-    /* Write data to buffer */
-    ringbuff_write(&usart_tx_dma_ringbuff, data, len);
-
-    /* Start DMA transfer if not already */
-    usart_start_tx_dma_transfer();
+    ringbuff_write(&usart_rx_dma_ringbuff, data, len);  /* Write data to receive buffer */
 }
 
 /**
- * \brief           Send string to USART
+ * \brief           Send string over USART
  * \param[in]       str: String to send
  */
 void
 usart_send_string(const char* str) {
-    usart_process_data(str, strlen(str));
+    ringbuff_write(&usart_tx_dma_ringbuff, str, strlen(str));   /* Write data to transmit buffer */
+    usart_start_tx_dma_transfer();
 }
 
 /**
