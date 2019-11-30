@@ -102,6 +102,7 @@ main(void) {
 
         /* Packet format: START_BYTE, CMD, LEN[, DATA[0], DATA[len - 1]], STOP BYTE */
         /* DATA bytes are included only if LEN > 0 */
+        /* An example, send sequence of these bytes: 0x55, 0x01, 0x01, 0xFF, 0xAA */
 
         /* Read byte by byte */
 
@@ -116,6 +117,7 @@ main(void) {
                 case 1: {           /* Check packet command */
                     cmd = b;
                     ++state;
+                    break;
                 }
                 case 2: {           /* Packet data length */
                     len = b;
@@ -123,12 +125,14 @@ main(void) {
                     if (len == 0) {
                         ++state;    /* Ignore data part if len = 0 */
                     }
+                    break;
                 }
                 case 3: {           /* Data for command */
                     --len;          /* Decrease for received character */
                     if (len == 0) {
                         ++state;
                     }
+                    break;
                 }
                 case 4: {           /* End of packet */
                     if (b == 0xAA) {
@@ -148,6 +152,7 @@ main(void) {
                         usart_start_tx_dma_transfer();
                     }
                     state = 0;
+                    break;
                 }
             }
         }
