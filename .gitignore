@@ -16,6 +16,7 @@
 *.sct
 *.MajerleT
 *.tjuln
+*.tilen
 *.dbgconf
 *.uvguix
 *.uvoptx
@@ -70,8 +71,10 @@ RTE/
 x64/
 x86/
 bld/
+[Bb]in/
 [Oo]bj/
 [Ll]og/
+_build/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -372,6 +375,7 @@ ASALocalRun/
 # MSBuild Binary and Structured Log
 *.binlog
 
+log_file.txt
 .metadata/
 .mxproject
 .settings/
