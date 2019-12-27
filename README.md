@@ -295,7 +295,7 @@ It is using DMA to transfer data (no CPU to wait for UART flags) and can achieve
 - Application will try to start & configure DMA after every successfive write to ringbuffer
 - If transfer is on-going, next start is configured from DMA TC interrupt
 
-As a result of this demo application for STm32F413-Nucleo board, observations are as following:
+As a result of this demo application for STM32F413-Nucleo board, observations are as following:
 - Demo code sends `1581` bytes every second at `115200` bauds, which is approx `142ms`.
 - With DMA disabled, CPU load was `14%`, in-line with time to transmit the data
 - With DMA enabled, CPU load was `0%`
@@ -303,5 +303,5 @@ As a result of this demo application for STm32F413-Nucleo board, observations ar
 
 # How to use this repository
 
-1. run `git clone --recurse-submodules https://github.com/MaJerle/STM32_USART_DMA_RX` to clone repository including submodules
+1. run `git clone --recurse-submodules https://github.com/MaJerle/stm32-usart-dma-rx-tx` to clone repository including submodules
 2. run examples from `projects` directory using Atollic TrueSTUDIO
