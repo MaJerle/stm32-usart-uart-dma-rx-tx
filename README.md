@@ -304,4 +304,4 @@ As a result of this demo application for STM32F413-Nucleo board, observations ar
 # How to use this repository
 
 1. run `git clone --recurse-submodules https://github.com/MaJerle/stm32-usart-dma-rx-tx` to clone repository including submodules
-2. run examples from `projects` directory using Atollic TrueSTUDIO
+2. run examples from `projects` directory using [STM32CubeIDE IDE](https://www.st.com/en/development-tools/stm32cubeide.html)
