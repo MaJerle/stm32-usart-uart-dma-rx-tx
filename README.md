@@ -45,39 +45,44 @@ UART in STM32 allows customers to configure it using different transmit(`TX`)/re
 
 > For RX mode, this article focuses only on *DMA mode*, to receive unknown number of bytes
 
-Every STM32 have at least one (`1`) UART IP available and at least one (`1`) DMA controller.
-For transmitting data, no special features on top of basic are necessary, except DMA availability. We will use default features to implement very efficient transmit system using DMA.
+Every STM32 has at least one (`1`) UART IP and at least one (`1`) DMA controller available in its DNA.
+For data transmission, no special features (on top of essential one) are necessary, except DMA availability for UART.
+Application uses use default features to implement very efficient transmit system using DMA.
 
-This is not the case for data receive operation. When implementing DMA receive, application would need to understand when (possible) burst of data received to MCU finished and react immediatelly. This is especially true when UART is used for system communication where it has to react immediately. STM32s have a capability (not all) in UART to detect when RX line has not been active for period of time. This is achieved using one of `2` available features:
-- IDLE LINE: This is an event, triggered when RX line has been in idle state (normally high state) for `1` frame time, after last received byte. Frame time is based on baudrate. Higher baudrate, lower frame time for single byte to be received.
-- RTO (Receiver Timeout): This event is triggered when line has been in idle state for programmable time. It is fully configured by UART.
+While it is straight-forward for RX, this is not the case for receive operation.
+When implementing DMA receive, application would need to understand number of received bytes to process by DMA before finishing transfer.
+This is especially true when UART is used for system communication where it has to react in short time after all bytes have been received.
+STM32s have capability in UART to detect when *RX* line has not been active for period of time. This is achieved using one of `2` available methods:
+- *IDLE LINE event*: Triggered when RX line has been in idle state (normally high state) for `1` frame time, after last received byte. Frame time is based on baudrate. Higher baudrate means lower frame time for single byte.
+- *RTO (Receiver Timeout) event*: Triggered when line has been in idle state for programmable time. It is fully configured by firmware.
 
-Both events can trigger an interrupt.
+Both events can trigger an interrupt which is an essential feature to allow effective receive operation
 
-> Not all STM32 have IDLE LINE or RTO features available. When not available, examples concerning these features may not be used
+> Not all STM32 have *IDLE LINE* or *RTO* features available. When not available, examples concerning these features may not be used.
 
 An example: To transmit `1` byte at `115200` bauds, it takes approximately (for easier estimation) `~10us`; for `3 bytes` it would be `~30us` in total. IDLE line event triggers an interrupt for application when line has been in idle state for `1` frame time (in this case `10us`) after third byte has been received.
 
 ![IDLE LINE DEMO](docs/idle_line_demo.png)
 
-This is a real experiment demo using STM32F4 and IDLE line. After IDLE line is triggered, data are echoed back (loopback mode):
+This is a real experiment demo using *STM32F4* and *IDLE LINE* event. After *IDLE event* is triggered, data are echoed back (loopback mode):
 
 - Application receives `3` bytes, takes approx `25us` at `115200` bauds
-- RX goes to high state (yellow rectangle) and UART RX detects that it has been idle for at least `1` frame
-	- Width of yellow rectangle represents time of `1` frame
-- IDLE line interrupt is triggered at green arrow
+- *RX* goes to high state (yellow rectangle) and *UART RX* detects that it has been idle for at least `1` frame time (approx `10us`)
+	- Width of yellow rectangle represents `1` frame time
+- *IDLE line* interrupt is triggered at green arrow
 - Application echoes data back from interrupt
 
 ## General about DMA
 
-DMA in STM32 can be configured in `normal` or `circular` mode. For each mode, it requires number of *elements* to transfer before events (such as transfer complete) are triggered.
+DMA in STM32 can be configured in `normal` or `circular` mode.
+For each mode, *DMA* requires number of *elements* to transfer before its events (half-transfer complete, transfer complete) are triggered.
 
 - *Normal mode*: DMA starts with data transfer, once it transfers all elements, it stops and sets enable bit to `0`.
 	- Application is using this mode when transmitting data
-- *Circular mode*: DMA starts with transfer, once it transfers all elements (as written in corresponding length register), it starts from beginning of memory and can transfer more
+- *Circular mode*: DMA starts with transfer, once it transfers all elements (as written in corresponding length register), it starts from beginning of memory and transfers more
 	- Applicaton is using this mode when receiving data
 
-While transfer is active, `2` (among others) interrupts may get triggered:
+While transfer is active, `2` (among others) interrupts may be triggered:
 
 - *Half-Transfer complete `HT`*: Triggers when DMA transfers half count of elements
 - *Transfer-Complete `TC`*: Triggers when DMA transfers all elements
@@ -109,8 +114,8 @@ Listed are steps to begin. Initial assumption is that UART has been initialized 
 
 ### Combine UART + DMA for data transmission
 
-Everything gets more simple when application transmits data, length of data is known in advance and memory to transmit is ready.
-For the sake of this example, we use memory for `Hello world` message. In C language it would be:
+Everything gets simplier when application transmits data, length of data is known in advance and memory to transmit is ready.
+For the sake of this example, we use memory for `Helloworld` message. In *C language* it would be:
 
 ```c
 const char
@@ -120,12 +125,15 @@ hello_world_arr[] = "HelloWorld";
 - Application writes number of bytes to transmit to relevant DMA register, that would be `strlen(hello_world_arr)` or `10`
 - Application writes memory & peripheral addresses to relevant DMA registers
 - Application sets DMA direction to *memory-to-peripheral* mode
-- Application sets DMA to *normal* mode. This will effectively disable DMA once al the bytes are successfully transferred
-- Application enables DMA & UART in transmitter mode. Transmit starts immediately when UART requests first byte via DMA to be transferred from memory to UART TX data register
-- Application is notified by `TC` event (or interrupt) after all bytes have been transmitted from memory to UART via DMA.
-- DMA is now stopped and application may prepare next transfer
+- Application sets DMA to *normal* mode. This effectively disables DMA once all the bytes are successfully transferred
+- Application enables DMA & UART in transmitter mode. Transmit starts immediately when UART requests first byte via DMA to be shifted to UART TX register
+- Application is notified by `TC` event (or interrupt) after all bytes have been transmitted from memory to UART via DMA
+- DMA is stopped and application may prepare next transfer immediately
 
-> Please note that `TC` event is triggered before last UART byte has been fully transmitted over UART. That's because `TC` event is part of DMA and not part of UART; it is triggered when DMA transfers all the bytes from point A to point B. That is, point A for DMA is memory, point B is UART data register. Now it is up to UART to clock out byte to GPIO pin
+> Please note that `TC` event is triggered before last UART byte has been fully transmitted over UART.
+> That's because `TC` event is part of DMA and not part of UART.
+> It is triggered when DMA transfers all the bytes from point *A* to point *B*. That is, point *A* for DMA is memory, point *B* is UART data register.
+> Now it is up to UART to clock out byte to GPIO pin
 
 ### DMA HT/TC and UART IDLE combination details
 
