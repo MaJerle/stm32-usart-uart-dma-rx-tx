@@ -33,7 +33,7 @@ uint8_t usart_start_tx_dma_transfer(void);
  * \brief           Buffer for USART DMA RX
  * \note            Contains RAW unprocessed data received by UART and transfered by DMA
  */
-__attribute__((section(".RAM_D2"))) uint8_t usart_rx_dma_buffer[64];
+uint8_t usart_rx_dma_buffer[64];
 
 /**
  * \brief           Create ring buffer for received data
@@ -44,7 +44,7 @@ usart_rx_dma_ringbuff;
 /**
  * \brief           Ring buffer data array for RX DMA
  */
-__attribute__((section(".RAM_D2"))) static uint8_t
+static uint8_t
 usart_rx_dma_ringbuff_data[128];
 
 /**
@@ -56,7 +56,7 @@ usart_tx_dma_ringbuff;
 /**
  * \brief           Ring buffer data array for TX DMA
  */
-__attribute__((section(".RAM_D2"))) static uint8_t
+static uint8_t
 usart_tx_dma_ringbuff_data[128];
 
 /**
