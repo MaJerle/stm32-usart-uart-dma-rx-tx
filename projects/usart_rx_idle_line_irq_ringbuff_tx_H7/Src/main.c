@@ -422,6 +422,11 @@ SystemClock_Config(void) {
     LL_PWR_ConfigSupply(LL_PWR_LDO_SUPPLY);
     LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE0);
 
+    /* Uncomment if used on STM32H745/H755 Nucleo */
+    /* Dual-Core Nucleo board used external SMPS instead of LDO */
+    /* Manually enable it */
+    //PWR->CR3 |= 1 << 2;
+
     /* Configure HSE */
     LL_RCC_HSE_EnableBypass();
     LL_RCC_HSE_Enable();
