@@ -236,7 +236,11 @@ Common for all examples:
 | STM32G0xx    | `NUCLEO-G071RB`   | `USART2`  | `PA2`     | `PA3`     | *`DMA1`, `Channel 1`*              |                                    |
 | STM32G4xx    | `NUCLEO-G474RE`   | `LPUART1` | `PA2`     | `PA3`     | *`DMA1`, `Channel 1`*              |                                    |
 | STM32L4xx    | `NUCLEO-L432KC`   | `USART2`  | `PA2`     | `PA15`    | *`DMA1`, `Channel 6`, `Request 2`* |                                    |
-| STM32H7xx    | `NUCLEO-H743ZI2`  | `USART3`  | `PD8`     | `PD9`     | *`DMA1`, `Stream 0`*               | *`DMA1`, `Stream 1`*               |
+| STM32H7xx    | `NUCLEO-H743ZI2*` | `USART3`  | `PD8`     | `PD9`     | *`DMA1`, `Stream 0`*               | *`DMA1`, `Stream 1`*               |
+
+> * It is possible to run H743 (single-core) examples on dual-core STM32H7 Nucleo boards, NUCLEO-H745 or NUCLEO-H755.
+> Special care needs to be taken as dual-core H7 Nucleo boards use DCDC for MCU power hence
+> application must check clock configuration in main file and uncomment code to enable SMPS.
 
 Examples demonstrate different use cases for RX only or RX&TX combined.
 
