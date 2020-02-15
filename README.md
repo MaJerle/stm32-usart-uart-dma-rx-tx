@@ -60,14 +60,15 @@ Both events can trigger an interrupt which is an essential feature to allow effe
 
 > Not all STM32 have *IDLE LINE* or *RTO* features available. When not available, examples concerning these features may not be used.
 
-An example: To transmit `1` byte at `115200` bauds, it takes approximately (for easier estimation) `~10us`; for `3 bytes` it would be `~30us` in total. IDLE line event triggers an interrupt for application when line has been in idle state for `1` frame time (in this case `10us`) after third byte has been received.
+An example: To transmit `1` byte at `115200` bauds, it takes approximately (for easier estimation) `~100us`; for `3 bytes` it would be `~300us` in total.
+IDLE line event triggers an interrupt for application when line has been in idle state for `1` frame time (in this case `100us`) after third byte has been received.
 
 ![IDLE LINE DEMO](docs/idle_line_demo.png)
 
 This is a real experiment demo using *STM32F4* and *IDLE LINE* event. After *IDLE event* is triggered, data are echoed back (loopback mode):
 
-- Application receives `3` bytes, takes approx `25us` at `115200` bauds
-- *RX* goes to high state (yellow rectangle) and *UART RX* detects that it has been idle for at least `1` frame time (approx `10us`)
+- Application receives `3` bytes, takes approx `~300us` at `115200` bauds
+- *RX* goes to high state (yellow rectangle) and *UART RX* detects that it has been idle for at least `1` frame time (approx `100us`)
 	- Width of yellow rectangle represents `1` frame time
 - *IDLE line* interrupt is triggered at green arrow
 - Application echoes data back from interrupt
