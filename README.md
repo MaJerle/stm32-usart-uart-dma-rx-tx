@@ -140,7 +140,7 @@ hello_world_arr[] = "HelloWorld";
 
 This section describes `4` possible cases and one additional which explains why *HT/TC* events are necessary by application
 
-![DMA events](https://raw.githubusercontent.com/MaJerle/STM32_USART_DMA_RX/master/docs/dma_events.svg?sanitize=true)
+![DMA events](https://raw.githubusercontent.com/MaJerle/stm32-usart-uart-dma-rx-tx/master/docs/dma_events.svg?sanitize=true)
 
 Abbrevations used on image:
 - `R`: `R`ead pointer, used by application to read data from memory. Later also used as `old_ptr`
