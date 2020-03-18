@@ -10,14 +10,15 @@ This is an application note and contains list of examples about `2` distinct top
 - USART: Universal Synchronous Asynchronous Receiver Transmitter
 - TX: Transmit
 - RX: Receive
-- HT: Half-Transfer Complete flag for DMA
-- TC: Transfer Complete flag for DMA
-- RTO: Receiver Timeout
+- HT: Half-Transfer Complete event/flag for DMA
+- TC: Transfer Complete event/flag for DMA
+- RTO: Receiver Timeout event/flag
+- IRQ: Interrupt
 
 ## General about UART
 
-> STM32 has peripherals such as USART and UART. Difference is that USART also has advance feature such as synchronous communication, not available in UART.
-> For the sake of this application note, we will use term **UART**, while exactly same applies to **USART** peripherals too.
+> STM32 has peripherals such as USART and UART. Difference between them is that USART includes advance feature such as optional synchronous communication, not available in UART. If these features are not used, USART and UART peripherals can be considered identical.
+> For the sake of this application note, we will use term **UART** only, while exactly same applies to **USART** peripherals aswell.
 
 UART in STM32 allows customers to configure it using different transmit(`TX`)/receive(`RX`) modes:
 
