@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ringbuff/ringbuff.h"
+#include "lwrb/lwrb.h"
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -39,26 +39,26 @@ usart_rx_dma_buffer[64];
 /**
  * \brief           Create ring buffer for received data
  */
-static ringbuff_t
+static lwrb_t
 usart_rx_dma_ringbuff;
 
 /**
  * \brief           Ring buffer data array for RX DMA
  */
 static uint8_t
-usart_rx_dma_ringbuff_data[128];
+usart_rx_dma_lwrb_data[128];
 
 /**
  * \brief           Create ring buffer for TX DMA
  */
-static ringbuff_t
+static lwrb_t
 usart_tx_dma_ringbuff;
 
 /**
  * \brief           Ring buffer data array for TX DMA
  */
 static uint8_t
-usart_tx_dma_ringbuff_data[128];
+usart_tx_dma_lwrb_data[128];
 
 /**
  * \brief           Length of TX DMA transfer
@@ -83,8 +83,8 @@ main(void) {
     SystemClock_Config();
 
     /* Initialize ringbuff for TX & RX */
-    ringbuff_init(&usart_tx_dma_ringbuff, usart_tx_dma_ringbuff_data, sizeof(usart_tx_dma_ringbuff_data));
-    ringbuff_init(&usart_rx_dma_ringbuff, usart_rx_dma_ringbuff_data, sizeof(usart_rx_dma_ringbuff_data));
+    lwrb_init(&usart_tx_dma_ringbuff, usart_tx_dma_lwrb_data, sizeof(usart_tx_dma_lwrb_data));
+    lwrb_init(&usart_rx_dma_ringbuff, usart_rx_dma_lwrb_data, sizeof(usart_rx_dma_lwrb_data));
 
     /* Initialize all configured peripherals */
     usart_init();
@@ -107,7 +107,7 @@ main(void) {
 
         /* Read byte by byte */
 
-        if (ringbuff_read(&usart_rx_dma_ringbuff, &b, 1) == 1) {
+        if (lwrb_read(&usart_rx_dma_ringbuff, &b, 1) == 1) {
             switch (state) {
                 case 0: {           /* Wait for start byte */
                     if (b == 0x55) {
@@ -141,13 +141,13 @@ main(void) {
 
                         /* Send out response with CMD = 0xFF */
                         b = 0x55;   /* Start byte */
-                        ringbuff_write(&usart_tx_dma_ringbuff, &b, 1);
+                        lwrb_write(&usart_tx_dma_ringbuff, &b, 1);
                         cmd = 0xFF; /* Command = 0xFF = OK response */
-                        ringbuff_write(&usart_tx_dma_ringbuff, &cmd, 1);
+                        lwrb_write(&usart_tx_dma_ringbuff, &cmd, 1);
                         b = 0x00;   /* Len = 0 */
-                        ringbuff_write(&usart_tx_dma_ringbuff, &b, 1);
+                        lwrb_write(&usart_tx_dma_ringbuff, &b, 1);
                         b = 0xAA;   /* Stop byte */
-                        ringbuff_write(&usart_tx_dma_ringbuff, &b, 1);
+                        lwrb_write(&usart_tx_dma_ringbuff, &b, 1);
 
                         /* Flush everything */
                         usart_start_tx_dma_transfer();
@@ -211,7 +211,7 @@ usart_start_tx_dma_transfer(void) {
     /* Check if transfer is not active */
     if (usart_tx_dma_current_len == 0) {
         /* Check if something to send  */
-        usart_tx_dma_current_len = ringbuff_get_linear_block_read_length(&usart_tx_dma_ringbuff);
+        usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_dma_ringbuff);
         if (usart_tx_dma_current_len > 0) {
             /* Disable channel if enabled */
             LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
@@ -224,7 +224,7 @@ usart_start_tx_dma_transfer(void) {
 
             /* Start DMA transfer */
             LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, usart_tx_dma_current_len);
-            LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)ringbuff_get_linear_block_read_address(&usart_tx_dma_ringbuff));
+            LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)lwrb_get_linear_block_read_address(&usart_tx_dma_ringbuff));
 
             /* Start new transfer */
             LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
@@ -244,7 +244,7 @@ usart_start_tx_dma_transfer(void) {
  */
 void
 usart_process_data(const void* data, size_t len) {
-    ringbuff_write(&usart_rx_dma_ringbuff, data, len);  /* Write data to receive buffer */
+    lwrb_write(&usart_rx_dma_ringbuff, data, len);  /* Write data to receive buffer */
 }
 
 /**
@@ -253,7 +253,7 @@ usart_process_data(const void* data, size_t len) {
  */
 void
 usart_send_string(const char* str) {
-    ringbuff_write(&usart_tx_dma_ringbuff, str, strlen(str));   /* Write data to transmit buffer */
+    lwrb_write(&usart_tx_dma_ringbuff, str, strlen(str));   /* Write data to transmit buffer */
     usart_start_tx_dma_transfer();
 }
 
@@ -369,7 +369,7 @@ DMA1_Channel2_3_IRQHandler(void) {
     /* Check transfer complete */
     if (LL_DMA_IsEnabledIT_TC(DMA1, LL_DMA_CHANNEL_3) && LL_DMA_IsActiveFlag_TC3(DMA1)) {
         LL_DMA_ClearFlag_TC3(DMA1);             /* Clear transfer complete flag */
-        ringbuff_skip(&usart_tx_dma_ringbuff, usart_tx_dma_current_len);/* Skip sent data, mark as read */
+        lwrb_skip(&usart_tx_dma_ringbuff, usart_tx_dma_current_len);/* Skip sent data, mark as read */
         usart_tx_dma_current_len = 0;           /* Clear length variable */
         usart_start_tx_dma_transfer();          /* Start sending more data */
     }

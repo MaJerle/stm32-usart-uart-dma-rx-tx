@@ -29,9 +29,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>ringbuff/ringbuff.c</name>
+			<name>lwrb/lwrb.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/middlewares/ringbuff/ringbuff/src/ringbuff/ringbuff.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/middlewares/lwrb/src/lwrb/lwrb.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/STM32G4xx_HAL_Driver/stm32g4xx_ll_dma.c</name>

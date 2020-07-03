@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include "cmsis_os.h"
 #include "cpu_utils.h"
-#include "ringbuff/ringbuff.h"
+#include "lwrb/lwrb.h"
 
 /*
  * Set this to `1` to enable DMA for TX for UART
@@ -36,7 +36,7 @@ void init_thread(void* arg);
 static char buff[256];
 
 /* Ring buffer for TX data */
-static ringbuff_t usart_tx_buff;
+static lwrb_t usart_tx_buff;
 static uint8_t usart_tx_buff_data[1024];
 static size_t usart_dma_tx_len;
 
@@ -75,7 +75,7 @@ main(void) {
     SystemClock_Config();
 
     /* Initialize ringbuff */
-    ringbuff_init(&usart_tx_buff, usart_tx_buff_data, sizeof(usart_tx_buff_data));
+    lwrb_init(&usart_tx_buff, usart_tx_buff_data, sizeof(usart_tx_buff_data));
 
     /* Init kernel, create thread(s) and start it */
     osKernelInitialize();
@@ -130,8 +130,8 @@ usart_send_string(const char* str) {
     uint8_t ret = 0;
 
 #if USE_DMA_TX
-    if (ringbuff_get_free(&usart_tx_buff) >= len) {
-        ringbuff_write(&usart_tx_buff, str, len);
+    if (lwrb_get_free(&usart_tx_buff) >= len) {
+        lwrb_write(&usart_tx_buff, str, len);
         usart_start_tx_dma();
         ret = 1;
     }
@@ -160,7 +160,7 @@ usart_start_tx_dma(void) {
 
     /* If transfer is not on-going */
     if (!LL_DMA_IsEnabledStream(DMA1, LL_DMA_STREAM_3)) {
-        usart_dma_tx_len = ringbuff_get_linear_block_read_length(&usart_tx_buff);
+        usart_dma_tx_len = lwrb_get_linear_block_read_length(&usart_tx_buff);
 
         /* Limit maximal size to transmit at a time */
         if (usart_dma_tx_len > 32) {
@@ -169,7 +169,7 @@ usart_start_tx_dma(void) {
 
         /* Anything to transmit? */
         if (usart_dma_tx_len > 0) {
-            void* ptr = ringbuff_get_linear_block_read_address(&usart_tx_buff);
+            void* ptr = lwrb_get_linear_block_read_address(&usart_tx_buff);
 
             /* Configure DMA */
             LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_3, usart_dma_tx_len);
@@ -267,7 +267,7 @@ DMA1_Stream3_IRQHandler(void) {
     /* Check transfer-complete interrupt */
     if (LL_DMA_IsEnabledIT_TC(DMA1, LL_DMA_STREAM_3) && LL_DMA_IsActiveFlag_TC3(DMA1)) {
         LL_DMA_ClearFlag_TC3(DMA1);             /* Clear transfer complete flag */
-        ringbuff_skip(&usart_tx_buff, usart_dma_tx_len);/* Data sent, ignore these */
+        lwrb_skip(&usart_tx_buff, usart_dma_tx_len);/* Data sent, ignore these */
         usart_start_tx_dma();                   /* Try to send more data */
     }
 

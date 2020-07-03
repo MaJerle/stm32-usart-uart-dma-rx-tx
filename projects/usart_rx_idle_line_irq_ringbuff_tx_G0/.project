@@ -109,9 +109,9 @@
 			<locationURI>PARENT-2-PROJECT_LOC/drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_utils.c</locationURI>
 		</link>
 		<link>
-			<name>ringbuff/ringbuff.c</name>
+			<name>lwrb/lwrb.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/middlewares/ringbuff/ringbuff/src/ringbuff/ringbuff.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/middlewares/lwrb/src/lwrb/lwrb.c</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
