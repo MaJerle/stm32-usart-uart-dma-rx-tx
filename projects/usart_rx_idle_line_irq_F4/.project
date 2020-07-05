@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>USART_DMA_RX_IDLE_LINE_IRQ_F4</name>
+	<name>usart_dma_rx_idle_line_irq_F4</name>
 	<comment></comment>
 	<projects>
 	</projects>
