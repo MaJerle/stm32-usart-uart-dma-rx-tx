@@ -1,10 +1,25 @@
 # STM32 UART DMA RX/TX
 
 This is an application note and contains list of examples about `2` distinct topics:
+
 - Receiving data with UART and DMA when application does not know in advance size of bytes to be received
 - Transmitting data with UART and DMA to avoid CPU stalling and use CPU for other purposes
 
+## Table of Contents
+
+- [Abbreviations](#abbreviations)
+- [General about UART](#general-about-uart)
+- [General about DMA](#general-about-dma)
+  - [Combine UART + DMA for data reception](#combine-uart--dma-for-data-reception)
+  - [Combine UART + DMA for data transmission](#combine-uart--dma-for-data-transmission)
+  - [DMA HT/TC and UART IDLE combination details](#dma-httc-and-uart-idle-combination-details)
+- [Examples](#examples)
+  - [Examples for UART + DMA RX](#examples-for-uart--dma-rx)
+  - [Examples for UART DMA for TX](#examples-for-uart-dma-for-tx-and-optionally-included-rx)
+- [How to use this repository](#how-to-use-this-repository)
+
 ## Abbreviations
+
 - DMA: Direct Memory Access controller in STM32
 - UART: Universal Asynchronous Receiver Transmitter
 - USART: Universal Synchronous Asynchronous Receiver Transmitter
@@ -316,7 +331,7 @@ As a result of this demo application for STM32F413-Nucleo board, observations ar
 - With DMA enabled, CPU load was `0%`
 - DMA can be enabled/disabled with `USE_DMA_TX` macro configuration in `main.c`
 
-# How to use this repository
+## How to use this repository
 
 1. run `git clone --recurse-submodules https://github.com/MaJerle/stm32-usart-dma-rx-tx` to clone repository including submodules
 2. run examples from `projects` directory using [STM32CubeIDE IDE](https://www.st.com/en/development-tools/stm32cubeide.html)
