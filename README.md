@@ -65,7 +65,7 @@ Every STM32 has at least one (`1`) UART IP and at least one (`1`) DMA controller
 For data transmission, no special features (on top of essential one) are necessary, except DMA availability for UART.
 Application uses use default features to implement very efficient transmit system using DMA.
 
-While it is straight-forward for RX, this is not the case for receive operation.
+While it is straight-forward for TX, this is not the case for receive operation.
 When implementing DMA receive, application would need to understand number of received bytes to process by DMA before finishing transfer.
 This is especially true when UART is used for system communication where it has to react in short time after all bytes have been received.
 STM32s have capability in UART to detect when *RX* line has not been active for period of time. This is achieved using one of `2` available methods:
