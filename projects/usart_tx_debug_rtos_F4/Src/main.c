@@ -155,36 +155,35 @@ void
 usart_start_tx_dma(void) {
     uint32_t primask;
 
+    /* Check if transfer active */
+    if (usart_dma_tx_len > 0) {
+        return;
+    }
+
     primask = __get_PRIMASK();
     __disable_irq();
 
     /* If transfer is not on-going */
-    if (!LL_DMA_IsEnabledStream(DMA1, LL_DMA_STREAM_3)) {
-        usart_dma_tx_len = lwrb_get_linear_block_read_length(&usart_tx_buff);
-
+    if (usart_dma_tx_len == 0
+            && (usart_dma_tx_len = lwrb_get_linear_block_read_length(&usart_tx_buff)) > 0) {
         /* Limit maximal size to transmit at a time */
         if (usart_dma_tx_len > 32) {
             usart_dma_tx_len = 32;
         }
 
-        /* Anything to transmit? */
-        if (usart_dma_tx_len > 0) {
-            void* ptr = lwrb_get_linear_block_read_address(&usart_tx_buff);
+        /* Configure DMA */
+        LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_3, usart_dma_tx_len);
+        LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_3, (uint32_t)lwrb_get_linear_block_read_address(&usart_tx_buff));
 
-            /* Configure DMA */
-            LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_3, usart_dma_tx_len);
-            LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_3, (uint32_t)ptr);
+        /* Clear all flags */
+        LL_DMA_ClearFlag_TC3(DMA1);
+        LL_DMA_ClearFlag_HT3(DMA1);
+        LL_DMA_ClearFlag_DME3(DMA1);
+        LL_DMA_ClearFlag_FE3(DMA1);
+        LL_DMA_ClearFlag_TE3(DMA1);
 
-            /* Clear all flags */
-            LL_DMA_ClearFlag_TC3(DMA1);
-            LL_DMA_ClearFlag_HT3(DMA1);
-            LL_DMA_ClearFlag_DME3(DMA1);
-            LL_DMA_ClearFlag_FE3(DMA1);
-            LL_DMA_ClearFlag_TE3(DMA1);
-
-            /* Start transfer */
-            LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_3);
-        }
+        /* Start transfer */
+        LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_3);
     }
 
     __set_PRIMASK(primask);
@@ -268,6 +267,7 @@ DMA1_Stream3_IRQHandler(void) {
     if (LL_DMA_IsEnabledIT_TC(DMA1, LL_DMA_STREAM_3) && LL_DMA_IsActiveFlag_TC3(DMA1)) {
         LL_DMA_ClearFlag_TC3(DMA1);             /* Clear transfer complete flag */
         lwrb_skip(&usart_tx_buff, usart_dma_tx_len);/* Data sent, ignore these */
+        usart_dma_tx_len = 0;
         usart_start_tx_dma();                   /* Try to send more data */
     }
 
