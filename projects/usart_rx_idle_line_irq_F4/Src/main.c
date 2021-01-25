@@ -82,12 +82,7 @@ usart_rx_check(void) {
                 usart_process_data(&usart_rx_dma_buffer[0], pos);
             }
         }
-    }
-    old_pos = pos;                              /* Save current position as old */
-
-    /* Check and manually update if we reached end of buffer */
-    if (old_pos == ARRAY_LEN(usart_rx_dma_buffer)) {
-        old_pos = 0;
+        old_pos = pos;                          /* Save current position as old */
     }
 }
 

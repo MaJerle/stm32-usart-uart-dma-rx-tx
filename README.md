@@ -201,7 +201,8 @@ usart_rx_check(void) {
     size_t pos;
 
     /* Calculate current position in buffer */
-    pos = ARRAY_LEN(usart_rx_dma_buffer) - LL_DMA_GetDataLength(DMA1, LL_DMA_STREAM_1);
+    /* usart_rx_dma_buffer is an array of uint8_t */
+    pos = sizeof(usart_rx_dma_buffer) - LL_DMA_GetDataLength(DMA1, LL_DMA_STREAM_1);
     if (pos != old_pos) {                       /* Check change in received data */
         if (pos > old_pos) {                    /* Current position is over previous one */
             /* We are in "linear" mode, case P1, P2, P3 */
@@ -210,18 +211,13 @@ usart_rx_check(void) {
         } else {
             /* We are in "overflow" mode, case P4 */
             /* First process data to the end of buffer */
-            usart_process_data(&usart_rx_dma_buffer[old_pos], ARRAY_LEN(usart_rx_dma_buffer) - old_pos);
+            usart_process_data(&usart_rx_dma_buffer[old_pos], sizeof(usart_rx_dma_buffer) - old_pos);
             /* Check and continue with beginning of buffer */
             if (pos > 0) {
                 usart_process_data(&usart_rx_dma_buffer[0], pos);
             }
         }
-    }
-    old_pos = pos;                              /* Save current position as old */
-
-    /* Check and manually update if we reached end of buffer */
-    if (old_pos == ARRAY_LEN(usart_rx_dma_buffer)) {
-        old_pos = 0;
+        old_pos = pos;                          /* Save current position as old */
     }
 }
 ```

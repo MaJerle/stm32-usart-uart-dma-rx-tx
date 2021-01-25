@@ -227,12 +227,7 @@ usart_rx_check(const uart_desc_t* uart) {
                 usart_process_data(uart, &uart->data->dma_rx_buffer[0], pos);
             }
         }
-    }
-    uart->data->old_pos = pos;                  /* Save current position as old */
-
-    /* Check and manually update if we reached end of buffer */
-    if (uart->data->old_pos == ARRAY_LEN(uart->data->dma_rx_buffer)) {
-        uart->data->old_pos = 0;
+        uart->data->old_pos = pos;              /* Save current position as old */
     }
 }
 

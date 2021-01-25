@@ -188,12 +188,7 @@ usart_rx_check(void) {
                 usart_process_data(&usart_rx_dma_buffer[0], pos);
             }
         }
-    }
-    old_pos = pos;                              /* Save current position as old */
-
-    /* Check and manually update if we reached end of buffer */
-    if (old_pos == ARRAY_LEN(usart_rx_dma_buffer)) {
-        old_pos = 0;
+        old_pos = pos;                          /* Save current position as old */
     }
 }
 
@@ -207,7 +202,7 @@ usart_start_tx_dma_transfer(void) {
 
     /* Check if transfer active */
     if (usart_tx_dma_current_len > 0) {
-        return;
+        return 0;
     }
 
     /* Check if DMA is active */
