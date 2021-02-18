@@ -41,9 +41,9 @@
 /** @addtogroup UTILS_LL_Private_Constants
   * @{
   */
-#define UTILS_MAX_FREQUENCY_SCALE0  110000000U       /*!< Maximum frequency for system clock at power scale0, in Hz */
-#define UTILS_MAX_FREQUENCY_SCALE1   80000000U       /*!< Maximum frequency for system clock at power scale1, in Hz */
-#define UTILS_MAX_FREQUENCY_SCALE2   26000000U       /*!< Maximum frequency for system clock at power scale2, in Hz */
+#define UTILS_MAX_FREQUENCY_SCALE0  110000000U       /*!< Maximum frequency for system clock at power scale 0, in Hz */
+#define UTILS_MAX_FREQUENCY_SCALE1   80000000U       /*!< Maximum frequency for system clock at power scale 1, in Hz */
+#define UTILS_MAX_FREQUENCY_SCALE2   26000000U       /*!< Maximum frequency for system clock at power scale 2, in Hz */
 
 /* Defines used for PLL range */
 #define UTILS_PLLVCO_INPUT_MIN        4000000U       /*!< Frequency min for PLLVCO input, in Hz   */
@@ -54,21 +54,6 @@
 /* Defines used for HSE range */
 #define UTILS_HSE_FREQUENCY_MIN      4000000U        /*!< Frequency min for HSE frequency, in Hz   */
 #define UTILS_HSE_FREQUENCY_MAX     48000000U        /*!< Frequency max for HSE frequency, in Hz   */
-
-/* Defines used for FLASH latency according to HCLK Frequency */
-#define UTILS_SCALE0_LATENCY1_FREQ   20000000U       /*!< HCLK frequency to set FLASH latency 1 in power scale 0 */
-#define UTILS_SCALE0_LATENCY2_FREQ   40000000U       /*!< HCLK frequency to set FLASH latency 2 in power scale 0 */
-#define UTILS_SCALE0_LATENCY3_FREQ   60000000U       /*!< HCLK frequency to set FLASH latency 3 in power scale 0 */
-#define UTILS_SCALE0_LATENCY4_FREQ   80000000U       /*!< HCLK frequency to set FLASH latency 4 in power scale 0 */
-#define UTILS_SCALE0_LATENCY5_FREQ  100000000U       /*!< HCLK frequency to set FLASH latency 5 in power scale 0 */
-#define UTILS_SCALE0_LATENCY6_FREQ  110000000U       /*!< HCLK frequency to set FLASH latency 6 in power scale 0 */
-#define UTILS_SCALE1_LATENCY1_FREQ   20000000U       /*!< HCLK frequency to set FLASH latency 1 in power scale 1 */
-#define UTILS_SCALE1_LATENCY2_FREQ   40000000U       /*!< HCLK frequency to set FLASH latency 2 in power scale 1 */
-#define UTILS_SCALE1_LATENCY3_FREQ   60000000U       /*!< HCLK frequency to set FLASH latency 3 in power scale 1 */
-#define UTILS_SCALE1_LATENCY4_FREQ   80000000U       /*!< HCLK frequency to set FLASH latency 4 in power scale 1 */
-#define UTILS_SCALE2_LATENCY1_FREQ    8000000U       /*!< HCLK frequency to set FLASH latency 1 in power scale 2 */
-#define UTILS_SCALE2_LATENCY2_FREQ   16000000U       /*!< HCLK frequency to set FLASH latency 2 in power scale 2 */
-#define UTILS_SCALE2_LATENCY3_FREQ   26000000U       /*!< HCLK frequency to set FLASH latency 3 in power scale 2 */
 /**
   * @}
   */
@@ -127,6 +112,8 @@
                                         || ((__STATE__) == LL_UTILS_HSEBYPASS_OFF))
 
 #define IS_LL_UTILS_HSE_FREQUENCY(__FREQUENCY__) (((__FREQUENCY__) >= UTILS_HSE_FREQUENCY_MIN) && ((__FREQUENCY__) <= UTILS_HSE_FREQUENCY_MAX))
+
+#define COUNTOF(a)   (sizeof(a) / sizeof(*(a)))
 /**
   * @}
   */
@@ -226,7 +213,7 @@ void LL_mDelay(uint32_t Delay)
              (++) |                 |  voltage range 0  |  voltage range 1 | voltage range 2  |
              (++) |                 |       1.28 V       |       1.2 V     |     1.0 V        |
              (++) |-----------------|-------------------|------------------|------------------|
-             (++) |0WS(1 CPU cycles)|   0 < HCLK <= 20  |  0 < HCLK <= 8   |  0 < HCLK <= 8   |
+             (++) |0WS(1 CPU cycles)|   0 < HCLK <= 20  |   0 < HCLK <= 20 |  0 < HCLK <= 8   |
              (++) |-----------------|-------------------|------------------|------------------|
              (++) |1WS(2 CPU cycles)|  20 < HCLK <= 40  |  20 < HCLK <= 40 |  8 < HCLK <= 16  |
              (++) |-----------------|-------------------|------------------|------------------|
@@ -268,101 +255,78 @@ ErrorStatus LL_SetFlashLatency(uint32_t HCLKFrequency)
   uint32_t timeout;
   uint32_t getlatency;
   uint32_t latency;
-  ErrorStatus status = SUCCESS;
+  uint8_t index;
+  ErrorStatus status = ERROR;
 
-  /* Frequency cannot be equal to 0 or greater than max clock */
-  if ((HCLKFrequency == 0U) || (HCLKFrequency > UTILS_SCALE0_LATENCY6_FREQ))
-  {
-    status = ERROR;
-  }
-  else
+  /* Array used for FLASH latency according to HCLK Frequency */
+  /* Flash Clock source (HCLK) range in MHz with a VCORE is range 0 */
+  const uint32_t UTILS_CLK_SRC_RANGE_VOS0[] = {20000000UL,  40000000UL, 60000000UL,
+                                               80000000UL, 100000000UL, UTILS_MAX_FREQUENCY_SCALE0};
+
+  /* Flash Clock source (HCLK) range in MHz with a VCORE is range 1 */
+  const uint32_t UTILS_CLK_SRC_RANGE_VOS1[] = {20000000UL, 40000000UL, 60000000UL,
+                                               UTILS_MAX_FREQUENCY_SCALE1};
+
+  /* Flash Clock source (HCLK3) range in MHz with a VCORE is range2 */
+  const uint32_t UTILS_CLK_SRC_RANGE_VOS2[] = {8000000UL, 16000000UL, UTILS_MAX_FREQUENCY_SCALE2};
+
+  /* Flash Latency range */
+  const uint32_t UTILS_LATENCY_RANGE[] = {LL_FLASH_LATENCY_0, LL_FLASH_LATENCY_1, LL_FLASH_LATENCY_2,
+                                          LL_FLASH_LATENCY_3, LL_FLASH_LATENCY_4, LL_FLASH_LATENCY_5};
+
+  /* Frequency cannot be equal to 0 */
+  if (HCLKFrequency != 0U)
   {
     if (LL_PWR_GetRegulVoltageScaling() == LL_PWR_REGU_VOLTAGE_SCALE0)
     {
-      if (HCLKFrequency > UTILS_SCALE0_LATENCY5_FREQ)
+      /* Frequency cannot be greater than a defined max clock */
+      if (HCLKFrequency <= UTILS_MAX_FREQUENCY_SCALE0)
       {
-        /* 100 < HCLK <= 110   => 5WS (6 CPU cycles) */
-        latency = LL_FLASH_LATENCY_5;
-      }
-      else if (HCLKFrequency > UTILS_SCALE0_LATENCY4_FREQ)
-      {
-        /* 80 < HCLK <= 100    => 4WS (5 CPU cycles) */
-        latency = LL_FLASH_LATENCY_4;
-      }
-      else if (HCLKFrequency > UTILS_SCALE0_LATENCY3_FREQ)
-      {
-        /* 60 < HCLK <= 80     => 3WS (4 CPU cycles) */
-        latency = LL_FLASH_LATENCY_3;
-      }
-      else if (HCLKFrequency > UTILS_SCALE0_LATENCY2_FREQ)
-      {
-        /* 40 < HCLK <= 60     => 2WS (3 CPU cycles) */
-        latency = LL_FLASH_LATENCY_2;
-      }
-      else if (HCLKFrequency > UTILS_SCALE0_LATENCY1_FREQ)
-      {
-        /* 20 < HCLK <= 40     => 1WS (2 CPU cycles) */
-        latency = LL_FLASH_LATENCY_1;
-      }
-      else
-      {
-        /* HCLK <= 20MHz       => 0WS (1 CPU cycle) */
-        latency = LL_FLASH_LATENCY_0;
+        for (index = 0; index < COUNTOF(UTILS_CLK_SRC_RANGE_VOS0); index++)
+        {
+          if (HCLKFrequency <= UTILS_CLK_SRC_RANGE_VOS0[index])
+          {
+            latency = UTILS_LATENCY_RANGE[index];
+            status = SUCCESS;
+            break;
+          }
+        }
       }
     }
     else if (LL_PWR_GetRegulVoltageScaling() == LL_PWR_REGU_VOLTAGE_SCALE1)
     {
-      if (HCLKFrequency > UTILS_SCALE1_LATENCY4_FREQ)
+      /* Frequency cannot be greater than a defined max clock */
+      if (HCLKFrequency <= UTILS_MAX_FREQUENCY_SCALE1)
       {
-        /* Unexpected HCLK > 80 */
-        status = ERROR;
-      }
-      else if (HCLKFrequency > UTILS_SCALE1_LATENCY3_FREQ)
-      {
-        /* 60 < HCLK <= 80     => 3WS (4 CPU cycles) */
-        latency = LL_FLASH_LATENCY_3;
-      }
-      else if (HCLKFrequency > UTILS_SCALE1_LATENCY2_FREQ)
-      {
-        /* 40 < HCLK <= 60     => 2WS (3 CPU cycles) */
-        latency = LL_FLASH_LATENCY_2;
-      }
-      else if (HCLKFrequency > UTILS_SCALE1_LATENCY1_FREQ)
-      {
-        /* 20 < HCLK <= 40     => 1WS (2 CPU cycles) */
-        latency = LL_FLASH_LATENCY_1;
-      }
-      else
-      {
-        /* HCLK <= 20MHz       => 0WS (1 CPU cycle) */
-        latency = LL_FLASH_LATENCY_0;
+        for (index = 0; index < COUNTOF(UTILS_CLK_SRC_RANGE_VOS1); index++)
+        {
+          if (HCLKFrequency <= UTILS_CLK_SRC_RANGE_VOS1[index])
+          {
+            latency = UTILS_LATENCY_RANGE[index];
+            status = SUCCESS;
+            break;
+          }
+        }
       }
     }
     else /* SCALE2 */
     {
-      if (HCLKFrequency > UTILS_SCALE2_LATENCY3_FREQ)
+      /* Frequency cannot be greater than a defined max clock */
+      if (HCLKFrequency <= UTILS_MAX_FREQUENCY_SCALE2)
       {
-        /* Unexpected HCLK > 26 */
-        status = ERROR;
-      }
-      else if (HCLKFrequency > UTILS_SCALE2_LATENCY2_FREQ)
-      {
-        /* 16 < HCLK <= 26     => 2WS (3 CPU cycles) */
-        latency = LL_FLASH_LATENCY_2;
-      }
-      else if (HCLKFrequency > UTILS_SCALE2_LATENCY1_FREQ)
-      {
-        /* 8 < HCLK <= 16      => 1WS (2 CPU cycles) */
-        latency = LL_FLASH_LATENCY_1;
-      }
-      else
-      {
-        /* HCLK <= 8MHz        => 0WS (1 CPU cycle) */
-        latency = LL_FLASH_LATENCY_0;
+        for (index = 0; index < COUNTOF(UTILS_CLK_SRC_RANGE_VOS2); index++)
+        {
+          if (HCLKFrequency <= UTILS_CLK_SRC_RANGE_VOS2[index])
+          {
+            latency = UTILS_LATENCY_RANGE[index];
+            status = SUCCESS;
+            break;
+          }
+        }
       }
     }
 
-    if (status != ERROR)
+    if (status == SUCCESS)
     {
       LL_FLASH_SetLatency(latency);
 

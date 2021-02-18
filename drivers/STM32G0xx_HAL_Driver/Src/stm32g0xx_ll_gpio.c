@@ -31,7 +31,7 @@
   * @{
   */
 
-#if defined (GPIOA) || defined (GPIOB) || defined (GPIOC) || defined (GPIOD) || defined (GPIOF)
+#if defined (GPIOA) || defined (GPIOB) || defined (GPIOC) || defined (GPIOD) || defined (GPIOE) || defined (GPIOF)
 
 /** @addtogroup GPIO_LL
   * @{
@@ -68,6 +68,19 @@
                                             ((__VALUE__) == LL_GPIO_PULL_UP)   ||\
                                             ((__VALUE__) == LL_GPIO_PULL_DOWN))
 
+#if defined(GPIOE)
+#define IS_LL_GPIO_ALTERNATE(__VALUE__)    (((__VALUE__) == LL_GPIO_AF_0  )   ||\
+                                            ((__VALUE__) == LL_GPIO_AF_1  )   ||\
+                                            ((__VALUE__) == LL_GPIO_AF_2  )   ||\
+                                            ((__VALUE__) == LL_GPIO_AF_3  )   ||\
+                                            ((__VALUE__) == LL_GPIO_AF_4  )   ||\
+                                            ((__VALUE__) == LL_GPIO_AF_5  )   ||\
+                                            ((__VALUE__) == LL_GPIO_AF_6  )   ||\
+                                            ((__VALUE__) == LL_GPIO_AF_7  )   ||\
+                                            ((__VALUE__) == LL_GPIO_AF_8  )   ||\
+                                            ((__VALUE__) == LL_GPIO_AF_9  )   ||\
+                                            ((__VALUE__) == LL_GPIO_AF_10 ))
+#else
 #define IS_LL_GPIO_ALTERNATE(__VALUE__)    (((__VALUE__) == LL_GPIO_AF_0  )   ||\
                                             ((__VALUE__) == LL_GPIO_AF_1  )   ||\
                                             ((__VALUE__) == LL_GPIO_AF_2  )   ||\
@@ -76,6 +89,7 @@
                                             ((__VALUE__) == LL_GPIO_AF_5  )   ||\
                                             ((__VALUE__) == LL_GPIO_AF_6  )   ||\
                                             ((__VALUE__) == LL_GPIO_AF_7 ))
+#endif
 /**
   * @}
   */
@@ -128,6 +142,13 @@ ErrorStatus LL_GPIO_DeInit(GPIO_TypeDef *GPIOx)
     LL_IOP_GRP1_ReleaseReset(LL_IOP_GRP1_PERIPH_GPIOD);
   }
 #endif /* GPIOD */
+#if defined(GPIOE)
+  else if (GPIOx == GPIOE)
+  {
+    LL_IOP_GRP1_ForceReset(LL_IOP_GRP1_PERIPH_GPIOE);
+    LL_IOP_GRP1_ReleaseReset(LL_IOP_GRP1_PERIPH_GPIOE);
+  }
+#endif /* GPIOE */
 #if defined(GPIOF)
   else if (GPIOx == GPIOF)
   {
@@ -175,9 +196,6 @@ ErrorStatus LL_GPIO_Init(GPIO_TypeDef *GPIOx, LL_GPIO_InitTypeDef *GPIO_InitStru
 
     if (currentpin != 0x00u)
     {
-      /* Pin Mode configuration */
-      LL_GPIO_SetPinMode(GPIOx, currentpin, GPIO_InitStruct->Mode);
-
       if ((GPIO_InitStruct->Mode == LL_GPIO_MODE_OUTPUT) || (GPIO_InitStruct->Mode == LL_GPIO_MODE_ALTERNATE))
       {
         /* Check Speed mode parameters */
@@ -185,6 +203,12 @@ ErrorStatus LL_GPIO_Init(GPIO_TypeDef *GPIOx, LL_GPIO_InitTypeDef *GPIO_InitStru
 
         /* Speed mode configuration */
         LL_GPIO_SetPinSpeed(GPIOx, currentpin, GPIO_InitStruct->Speed);
+
+        /* Check Output mode parameters */
+        assert_param(IS_LL_GPIO_OUTPUT_TYPE(GPIO_InitStruct->OutputType));
+
+        /* Output mode configuration*/
+        LL_GPIO_SetPinOutputType(GPIOx, currentpin, GPIO_InitStruct->OutputType);
       }
 
       /* Pull-up Pull down resistor configuration*/
@@ -205,19 +229,13 @@ ErrorStatus LL_GPIO_Init(GPIO_TypeDef *GPIOx, LL_GPIO_InitTypeDef *GPIO_InitStru
           LL_GPIO_SetAFPin_8_15(GPIOx, currentpin, GPIO_InitStruct->Alternate);
         }
       }
+
+      /* Pin Mode configuration */
+      LL_GPIO_SetPinMode(GPIOx, currentpin, GPIO_InitStruct->Mode);
     }
     pinpos++;
   }
 
-  if ((GPIO_InitStruct->Mode == LL_GPIO_MODE_OUTPUT) || (GPIO_InitStruct->Mode == LL_GPIO_MODE_ALTERNATE))
-  {
-    /* Check Output mode parameters */
-    assert_param(IS_LL_GPIO_OUTPUT_TYPE(GPIO_InitStruct->OutputType));
-
-    /* Output mode configuration*/
-    LL_GPIO_SetPinOutputType(GPIOx, GPIO_InitStruct->Pin, GPIO_InitStruct->OutputType);
-
-  }
   return (SUCCESS);
 }
 
@@ -251,7 +269,7 @@ void LL_GPIO_StructInit(LL_GPIO_InitTypeDef *GPIO_InitStruct)
   * @}
   */
 
-#endif /* defined (GPIOA) || defined (GPIOB) || defined (GPIOC) || defined (GPIOD) || defined (GPIOF) */
+#endif /* defined (GPIOA) || defined (GPIOB) || defined (GPIOC) || defined (GPIOD) || defined (GPIOE) || defined (GPIOF) */
 
 /**
   * @}

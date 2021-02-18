@@ -493,13 +493,11 @@ __STATIC_INLINE void LL_PWR_DisableUCPDDeadBattery(void)
   *         to disable it in all cases, either to stop this pull-down or to hand over
   *         control to the UCPD (which should therefore be initialized before doing the disable).
   * @rmtoll CR3          UCPD_DBDIS           LL_PWR_IsEnabledUCPDDeadBattery
-  * @retval State of bit.
+  * @retval State of feature (1 : enabled; 0 : disabled).
   */
 __STATIC_INLINE uint32_t LL_PWR_IsEnabledUCPDDeadBattery(void)
 {
-
-  return ((READ_BIT(PWR->CR3, PWR_CR3_UCPD_DBDIS) == (PWR_CR3_UCPD_DBDIS)) ? 1UL : 0UL);
-
+  return ((READ_BIT(PWR->CR3, PWR_CR3_UCPD_DBDIS) == (PWR_CR3_UCPD_DBDIS)) ? 0UL : 1UL);
 }
 
 /**

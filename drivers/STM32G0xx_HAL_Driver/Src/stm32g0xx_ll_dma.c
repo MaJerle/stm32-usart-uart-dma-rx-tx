@@ -6,11 +6,11 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics. 
+  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
   * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the 
+  * the "License"; You may not use this file except in compliance with the
   * License. You may obtain a copy of the License at:
   *                        opensource.org/licenses/BSD-3-Clause
   *
@@ -31,7 +31,7 @@
   * @{
   */
 
-#if defined (DMA1)
+#if defined (DMA1) || defined (DMA2)
 
 /** @defgroup DMA_LL DMA
   * @{
@@ -67,14 +67,30 @@
 
 #define IS_LL_DMA_NBDATA(__VALUE__)             ((__VALUE__)  <= 0x0000FFFFU)
 
-#define IS_LL_DMA_PERIPHREQUEST(__VALUE__)      ((__VALUE__) <= 40U)
+#define IS_LL_DMA_PERIPHREQUEST(__VALUE__)      ((__VALUE__) <= LL_DMAMUX_MAX_REQ)
 
 #define IS_LL_DMA_PRIORITY(__VALUE__)           (((__VALUE__) == LL_DMA_PRIORITY_LOW)    || \
                                                  ((__VALUE__) == LL_DMA_PRIORITY_MEDIUM) || \
                                                  ((__VALUE__) == LL_DMA_PRIORITY_HIGH)   || \
                                                  ((__VALUE__) == LL_DMA_PRIORITY_VERYHIGH))
 
-#if defined(STM32G081xx) ||  defined(STM32G071xx) || defined(STM32G070xx)
+#if defined(DMA2)
+#define IS_LL_DMA_ALL_CHANNEL_INSTANCE(INSTANCE, CHANNEL)  ((((INSTANCE) == DMA1) && \
+                                                            (((CHANNEL) == LL_DMA_CHANNEL_1) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_2) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_3) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_4) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_5) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_6) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_7))) || \
+                                                            (((INSTANCE) == DMA2) && \
+                                                            (((CHANNEL) == LL_DMA_CHANNEL_1) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_2) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_3) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_4) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_5))))
+#else /* DMA1 */
+#if   defined(DMA1_Channel7)
 #define IS_LL_DMA_ALL_CHANNEL_INSTANCE(INSTANCE, CHANNEL)  ((((INSTANCE) == DMA1) && \
                                                             (((CHANNEL) == LL_DMA_CHANNEL_1) || \
                                                              ((CHANNEL) == LL_DMA_CHANNEL_2) || \
@@ -83,7 +99,15 @@
                                                              ((CHANNEL) == LL_DMA_CHANNEL_5) || \
                                                              ((CHANNEL) == LL_DMA_CHANNEL_6) || \
                                                              ((CHANNEL) == LL_DMA_CHANNEL_7))))
+#else
+#define IS_LL_DMA_ALL_CHANNEL_INSTANCE(INSTANCE, CHANNEL)  ((((INSTANCE) == DMA1) && \
+                                                            (((CHANNEL) == LL_DMA_CHANNEL_1) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_2) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_3) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_4) || \
+                                                             ((CHANNEL) == LL_DMA_CHANNEL_5))))
 #endif
+#endif /* DMA2 */
 /**
   * @}
   */
@@ -117,7 +141,6 @@
   */
 ErrorStatus LL_DMA_DeInit(DMA_TypeDef *DMAx, uint32_t Channel)
 {
-  DMA_Channel_TypeDef *tmp;
   ErrorStatus status = SUCCESS;
 
   /* Check the DMA Instance DMAx and Channel parameters*/
@@ -150,22 +173,24 @@ ErrorStatus LL_DMA_DeInit(DMA_TypeDef *DMAx, uint32_t Channel)
   }
   else
   {
+    DMA_Channel_TypeDef *tmp;
+
     tmp = (DMA_Channel_TypeDef *)(__LL_DMA_GET_CHANNEL_INSTANCE(DMAx, Channel));
 
     /* Disable the selected DMAx_Channely */
     CLEAR_BIT(tmp->CCR, DMA_CCR_EN);
 
     /* Reset DMAx_Channely control register */
-    LL_DMA_WriteReg((tmp), CCR, 0U);
+    WRITE_REG(tmp->CCR, 0U);
 
     /* Reset DMAx_Channely remaining bytes register */
-    LL_DMA_WriteReg((tmp), CNDTR, 0U);
+    WRITE_REG(tmp->CNDTR, 0U);
 
     /* Reset DMAx_Channely peripheral address register */
-    LL_DMA_WriteReg((tmp), CPAR, 0U);
+    WRITE_REG(tmp->CPAR, 0U);
 
     /* Reset DMAx_Channely memory address register */
-    LL_DMA_WriteReg((tmp), CMAR, 0U);
+    WRITE_REG(tmp->CMAR, 0U);
 
     /* Reset Request register field for DMAx Channel */
     LL_DMA_SetPeriphRequest(DMAx, Channel, LL_DMAMUX_REQ_MEM2MEM);
@@ -195,20 +220,20 @@ ErrorStatus LL_DMA_DeInit(DMA_TypeDef *DMAx, uint32_t Channel)
       /* Reset interrupt pending bits for DMAx Channel5 */
       LL_DMA_ClearFlag_GI5(DMAx);
     }
-#if defined(LL_DMA_CHANNEL_6)
+#if defined(DMA1_Channel6)
     else if (Channel == LL_DMA_CHANNEL_6)
     {
       /* Reset interrupt pending bits for DMAx Channel6 */
       LL_DMA_ClearFlag_GI6(DMAx);
     }
-#endif /* LL_DMA_CHANNEL_6 */
-#if defined(LL_DMA_CHANNEL_7)
+#endif
+#if defined(DMA1_Channel7)
     else if (Channel == LL_DMA_CHANNEL_7)
     {
       /* Reset interrupt pending bits for DMAx Channel7 */
       LL_DMA_ClearFlag_GI7(DMAx);
     }
-#endif /* LL_DMA_CHANNEL_7 */
+#endif
     else
     {
       status = ERROR;
@@ -333,7 +358,7 @@ void LL_DMA_StructInit(LL_DMA_InitTypeDef *DMA_InitStruct)
   * @}
   */
 
-#endif /* DMA1 */
+#endif /* DMA1 || DMA2 */
 
 /**
   * @}
