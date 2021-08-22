@@ -21,8 +21,10 @@ void SystemClock_Config(void);
 
 /* USART related functions */
 void    usart_init(void);
-uint8_t usart_send_string(const char* str);
-void    usart_start_tx_dma(void);
+void    usart_rx_check(void);
+void    usart_process_data(const void* data, size_t len);
+void    usart_send_string(const char* str);
+uint8_t usart_start_tx_dma_transfer(void);
 
 /**
  * \brief           Calculate length of statically allocated array
@@ -122,16 +124,14 @@ init_thread(void* arg) {
  * \brief           Send debug string over UART
  * \param[in]       str: String to send
  */
-uint8_t
+void
 usart_send_string(const char* str) {
     size_t len = strlen(str);
-    uint8_t ret = 0;
 
 #if USE_DMA_TX
     if (lwrb_get_free(&usart_tx_buff) >= len) {
         lwrb_write(&usart_tx_buff, str, len);
-        usart_start_tx_dma();
-        ret = 1;
+        usart_start_tx_dma_transfer();
     }
 #else /* USE_DMA_TX */
     for (; len > 0; --len, ++str) {
@@ -139,18 +139,17 @@ usart_send_string(const char* str) {
         while (!LL_USART_IsActiveFlag_TXE(USART3)) {}
     }
     while (!LL_USART_IsActiveFlag_TC(USART3)) {}
-    return 1;
 #endif /* !USE_DMA_TX */
-
-    return ret;
 }
 
 /**
  * \brief           Checks for data in buffer and starts transfer if not in progress
  */
-void
-usart_start_tx_dma(void) {
-    /* If transfer is not on-going */
+uint8_t
+usart_start_tx_dma_transfer(void) {
+    uint8_t started = 0;
+
+    /* Check if transfer is not active */
     if (usart_tx_dma_current_len == 0
             && (usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_buff)) > 0) {
         /* Limit maximal size to transmit at a time */
@@ -171,7 +170,9 @@ usart_start_tx_dma(void) {
 
         /* Start transfer */
         LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_3);
+        started = 1;
     }
+    return started;
 }
 
 /**
@@ -253,7 +254,7 @@ DMA1_Stream3_IRQHandler(void) {
         LL_DMA_ClearFlag_TC3(DMA1);             /* Clear transfer complete flag */
         lwrb_skip(&usart_tx_buff, usart_tx_dma_current_len);/* Data sent, ignore these */
         usart_tx_dma_current_len = 0;
-        usart_start_tx_dma();                   /* Try to send more data */
+        usart_start_tx_dma_transfer();          /* Try to send more data */
     }
 
     /* Implement other events when needed */

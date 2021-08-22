@@ -9,10 +9,11 @@
 void SystemClock_Config(void);
 
 /* USART related functions */
-void usart_init(void);
-void usart_rx_check(void);
-void usart_process_data(const void* data, size_t len);
-void usart_send_string(const char* str);
+void    usart_init(void);
+void    usart_rx_check(void);
+void    usart_process_data(const void* data, size_t len);
+void    usart_send_string(const char* str);
+uint8_t usart_start_tx_dma_transfer(void);
 
 /**
  * \brief           Calculate length of statically allocated array
@@ -30,13 +31,13 @@ usart_rx_dma_buffer[64];
  * \brief           Create ring buffer for TX DMA
  */
 lwrb_t
-usart_tx_dma_ringbuff;
+usart_tx_rb;
 
 /**
  * \brief           Ring buffer data array for TX DMA
  */
 uint8_t
-usart_tx_dma_lwrb_data[128];
+usart_tx_rb_data[128];
 
 /**
  * \brief           Length of currently active TX DMA transfer
@@ -59,7 +60,7 @@ main(void) {
     SystemClock_Config();
 
     /* Initialize ringbuff for TX */
-    lwrb_init(&usart_tx_dma_ringbuff, usart_tx_dma_lwrb_data, sizeof(usart_tx_dma_lwrb_data));
+    lwrb_init(&usart_tx_rb, usart_tx_rb_data, sizeof(usart_tx_rb_data));
 
     /* Initialize all configured peripherals */
     usart_init();
@@ -114,9 +115,9 @@ uint8_t
 usart_start_tx_dma_transfer(void) {
     uint8_t started = 0;
 
-    /* data to send */
+    /* Check if transfer is not active */
     if (usart_tx_dma_current_len == 0
-            && (usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_dma_ringbuff)) > 0) {
+            && (usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_rb)) > 0) {
         /* Disable channel if enabled */
         LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_3);
 
@@ -126,11 +127,11 @@ usart_start_tx_dma_transfer(void) {
         LL_DMA_ClearFlag_GI3(DMA1);
         LL_DMA_ClearFlag_TE3(DMA1);
 
-        /* Start DMA transfer */
+        /* Prepare DMA data and length */
         LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_3, usart_tx_dma_current_len);
-        LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)lwrb_get_linear_block_read_address(&usart_tx_dma_ringbuff));
+        LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_3, (uint32_t)lwrb_get_linear_block_read_address(&usart_tx_rb));
 
-        /* Start new transfer */
+        /* Start transfer */
         LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
         started = 1;
     }
@@ -146,9 +147,9 @@ usart_start_tx_dma_transfer(void) {
 void
 usart_process_data(const void* data, size_t len) {
     /* Write data to buffer */
-    lwrb_write(&usart_tx_dma_ringbuff, data, len);
+    lwrb_write(&usart_tx_rb, data, len);
 
-    /* Start DMA transfer if not already */
+    /* Prepare DMA data and length */
     usart_start_tx_dma_transfer();
 }
 
@@ -162,10 +163,8 @@ usart_send_string(const char* str) {
 }
 
 /**
-  * @brief USART2 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * \brief           Initialize USART2
+ */
 void
 usart_init(void) {
     LL_USART_InitTypeDef USART_InitStruct = {0};
@@ -275,7 +274,7 @@ DMA1_Channel2_3_IRQHandler(void) {
     /* Check transfer complete */
     if (LL_DMA_IsEnabledIT_TC(DMA1, LL_DMA_CHANNEL_3) && LL_DMA_IsActiveFlag_TC3(DMA1)) {
         LL_DMA_ClearFlag_TC3(DMA1);             /* Clear transfer complete flag */
-        lwrb_skip(&usart_tx_dma_ringbuff, usart_tx_dma_current_len);/* Skip sent data, mark as read */
+        lwrb_skip(&usart_tx_rb, usart_tx_dma_current_len);/* Skip sent data, mark as read */
         usart_tx_dma_current_len = 0;           /* Clear length variable */
         usart_start_tx_dma_transfer();          /* Start sending more data */
     }
