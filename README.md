@@ -192,8 +192,24 @@ Example code to read data from memory and process it, for cases *A-D*
 ```c
 /**
  * \brief           Check for new data received with DMA
- * \note            This function must be called from DMA HT/TC and USART IDLE events
- * \note            Full source code is available in examples
+ *
+ * User must select context to call this function from:
+ * - Only interrupts (DMA HT, DMA TC, UART IDLE)
+ * - Only thread context (outside interrupts)
+ *
+ * If called from both context-es, exclusive access protection must be implemented
+ * This mode is not advised as it usually means architecture design problems
+ *
+ * When IDLE interrupt is not present, application needs to rely completely on thread context,
+ * by manually calling function as quickly as possible, to make sure
+ * data are read from raw buffer and processed.
+ *
+ * Not doing reads fast enough may cause DMA to overflow unread received bytes,
+ * hence application will lost useful data.
+ *
+ * Solution to this are:
+ * - Improve architecture design to achieve faster reads
+ * - Increase raw buffer size and allow DMA to write more data before this function is called
  */
 void
 usart_rx_check(void) {
@@ -201,46 +217,72 @@ usart_rx_check(void) {
     size_t pos;
 
     /* Calculate current position in buffer */
-    /* usart_rx_dma_buffer is an array of uint8_t */
-    pos = sizeof(usart_rx_dma_buffer) - LL_DMA_GetDataLength(DMA1, LL_DMA_STREAM_1);
+    pos = ARRAY_LEN(usart_rx_dma_buffer) - LL_DMA_GetDataLength(DMA1, LL_DMA_CHANNEL_5);
     if (pos != old_pos) {                       /* Check change in received data */
         if (pos > old_pos) {                    /* Current position is over previous one */
-            /* We are in "linear" mode, case P1, P2, P3 */
-            /* Process data directly by subtracting "pointers" */
+            /*
+             * Current read will be in linear mode.
+             *
+             * Application processing can be faster,
+             * by subtracting pointers to determine length
+             *
+             * [   0   ]
+             * [   1   ] <- old_pos |------------------------------------|
+             * [   2   ]            |                                    |
+             * [   3   ]            | Single block (len = pos - old_pos) |
+             * [   4   ]            |                                    |
+             * [   5   ]            |------------------------------------|
+             * [   6   ] <- pos
+             * [   7   ]
+             * [ N - 1 ]
+             */
             usart_process_data(&usart_rx_dma_buffer[old_pos], pos - old_pos);
         } else {
-            /* We are in "overflow" mode, case P4 */
-            /* First process data to the end of buffer */
-            usart_process_data(&usart_rx_dma_buffer[old_pos], sizeof(usart_rx_dma_buffer) - old_pos);
-            /* Check and continue with beginning of buffer */
+            /*
+             * Current read will be in overflow mode.
+             *
+             * Application must twice process data,
+             * since there is no single linear entry point available
+             *
+             * [   0   ]            |---------------------------------|
+             * [   1   ]            | Second block (len = pos)        |
+             * [   2   ]            |---------------------------------|
+             * [   3   ] <- pos
+             * [   4   ] <- old_pos |---------------------------------|
+             * [   5   ]            |                                 |
+             * [   6   ]            | First block (len = N - old_pos) |
+             * [   7   ]            |                                 |
+             * [ N - 1 ]            |---------------------------------|
+             */
+            usart_process_data(&usart_rx_dma_buffer[old_pos], ARRAY_LEN(usart_rx_dma_buffer) - old_pos);
             if (pos > 0) {
                 usart_process_data(&usart_rx_dma_buffer[0], pos);
             }
         }
-        old_pos = pos;                          /* Save current position as old */
+        old_pos = pos;                          /* Save current position as old for next transfers */
     }
 }
 ```
 
 # Examples
 
-Examples provide reference code to implement RX and TX functionality using DMA transfers.
+Examples can be used as reference code to implement your own DMA TX and RX functionality.
+
 There are 2 sets of examples:
 - Examples for RX only
 	- Available in `projects` folder with `usart_rx_` prefix
 	- DMA is used to receive data, polling is used to echo data back
 - Examples for RX & TX
-	- Available in `projects` folder with `usart_tx_` prefix
 	- DMA is used to receive data and to transmit data back
-	- It uses ring buffer to copy data from DMA buffer to application buffer first
+	- It uses ring buffer to copy data from DMA buffer to application before it is sent back
 
 Common for all examples:
-- Developed in STM32CubeIDE for easier evaluation on STM32 boards
+- Developed in [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) for easier evaluation on STM32 boards
 - Fully developed using LL drivers for various STM32 families
 - UART common configuration: `115200` bauds, `1` stop bit, no-parity
 - DMA RX common configuration: Circular mode, `TC` and `HT` events enabled
 - DMA TX common configuration: Normal mode, `TC` event enabled
-- All RX examples implement loop-back with polling. Every character received by UART and transfered by DMA is sent back to same UART
+- All RX examples implement loop-back functionality. Every character received by UART and transfered by DMA is sent back to same UART
 
 | STM32 family | Board name        | USART     | STM32 TX  | STM32 RX  | RX DMA settings                    | TX DMA settings                    |
 |--------------|-------------------|-----------|-----------|-----------|------------------------------------|------------------------------------|
