@@ -7,14 +7,14 @@
  * - Ringbuff for TX data to send using TX DMA
  */
 
-/* Includes ------------------------------------------------------------------*/
+/* Includes */
 #include "main.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "lwrb/lwrb.h"
 
-/* Private function prototypes -----------------------------------------------*/
+/* Private function prototypes */
 void SystemClock_Config(void);
 
 /* USART related functions */
@@ -38,31 +38,31 @@ uint8_t usart_rx_dma_buffer[64];
 /**
  * \brief           Create ring buffer for received data
  */
-static lwrb_t
+lwrb_t
 usart_rx_dma_ringbuff;
 
 /**
  * \brief           Ring buffer data array for RX DMA
  */
-static uint8_t
+uint8_t
 usart_rx_dma_lwrb_data[128];
 
 /**
  * \brief           Create ring buffer for TX DMA
  */
-static lwrb_t
+lwrb_t
 usart_tx_dma_ringbuff;
 
 /**
  * \brief           Ring buffer data array for TX DMA
  */
-static uint8_t
+uint8_t
 usart_tx_dma_lwrb_data[128];
 
 /**
- * \brief           Length of TX DMA transfer
+ * \brief           Length of currently active TX DMA transfer
  */
-static size_t
+volatile size_t
 usart_tx_dma_current_len;
 
 /**
@@ -72,7 +72,7 @@ int
 main(void) {
     uint8_t state, cmd, len;
 
-    /* MCU Configuration--------------------------------------------------------*/
+    /* MCU Configuration */
 //    SCB_DisableDCache();
 //    SCB_DisableICache();
 

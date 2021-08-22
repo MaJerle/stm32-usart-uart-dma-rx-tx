@@ -1,11 +1,11 @@
-/* Includes ------------------------------------------------------------------*/
+/* Includes */
 #include "main.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "lwrb/lwrb.h"
 
-/* Private function prototypes -----------------------------------------------*/
+/* Private function prototypes */
 void SystemClock_Config(void);
 
 /* LPUART related functions */
@@ -22,26 +22,25 @@ void usart_send_string(const char* str);
 /**
  * \brief           Create ring buffer for TX DMA
  */
-static lwrb_t
-usart_tx_dma_ringbuff;
+static lwrb_t usart_tx_dma_ringbuff;
 
 /**
  * \brief           Ring buffer data array for TX DMA
  */
-static uint8_t
+uint8_t
 usart_tx_dma_lwrb_data[128];
 
 /**
- * \brief           Length of TX DMA transfer
+ * \brief           Length of currently active TX DMA transfer
  */
-static size_t
+volatile size_t
 usart_tx_dma_current_len;
 
 /**
  * \brief           Buffer for USART DMA
  * \note            Contains RAW unprocessed data received by UART and transfered by DMA
  */
-static uint8_t
+uint8_t
 usart_rx_dma_buffer[64];
 
 /**
@@ -49,7 +48,7 @@ usart_rx_dma_buffer[64];
  */
 int
 main(void) {
-    /* MCU Configuration--------------------------------------------------------*/
+    /* MCU Configuration */
 
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);

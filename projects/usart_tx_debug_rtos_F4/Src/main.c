@@ -1,4 +1,4 @@
-/* Includes ------------------------------------------------------------------*/
+/* Includes */
 #include "main.h"
 #include <stdint.h>
 #include <stdlib.h>
@@ -16,7 +16,7 @@
  */
 #define USE_DMA_TX              0
 
-/* Private function prototypes -----------------------------------------------*/
+/* Private function prototypes */
 void SystemClock_Config(void);
 
 /* USART related functions */
@@ -36,9 +36,9 @@ void init_thread(void* arg);
 static char buff[256];
 
 /* Ring buffer for TX data */
-static lwrb_t usart_tx_buff;
-static uint8_t usart_tx_buff_data[1024];
-static size_t usart_dma_tx_len;
+lwrb_t usart_tx_buff;
+uint8_t usart_tx_buff_data[1024];
+volatile size_t usart_tx_dma_current_len;
 
 /**
  * \brief           Long text to be transmitted
@@ -64,7 +64,7 @@ long_string[] = ""
  */
 int
 main(void) {
-    /* MCU Configuration--------------------------------------------------------*/
+    /* MCU Configuration */
 
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
@@ -116,8 +116,6 @@ init_thread(void* arg) {
         sprintf(buff, "CPU Load: %d%%\r\n", (int)cpu_usage);
         usart_send_string(buff);
     }
-
-    __get_IPSR();
 }
 
 /**
@@ -149,30 +147,19 @@ usart_send_string(const char* str) {
 
 /**
  * \brief           Checks for data in buffer and starts transfer if not in progress
- * \note            It disables interrupts to prevent race condition
  */
 void
 usart_start_tx_dma(void) {
-    uint32_t primask;
-
-    /* Check if transfer active */
-    if (usart_dma_tx_len > 0) {
-        return;
-    }
-
-    primask = __get_PRIMASK();
-    __disable_irq();
-
     /* If transfer is not on-going */
-    if (usart_dma_tx_len == 0
-            && (usart_dma_tx_len = lwrb_get_linear_block_read_length(&usart_tx_buff)) > 0) {
+    if (usart_tx_dma_current_len == 0
+            && (usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_buff)) > 0) {
         /* Limit maximal size to transmit at a time */
-        if (usart_dma_tx_len > 32) {
-            usart_dma_tx_len = 32;
+        if (usart_tx_dma_current_len > 32) {
+            usart_tx_dma_current_len = 32;
         }
 
         /* Configure DMA */
-        LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_3, usart_dma_tx_len);
+        LL_DMA_SetDataLength(DMA1, LL_DMA_STREAM_3, usart_tx_dma_current_len);
         LL_DMA_SetMemoryAddress(DMA1, LL_DMA_STREAM_3, (uint32_t)lwrb_get_linear_block_read_address(&usart_tx_buff));
 
         /* Clear all flags */
@@ -185,8 +172,6 @@ usart_start_tx_dma(void) {
         /* Start transfer */
         LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_3);
     }
-
-    __set_PRIMASK(primask);
 }
 
 /**
@@ -266,8 +251,8 @@ DMA1_Stream3_IRQHandler(void) {
     /* Check transfer-complete interrupt */
     if (LL_DMA_IsEnabledIT_TC(DMA1, LL_DMA_STREAM_3) && LL_DMA_IsActiveFlag_TC3(DMA1)) {
         LL_DMA_ClearFlag_TC3(DMA1);             /* Clear transfer complete flag */
-        lwrb_skip(&usart_tx_buff, usart_dma_tx_len);/* Data sent, ignore these */
-        usart_dma_tx_len = 0;
+        lwrb_skip(&usart_tx_buff, usart_tx_dma_current_len);/* Data sent, ignore these */
+        usart_tx_dma_current_len = 0;
         usart_start_tx_dma();                   /* Try to send more data */
     }
 

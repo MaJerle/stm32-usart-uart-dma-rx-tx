@@ -1,10 +1,10 @@
-/* Includes ------------------------------------------------------------------*/
+/* Includes */
 #include "main.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-/* Private function prototypes -----------------------------------------------*/
+/* Private function prototypes */
 void SystemClock_Config(void);
 
 /* USART related functions */
@@ -30,7 +30,7 @@ usart_rx_dma_buffer[64];
  */
 int
 main(void) {
-    /* MCU Configuration--------------------------------------------------------*/
+    /* MCU Configuration */
 
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);

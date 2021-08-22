@@ -7,21 +7,21 @@
  * - Ringbuff for TX data to send using TX DMA
  */
 
-/* Includes ------------------------------------------------------------------*/
+/* Includes */
 #include "main.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include "lwrb/lwrb.h"
 
-/* Private function prototypes -----------------------------------------------*/
+/* Private function prototypes */
 void SystemClock_Config(void);
 
 /* USART related functions */
-void usart_init(void);
-void usart_rx_check(void);
-void usart_process_data(const void* data, size_t len);
-void usart_send_string(const char* str);
+void    usart_init(void);
+void    usart_rx_check(void);
+void    usart_process_data(const void* data, size_t len);
+void    usart_send_string(const char* str);
 uint8_t usart_start_tx_dma_transfer(void);
 
 /**
@@ -33,37 +33,37 @@ uint8_t usart_start_tx_dma_transfer(void);
  * \brief           Buffer for USART DMA RX
  * \note            Contains RAW unprocessed data received by UART and transfered by DMA
  */
-static uint8_t
+uint8_t
 usart_rx_dma_buffer[64];
 
 /**
  * \brief           Create ring buffer for received data
  */
-static lwrb_t
+lwrb_t
 usart_rx_dma_ringbuff;
 
 /**
  * \brief           Ring buffer data array for RX DMA
  */
-static uint8_t
+uint8_t
 usart_rx_dma_lwrb_data[128];
 
 /**
  * \brief           Create ring buffer for TX DMA
  */
-static lwrb_t
+lwrb_t
 usart_tx_dma_ringbuff;
 
 /**
  * \brief           Ring buffer data array for TX DMA
  */
-static uint8_t
+uint8_t
 usart_tx_dma_lwrb_data[128];
 
 /**
- * \brief           Length of TX DMA transfer
+ * \brief           Length of currently active TX DMA transfer
  */
-static size_t
+volatile size_t
 usart_tx_dma_current_len;
 
 /**
@@ -73,7 +73,7 @@ int
 main(void) {
     uint8_t state, cmd, len;
 
-    /* MCU Configuration--------------------------------------------------------*/
+    /* MCU Configuration */
 
     /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
@@ -195,18 +195,7 @@ usart_rx_check(void) {
  */
 uint8_t
 usart_start_tx_dma_transfer(void) {
-    uint32_t old_primask;
     uint8_t started = 0;
-
-    /* Check if transfer is on-going */
-    if (usart_tx_dma_current_len > 0) {
-        return 0;
-    }
-
-    /* Check if DMA is active */
-    /* Must be set to 0 */
-    old_primask = __get_PRIMASK();
-    __disable_irq();
 
     /* Check if transfer is not active */
     if (usart_tx_dma_current_len == 0
@@ -228,8 +217,6 @@ usart_start_tx_dma_transfer(void) {
         LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
         started = 1;
     }
-
-    __set_PRIMASK(old_primask);
     return started;
 }
 
