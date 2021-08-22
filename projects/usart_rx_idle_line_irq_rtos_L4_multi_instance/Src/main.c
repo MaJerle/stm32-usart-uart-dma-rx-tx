@@ -242,7 +242,7 @@ usart_process_data(const uart_desc_t* uart, const void* data, size_t len) {
     const uint8_t* d = data;
 	
     /*
-     * This function is called on DMA TC and HT events, aswell as on UART IDLE (if enabled) line event.
+     * This function is called on DMA TC or HT events, and on UART IDLE (if enabled) event.
      * 
      * For the sake of this example, function does a loop-back data over UART in polling mode.
      * Check ringbuff RX-based example for implementation with TX & RX DMA transfer.

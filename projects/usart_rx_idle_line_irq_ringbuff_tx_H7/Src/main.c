@@ -30,8 +30,8 @@ uint8_t usart_start_tx_dma_transfer(void);
 #define ARRAY_LEN(x)            (sizeof(x) / sizeof((x)[0]))
 
 /**
- * \brief           Buffer for USART DMA RX
- * \note            Contains RAW unprocessed data received by UART and transfered by DMA
+ * \brief           USART RX buffer for DMA to transfer every received byte RX
+ * \note            Contains raw data that are about to be processed by different events
  */
 uint8_t usart_rx_dma_buffer[64];
 

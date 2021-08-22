@@ -37,8 +37,8 @@ volatile size_t
 usart_tx_dma_current_len;
 
 /**
- * \brief           Buffer for USART DMA
- * \note            Contains RAW unprocessed data received by UART and transfered by DMA
+ * \brief           USART RX buffer for DMA to transfer every received byte
+ * \note            Contains raw data that are about to be processed by different events
  */
 uint8_t
 usart_rx_dma_buffer[64];

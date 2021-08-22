@@ -20,8 +20,8 @@ void usart_send_string(const char* str);
 #define ARRAY_LEN(x)            (sizeof(x) / sizeof((x)[0]))
 
 /**
- * \brief           Buffer for USART DMA
- * \note            Contains RAW unprocessed data received by UART and transfered by DMA
+ * \brief           USART RX buffer for DMA to transfer every received byte
+ * \note            Contains raw data that are about to be processed by different events
  */
 static uint8_t
 usart_rx_dma_buffer[64];
@@ -98,7 +98,7 @@ usart_process_data(const void* data, size_t len) {
     const uint8_t* d = data;
 	
     /*
-     * This function is called on DMA TC and HT events, aswell as on UART IDLE (if enabled) line event.
+     * This function is called on DMA TC or HT events, and on UART IDLE (if enabled) event.
      * 
      * For the sake of this example, function does a loop-back data over UART in polling mode.
      * Check ringbuff RX-based example for implementation with TX & RX DMA transfer.
