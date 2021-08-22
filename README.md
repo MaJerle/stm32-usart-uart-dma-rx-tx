@@ -1,9 +1,9 @@
-# STM32 UART DMA RX/TX
+# STM32 UART DMA RX and TX
 
-This is an application note and contains list of examples about `2` distinct topics:
+This application note contains explanation with examples for `2` distinct topics:
 
-- Receiving data with UART and DMA when application does not know in advance size of bytes to be received
-- Transmitting data with UART and DMA to avoid CPU stalling and use CPU for other purposes
+- Data reception with UART and DMA when application does not know size of bytes to receive in advance
+- Data transmission with UART and DMA to avoid CPU stalling and use CPU for other purposes
 
 ## Table of Contents
 
@@ -25,31 +25,30 @@ This is an application note and contains list of examples about `2` distinct top
 - USART: Universal Synchronous Asynchronous Receiver Transmitter
 - TX: Transmit
 - RX: Receive
-- HT: Half-Transfer Complete event/flag for DMA
-- TC: Transfer Complete event/flag for DMA
-- RTO: Receiver Timeout event/flag
+- HT: Half-Transfer Complete DMA event/flag
+- TC: Transfer Complete DMA event/flag
+- RTO: Receiver Timeout UART event/flag
 - IRQ: Interrupt
 
 ## General about UART
 
-> STM32 has peripherals such as USART and UART. Difference between them is that USART includes advance feature such as optional synchronous communication, not available in UART. If these features are not used, USART and UART peripherals can be considered identical.
-> For the sake of this application note, we will use term **UART** only, while exactly same applies to **USART** peripherals aswell.
+> STM32 has peripherals such as USART, UART or LPUART. Difference between them is not relevant for this purpose since concept can be applied to all of them. In few words, USART supports synchronous operation on top of asynchronous (UART) and LPUART supports Low-Power operation in STOP mode. When synchronous mode or low-power mode is not used, USART, UART and LPUART can be consideted identical. For complete set of details, check product's reference manual and datasheet.
 
-UART in STM32 allows customers to configure it using different transmit(`TX`)/receive(`RX`) modes:
+> For the sake of this application note, we will only use term **UART**.
+
+UART in STM32 allows configurion using different transmit (`TX`) and receive (`RX`) modes:
 
 - Polling mode (no DMA, no IRQ)
-	- Application is polling for status bits to check if any character has been transmitted/received and read it fast enough in order to not-miss any byte
-	- P: Easy to implement
-	- C: Easy to miss received characters in bursts
+	- P: Application is polling for status bits to check if any character has been transmitted/received and read it fast enough in order to not-miss any byte
+	- P: Easy to implement, simply few code lines
+	- C: Can easiy miss received data in complex application if CPU cannot read registers quickly enough
 	- C: Works only for low baudrates, `9600` or lower
-	- C: Application must periodically (with high frequency) check for new characters, usually not always possible at complex systems
 - Interrupt mode (no DMA)
-	- UART triggers interrupt and CPU jumps to service routine to handle each received byte separately
+	- P: UART triggers interrupt and CPU jumps to service routine to handle each received byte separately
 	- P: Commonly used approach in embedded applications
 	- P: Works well with common baudrates, `115200`, up to `~921600` bauds
 	- C: Interrupt service routine is executed for every received character
-	- C: May stall other tasks in high-performance MCUs if interrupts are triggered for every character
-	- C: May stall operating system when receiving burst of data, interrupt priority must be higher than operating system maximum is
+	- C: May decrease system performance if interrupts are triggered for every character for high-speed baudrates
 - DMA mode
 	- DMA is used to transfer data from USART RX data register to user memory on hardware level. No application interaction is needed at this point except processing received data by application once necessary
 	- P: Transfer from USART peripheral to memory is done on hardware level without CPU interaction
@@ -59,16 +58,18 @@ UART in STM32 allows customers to configure it using different transmit(`TX`)/re
 	- C: Number of bytes to transfer must be known in advance by DMA hardware
 	- C: If communication fails, DMA may not notify application about all bytes transferred
 
-> For RX mode, this article focuses only on *DMA mode*, to receive unknown number of bytes
+> This article focuses only on *DMA mode* for RX operation and explain how to handle unknown data length
 
 Every STM32 has at least one (`1`) UART IP and at least one (`1`) DMA controller available in its DNA.
-For data transmission, no special features (on top of essential one) are necessary, except DMA availability for UART.
-Application uses use default features to implement very efficient transmit system using DMA.
+This is all we need for successful data transmission.
+Application uses default features to implement very efficient transmit system using DMA.
 
-While it is straight-forward for TX, this is not the case for receive operation.
-When implementing DMA receive, application would need to understand number of received bytes to process by DMA before finishing transfer.
-This is especially true when UART is used for system communication where it has to react in short time after all bytes have been received.
-STM32s have capability in UART to detect when *RX* line has not been active for period of time. This is achieved using one of `2` available methods:
+While implementation is is straight-forward for TX (set pointer to data, define its length and go), this is not the case for receive operation.
+When implementing DMA receive, application should understand number of received bytes to process by DMA before finishing transfer.
+
+This is especially true when UART is used for system communication where it has to react in short time after all bytes have been received, for example in master-slave communication.
+
+STM32s have capability in UART to detect when *RX* line has not been active for period of time. This is achieved using `2` methods:
 - *IDLE LINE event*: Triggered when RX line has been in idle state (normally high state) for `1` frame time, after last received byte. Frame time is based on baudrate. Higher baudrate means lower frame time for single byte.
 - *RTO (Receiver Timeout) event*: Triggered when line has been in idle state for programmable time. It is fully configured by firmware.
 
@@ -77,17 +78,17 @@ Both events can trigger an interrupt which is an essential feature to allow effe
 > Not all STM32 have *IDLE LINE* or *RTO* features available. When not available, examples concerning these features may not be used.
 
 An example: To transmit `1` byte at `115200` bauds, it takes approximately (for easier estimation) `~100us`; for `3 bytes` it would be `~300us` in total.
-IDLE line event triggers an interrupt for application when line has been in idle state for `1` frame time (in this case `100us`) after third byte has been received.
+IDLE line event triggers an interrupt when line has been in idle state for `1` frame time (in this case `100us`), after third byte has been received.
 
 ![IDLE LINE DEMO](docs/idle_line_demo.png)
 
 This is a real experiment demo using *STM32F4* and *IDLE LINE* event. After *IDLE event* is triggered, data are echoed back (loopback mode):
 
 - Application receives `3` bytes, takes approx `~300us` at `115200` bauds
-- *RX* goes to high state (yellow rectangle) and *UART RX* detects that it has been idle for at least `1` frame time (approx `100us`)
+- *RX* goes to high state (yellow rectangle) and *UART RX* detects it has been idle for at least `1` frame time (approx `100us`)
 	- Width of yellow rectangle represents `1` frame time
 - *IDLE line* interrupt is triggered at green arrow
-- Application echoes data back from interrupt
+- Application echoes data back from interrupt context
 
 ## General about DMA
 
