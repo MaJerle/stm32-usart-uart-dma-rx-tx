@@ -1,10 +1,10 @@
 /*
- * This example shows how can application implement RX and TX DMA for UART.
+ * This example shows how application can implement RX and TX DMA for UART.
  * It uses simple packet example approach and 3 separate buffers:
  *
  * - Raw DMA RX buffer where DMA transfers data from UART to memory
- * - Ringbuff for RX data which are processed by application
- * - Ringbuff for TX data to send using TX DMA
+ * - Ringbuff for RX data which are transfered from raw buffer and ready for application processin
+ * - Ringbuff for TX data to be sent out by DMA TX
  */
 
 /* Includes */
@@ -32,23 +32,31 @@ uint8_t usart_start_tx_dma_transfer(void);
 /**
  * \brief           USART RX buffer for DMA to transfer every received byte RX
  * \note            Contains raw data that are about to be processed by different events
+ *
+ * Special use case for STM32H7 series.
+ * Default memory configuration in STM32H7 may put variables to DTCM RAM,
+ * part of memory that is super fast, however DMA has no access to it.
+ *
+ * For this specific example, all variables are by default
+ * configured in D1 RAM. This is configured in linker script
  */
-uint8_t usart_rx_dma_buffer[64];
+uint8_t
+usart_rx_dma_buffer[64];
 
 /**
- * \brief           Create ring buffer for received data
+ * \brief           Ring buffer instance for TX data
  */
 lwrb_t
-usart_rx_dma_ringbuff;
+usart_rx_rb;
 
 /**
  * \brief           Ring buffer data array for RX DMA
  */
 uint8_t
-usart_rx_dma_lwrb_data[128];
+usart_rx_rb_data[128];
 
 /**
- * \brief           Create ring buffer for TX DMA
+ * \brief           Ring buffer instance for TX data
  */
 lwrb_t
 usart_tx_rb;
@@ -84,7 +92,7 @@ main(void) {
 
     /* Initialize ringbuff for TX & RX */
     lwrb_init(&usart_tx_rb, usart_tx_rb_data, sizeof(usart_tx_rb_data));
-    lwrb_init(&usart_rx_dma_ringbuff, usart_rx_dma_lwrb_data, sizeof(usart_rx_dma_lwrb_data));
+    lwrb_init(&usart_rx_rb, usart_rx_rb_data, sizeof(usart_rx_rb_data));
 
     /* Initialize all configured peripherals */
     usart_init();
@@ -107,7 +115,7 @@ main(void) {
 
         /* Read byte by byte */
 
-        if (lwrb_read(&usart_rx_dma_ringbuff, &b, 1) == 1) {
+        if (lwrb_read(&usart_rx_rb, &b, 1) == 1) {
             lwrb_write(&usart_tx_rb, &b, 1);   /* Write data to transmit buffer */
             usart_start_tx_dma_transfer();
             switch (state) {
@@ -194,12 +202,39 @@ usart_rx_check(void) {
 
 /**
  * \brief           Check if DMA is active and if not try to send data
+ *
+ * This function can be called either by application to start data transfer
+ * or from DMA TX interrupt after previous transfer just finished
+ *
+ * \return          `1` if transfer just started, `0` if on-going or no data to transmit
  */
 uint8_t
 usart_start_tx_dma_transfer(void) {
     uint8_t started = 0;
 
-    /* Check if transfer is not active */
+    /*
+     * First check if transfer is currently in-active,
+     * by examining the value of usart_tx_dma_current_len variable.
+     *
+     * This variable is set before DMA transfer is started and cleared in DMA TX complete interrupt.
+     *
+     * It is not necessary to disable the interrupts before checking the variable:
+     *
+     * When usart_tx_dma_current_len == 0
+     *    - This function is called by either application or TX DMA interrupt
+     *    - When called from interrupt, it was just reset before the call,
+     *         indicating transfer just completed and ready for more
+     *    - When called from an application, transfer was previously already in-active
+     *         and immediate call from interrupt cannot happen at this moment
+     *
+     * When usart_tx_dma_current_len != 0
+     *    - This function is called only by an application.
+     *    - It will never be called from interrupt with usart_tx_dma_current_len != 0 condition
+     *
+     * Disabling interrupts before checking for next transfer is advised
+     * only if multiple operating system threads can access to this function w/o
+     * exclusive access protection (mutex) configured
+     */
     if (usart_tx_dma_current_len == 0
             && (usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_rb)) > 0) {
         /* Disable channel if enabled */
@@ -231,7 +266,7 @@ usart_start_tx_dma_transfer(void) {
  */
 void
 usart_process_data(const void* data, size_t len) {
-    lwrb_write(&usart_rx_dma_ringbuff, data, len);  /* Write data to receive buffer */
+    lwrb_write(&usart_rx_rb, data, len);  /* Write data to receive buffer */
 }
 
 /**

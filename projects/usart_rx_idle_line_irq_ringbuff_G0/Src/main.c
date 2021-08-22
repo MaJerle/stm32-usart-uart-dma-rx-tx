@@ -28,7 +28,7 @@ uint8_t
 usart_rx_dma_buffer[64];
 
 /**
- * \brief           Create ring buffer for TX DMA
+ * \brief           Ring buffer instance for TX data
  */
 lwrb_t
 usart_tx_rb;
@@ -110,12 +110,35 @@ usart_rx_check(void) {
 
 /**
  * \brief           Check if DMA is active and if not try to send data
+ * \return          `1` if transfer just started, `0` if on-going or no data to transmit
  */
 uint8_t
 usart_start_tx_dma_transfer(void) {
     uint8_t started = 0;
 
-    /* Check if transfer is not active */
+    /*
+     * First check if transfer is currently in-active,
+     * by examining the value of usart_tx_dma_current_len variable.
+     *
+     * This variable is set before DMA transfer is started and cleared in DMA TX complete interrupt.
+     *
+     * It is not necessary to disable the interrupts before checking the variable:
+     *
+     * When usart_tx_dma_current_len == 0
+     *    - This function is called by either application or TX DMA interrupt
+     *    - When called from interrupt, it was just reset before the call,
+     *         indicating transfer just completed and ready for more
+     *    - When called from an application, transfer was previously already in-active
+     *         and immediate call from interrupt cannot happen at this moment
+     *
+     * When usart_tx_dma_current_len != 0
+     *    - This function is called only by an application.
+     *    - It will never be called from interrupt with usart_tx_dma_current_len != 0 condition
+     *
+     * Disabling interrupts before checking for next transfer is advised
+     * only if multiple operating system threads can access to this function w/o
+     * exclusive access protection (mutex) configured
+     */
     if (usart_tx_dma_current_len == 0
             && (usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_rb)) > 0) {
         /* Disable channel if enabled */

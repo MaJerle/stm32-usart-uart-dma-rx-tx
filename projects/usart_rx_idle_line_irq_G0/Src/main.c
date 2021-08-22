@@ -22,7 +22,7 @@ void usart_send_string(const char* str);
  * \brief           USART RX buffer for DMA to transfer every received byte
  * \note            Contains raw data that are about to be processed by different events
  */
-static uint8_t
+uint8_t
 usart_rx_dma_buffer[64];
 
 /**
