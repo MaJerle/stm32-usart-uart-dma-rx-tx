@@ -7,16 +7,7 @@ This application note contains explanation with examples for `2` distinct topics
 
 ## Table of Contents
 
-- [Abbreviations](#abbreviations)
-- [General about UART](#general-about-uart)
-- [General about DMA](#general-about-dma)
-  - [Combine UART + DMA for data reception](#combine-uart--dma-for-data-reception)
-  - [Combine UART + DMA for data transmission](#combine-uart--dma-for-data-transmission)
-  - [DMA HT/TC and UART IDLE combination details](#dma-httc-and-uart-idle-combination-details)
-- [Examples](#examples)
-  - [Examples for UART + DMA RX](#examples-for-uart--dma-rx)
-  - [Examples for UART DMA for TX](#examples-for-uart-dma-for-tx-and-optionally-included-rx)
-- [How to use this repository](#how-to-use-this-repository)
+Github supports ToC by default. It is available in the top-left corner of this document.
 
 ## Abbreviations
 
@@ -64,10 +55,10 @@ Every STM32 has at least one (`1`) UART IP and at least one (`1`) DMA controller
 This is all we need for successful data transmission.
 Application uses default features to implement very efficient transmit system using DMA.
 
-While implementation is is straight-forward for TX (set pointer to data, define its length and go), this is not the case for receive operation.
-When implementing DMA receive, application should understand number of received bytes to process by DMA before finishing transfer.
+While implementation happens to be pretty straight-forward for TX (set pointer to data, define its length and go) operation, this may not be the case for receive.
+Implementing DMA receive, application should understand number of received bytes to process by DMA before its considered *done*. However, UART protocol does not offer such information (it could work with higher-level protocol, but that's way another story that we don't touch here. We assume we have to implement very reliable low-level communication protocol).
 
-This is especially true when UART is used for system communication where it has to react in short time after all bytes have been received, for example in master-slave communication.
+## Idle Line or Receiver Timeout events
 
 STM32s have capability in UART to detect when *RX* line has not been active for period of time. This is achieved using `2` methods:
 - *IDLE LINE event*: Triggered when RX line has been in idle state (normally high state) for `1` frame time, after last received byte. Frame time is based on baudrate. Higher baudrate means lower frame time for single byte.
