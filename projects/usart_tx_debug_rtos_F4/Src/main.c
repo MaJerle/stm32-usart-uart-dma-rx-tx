@@ -147,6 +147,7 @@ usart_send_string(const char* str) {
  */
 uint8_t
 usart_start_tx_dma_transfer(void) {
+    uint32_t primask;
     uint8_t started = 0;
 
     /*
@@ -170,8 +171,14 @@ usart_start_tx_dma_transfer(void) {
      *
      * Disabling interrupts before checking for next transfer is advised
      * only if multiple operating system threads can access to this function w/o
-     * exclusive access protection (mutex) configured
+     * exclusive access protection (mutex) configured,
+	 * or if application calls this function from multiple interrupts.
+	 *
+	 * This example assumes worst use case scenario,
+     * hence interrupts are disabled prior every check
      */
+    primask = __get_PRIMASK();
+    __disable_irq();
     if (usart_tx_dma_current_len == 0
             && (usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_buff)) > 0) {
         /* Limit maximal size to transmit at a time */
@@ -194,6 +201,7 @@ usart_start_tx_dma_transfer(void) {
         LL_DMA_EnableStream(DMA1, LL_DMA_STREAM_3);
         started = 1;
     }
+    __set_PRIMASK(primask);
     return started;
 }
 

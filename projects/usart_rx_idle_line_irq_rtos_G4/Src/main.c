@@ -106,13 +106,13 @@ usart_rx_dma_thread(void* arg) {
  * \brief           Check for new data received with DMA
  *
  * User must select context to call this function from:
- * - Only interrupts (DMA HT, DMA TC, UART IDLE)
+ * - Only interrupts (DMA HT, DMA TC, UART IDLE) with same preemption priority level
  * - Only thread context (outside interrupts)
  *
  * If called from both context-es, exclusive access protection must be implemented
  * This mode is not advised as it usually means architecture design problems
  *
- * When IDLE interrupt is not present, application needs to rely completely on thread context,
+ * When IDLE interrupt is not present, application must rely only on thread context,
  * by manually calling function as quickly as possible, to make sure
  * data are read from raw buffer and processed.
  *
@@ -128,7 +128,7 @@ usart_rx_check(void) {
     static size_t old_pos;
     size_t pos;
 
-    /* Calculate current position in buffer */
+    /* Calculate current position in buffer and check for new data available */
     pos = ARRAY_LEN(usart_rx_dma_buffer) - LL_DMA_GetDataLength(DMA1, LL_DMA_CHANNEL_1);
     if (pos != old_pos) {                       /* Check change in received data */
         if (pos > old_pos) {                    /* Current position is over previous one */

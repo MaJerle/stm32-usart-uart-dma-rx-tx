@@ -84,13 +84,13 @@ main(void) {
  * \brief           Check for new data received with DMA
  *
  * User must select context to call this function from:
- * - Only interrupts (DMA HT, DMA TC, UART IDLE)
+ * - Only interrupts (DMA HT, DMA TC, UART IDLE) with same preemption priority level
  * - Only thread context (outside interrupts)
  *
  * If called from both context-es, exclusive access protection must be implemented
  * This mode is not advised as it usually means architecture design problems
  *
- * When IDLE interrupt is not present, application needs to rely completely on thread context,
+ * When IDLE interrupt is not present, application must rely only on thread context,
  * by manually calling function as quickly as possible, to make sure
  * data are read from raw buffer and processed.
  *
@@ -106,7 +106,7 @@ usart_rx_check(void) {
     static size_t old_pos;
     size_t pos;
 
-    /* Calculate current position in buffer */
+    /* Calculate current position in buffer and check for new data available */
     pos = ARRAY_LEN(usart_rx_dma_buffer) - LL_DMA_GetDataLength(DMA1, LL_DMA_CHANNEL_2);
     if (pos != old_pos) {                       /* Check change in received data */
         if (pos > old_pos) {                    /* Current position is over previous one */
@@ -159,6 +159,7 @@ usart_rx_check(void) {
  */
 uint8_t
 usart_start_tx_dma_transfer(void) {
+    uint32_t primask;
     uint8_t started = 0;
 
     /*
@@ -182,8 +183,14 @@ usart_start_tx_dma_transfer(void) {
      *
      * Disabling interrupts before checking for next transfer is advised
      * only if multiple operating system threads can access to this function w/o
-     * exclusive access protection (mutex) configured
+     * exclusive access protection (mutex) configured,
+	 * or if application calls this function from multiple interrupts.
+	 *
+	 * This example assumes worst use case scenario,
+     * hence interrupts are disabled prior every check
      */
+    primask = __get_PRIMASK();
+    __disable_irq();
     if (usart_tx_dma_current_len == 0
             && (usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_rb)) > 0) {
         /* Disable channel if enabled */
@@ -203,6 +210,7 @@ usart_start_tx_dma_transfer(void) {
         LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_3);
         started = 1;
     }
+    __set_PRIMASK(primask);
     return started;
 }
 
