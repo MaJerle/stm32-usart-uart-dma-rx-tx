@@ -95,7 +95,7 @@ LL_Init(void) {
  * Not doing reads fast enough may cause DMA to overflow unread received bytes,
  * hence application will lost useful data.
  *
- * Solution to this are:
+ * Solutions to this are:
  * - Improve architecture design to achieve faster reads
  * - Increase raw buffer size and allow DMA to write more data before this function is called
  */
