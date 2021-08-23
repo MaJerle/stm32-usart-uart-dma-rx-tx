@@ -234,10 +234,10 @@ usart_rx_check(const uart_desc_t* uart) {
     if (pos != uart->data->old_pos) {           /* Check change in received data */
         if (pos > uart->data->old_pos) {        /* Current position is over previous one */
             /*
-             * Current read will be in linear mode.
+             * Processing is done in "linear" mode.
              *
-             * Application processing can be faster,
-             * by subtracting pointers to determine length
+             * Application processing is fast with single data block,
+             * length is simply calculated by subtracting pointers
              *
              * [   0   ]
              * [   1   ] <- old_pos |------------------------------------|
@@ -252,10 +252,10 @@ usart_rx_check(const uart_desc_t* uart) {
             usart_process_data(uart, &uart->data->dma_rx_buffer[uart->data->old_pos], pos - uart->data->old_pos);
         } else {
             /*
-             * Current read will be in overflow mode.
+             * Processing is done in "overflow" mode..
              *
-             * Application must twice process data,
-             * since there is no single linear entry point available
+             * Application must process data twice,
+             * since there are 2 linear memory blocks to handle
              *
              * [   0   ]            |---------------------------------|
              * [   1   ]            | Second block (len = pos)        |
