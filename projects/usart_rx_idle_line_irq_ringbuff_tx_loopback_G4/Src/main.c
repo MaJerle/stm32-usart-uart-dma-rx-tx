@@ -179,9 +179,9 @@ usart_start_tx_dma_transfer(void) {
      * Disabling interrupts before checking for next transfer is advised
      * only if multiple operating system threads can access to this function w/o
      * exclusive access protection (mutex) configured,
-	 * or if application calls this function from multiple interrupts.
-	 *
-	 * This example assumes worst use case scenario,
+     * or if application calls this function from multiple interrupts.
+     *
+     * This example assumes worst use case scenario,
      * hence interrupts are disabled prior every check
      */
     primask = __get_PRIMASK();

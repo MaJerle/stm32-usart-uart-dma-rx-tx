@@ -172,14 +172,14 @@ usart_rx_check(void) {
 void
 usart_process_data(const void* data, size_t len) {
     const uint8_t* d = data;
-	
+    
     /*
      * This function is called on DMA TC or HT events, and on UART IDLE (if enabled) event.
      * 
      * For the sake of this example, function does a loop-back data over UART in polling mode.
      * Check ringbuff RX-based example for implementation with TX & RX DMA transfer.
      */
-	
+    
     for (; len > 0; --len, ++d) {
         LL_USART_TransmitData8(USART3, *d);
         while (!LL_USART_IsActiveFlag_TXE(USART3)) {}
