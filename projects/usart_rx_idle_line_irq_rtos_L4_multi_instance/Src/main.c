@@ -357,7 +357,7 @@ usart_init(const uart_desc_t* uart) {
     LL_DMA_SetMemoryIncMode(uart->dma_rx, uart->dma_rx_ch, LL_DMA_MEMORY_INCREMENT);
     LL_DMA_SetPeriphSize(uart->dma_rx, uart->dma_rx_ch, LL_DMA_PDATAALIGN_BYTE);
     LL_DMA_SetMemorySize(uart->dma_rx, uart->dma_rx_ch, LL_DMA_MDATAALIGN_BYTE);
-    LL_DMA_SetPeriphAddress(uart->dma_rx, uart->dma_rx_ch, (uint32_t)&uart->uart->RDR);
+    LL_DMA_SetPeriphAddress(uart->dma_rx, uart->dma_rx_ch, LL_USART_DMA_GetRegAddr(uart->uart, LL_USART_DMA_REG_DATA_RECEIVE));
     LL_DMA_SetMemoryAddress(uart->dma_rx, uart->dma_rx_ch, (uint32_t)uart->data->dma_rx_buffer);
     LL_DMA_SetDataLength(uart->dma_rx, uart->dma_rx_ch, ARRAY_LEN(uart->data->dma_rx_buffer));
 

@@ -242,8 +242,7 @@ usart_init(void) {
     LL_DMA_SetPeriphSize(DMA1, LL_DMA_STREAM_3, LL_DMA_PDATAALIGN_BYTE);
     LL_DMA_SetMemorySize(DMA1, LL_DMA_STREAM_3, LL_DMA_MDATAALIGN_BYTE);
     LL_DMA_DisableFifoMode(DMA1, LL_DMA_STREAM_3);
-
-    LL_DMA_SetPeriphAddress(DMA1, LL_DMA_STREAM_3, (uint32_t)&USART3->DR);
+    LL_DMA_SetPeriphAddress(DMA1, LL_DMA_STREAM_3, LL_USART_DMA_GetRegAddr(USART3));
 
     /* Enable TC interrupt */
     LL_DMA_EnableIT_TC(DMA1, LL_DMA_STREAM_3);
