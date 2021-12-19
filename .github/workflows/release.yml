@@ -22,6 +22,6 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           body: |
-            See the CHANGELOG.md
+            See the [CHANGELOG](CHANGELOG.md)
           draft: false
           prerelease: false
