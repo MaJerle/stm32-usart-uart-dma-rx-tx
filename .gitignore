@@ -23,26 +23,30 @@
 *.__i
 *.i
 *.txt
+!docs/*.txt
+!CMakeLists.txt
 RTE/
 
-# IAR Settings  
-**/settings/*.crun  
-**/settings/*.dbgdt  
-**/settings/*.cspy  
-**/settings/*.cspy.*  
-**/settings/*.xcl  
-**/settings/*.dni  
-**/settings/*.wsdt  
-**/settings/*.wspos  
+*debug
 
-# IAR Debug Exe  
-**/Exe/*.sim  
+# IAR Settings
+**/settings/*.crun
+**/settings/*.dbgdt
+**/settings/*.cspy
+**/settings/*.cspy.*
+**/settings/*.xcl
+**/settings/*.dni
+**/settings/*.wsdt
+**/settings/*.wspos
 
-# IAR Debug Obj  
-**/Obj/*.pbd  
-**/Obj/*.pbd.*  
-**/Obj/*.pbi  
-**/Obj/*.pbi.*  
+# IAR Debug Exe
+**/Exe/*.sim
+
+# IAR Debug Obj
+**/Obj/*.pbd
+**/Obj/*.pbd.*
+**/Obj/*.pbi
+**/Obj/*.pbi.*
 
 *.TMP
 /docs_src/x_Doxyfile.doxy
@@ -68,6 +72,7 @@ RTE/
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
+[Dd]ebug*/
 x64/
 x86/
 bld/
@@ -75,6 +80,7 @@ bld/
 [Oo]bj/
 [Ll]og/
 _build/
+build/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -273,7 +279,7 @@ ClientBin/
 *.publishsettings
 orleans.codegen.cs
 
-# Including strong name files can present a security risk 
+# Including strong name files can present a security risk
 # (https://github.com/github/gitignore/pull/2483#issue-259490424)
 #*.snk
 
@@ -369,7 +375,7 @@ __pycache__/
 # OpenCover UI analysis results
 OpenCover/
 
-# Azure Stream Analytics local run output 
+# Azure Stream Analytics local run output
 ASALocalRun/
 
 # MSBuild Binary and Structured Log
@@ -379,7 +385,16 @@ log_file.txt
 .metadata/
 .mxproject
 .settings/
-template/
 project.ioc
 mx.scratch
 *.tilen majerle
+
+
+# Altium
+Project outputs*
+History/
+*.SchDocPreview
+*.$$$Preview
+
+# VSCode projects
+project_vscode_compiled.exe
