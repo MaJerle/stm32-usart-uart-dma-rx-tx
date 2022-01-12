@@ -1,0 +1,18 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            /* ms-vscode.cmake-tools plugin shall to be installed, which provides include paths and defines through CMake file */
+            "name": "STM32",
+            "includePath": [],
+            "defines": [],
+            "compilerPath": "",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "${default}",
+
+            /* Use this and all the include paths will come from CMake configuration instead */
+            "configurationProvider": "ms-vscode.cmake-tools"
+        }
+    ]
+}
