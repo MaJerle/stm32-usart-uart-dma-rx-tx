@@ -37,13 +37,15 @@ set(EXECUTABLE                      ${CMAKE_PROJECT_NAME})
 #
 # Source files
 #
-set(linked_SRCS
-    ${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_dma.c
+set(src_drivers_stm32f4xx_hal_driver_SRCS 
+	${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_dma.c
 	${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_exti.c
 	${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_gpio.c
 	${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_rcc.c
 	${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usart.c
-	${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_utils.c
+	${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_utils.c)
+
+set(src_middleware_freertos_SRCS 
 	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/CMSIS_RTOS/cmsis_os2.c
 	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/CMSIS_RTOS/cpu_utils.c
 	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/croutine.c
@@ -53,33 +55,21 @@ set(linked_SRCS
 	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
 	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/queue.c
 	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/tasks.c
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/timers.c
-	${PROJ_PATH}/../../middlewares/lwrb/src/lwrb/lwrb.c
-)
-set(source_folder_Drivers_SRCS 
-	)
+	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/timers.c)
 
-set(source_folder_Inc_SRCS 
-	)
+set(src_middleware_lwrb_SRCS 
+	${PROJ_PATH}/../../middlewares/lwrb/src/lwrb/lwrb.c)
 
-set(source_folder_Middleware_SRCS 
-	)
-
-set(source_folder_Middleware_FreeRTOS_SRCS 
-	)
-
-set(source_folder_Src_SRCS 
+set(src_src_SRCS 
 	${PROJ_PATH}/Src/main.c
 	${PROJ_PATH}/Src/stm32f4xx_it.c
 	${PROJ_PATH}/Src/system_stm32f4xx.c)
 
-set(source_folder_startup_SRCS 
+set(src_startup_SRCS 
 	${PROJ_PATH}/startup/startup_stm32f413xx.s)
 
-# Source files in the same path as ".cproject/.project" but nowhere included in file descriptions
-set(all_project_dir_SRCS
-    ${PROJ_PATH}/syscalls.c
-)
+set(src__SRCS 
+	${PROJ_PATH}/syscalls.c)
 
 #
 # Include directories
@@ -140,15 +130,13 @@ link_directories(${EXECUTABLE} ${link_DIRS})
 #
 # Executable files
 #
-add_executable(${EXECUTABLE}
-    ${linked_SRCS}
-    ${all_project_dir_SRCS} 
-	${source_folder_Drivers_SRCS}
-	${source_folder_Inc_SRCS}
-	${source_folder_Middleware_SRCS}
-	${source_folder_Middleware_FreeRTOS_SRCS}
-	${source_folder_Src_SRCS}
-	${source_folder_startup_SRCS})
+add_executable(${EXECUTABLE} 
+	${src_drivers_stm32f4xx_hal_driver_SRCS}
+	${src_middleware_freertos_SRCS}
+	${src_middleware_lwrb_SRCS}
+	${src_src_SRCS}
+	${src_startup_SRCS}
+	${src__SRCS})
 
 #
 # Add linked libraries for linker
@@ -205,7 +193,9 @@ target_compile_options(${EXECUTABLE} PRIVATE
         #-Wsuggest-override
     >
     $<$<COMPILE_LANGUAGE:ASM>:
-
+        -x assembler-with-cpp
+        -MMD
+        -MP
     >
     $<$<CONFIG:Debug>:
         -Og -g3 -ggdb

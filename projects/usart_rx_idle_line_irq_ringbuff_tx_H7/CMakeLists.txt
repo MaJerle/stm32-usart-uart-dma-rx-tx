@@ -37,35 +37,26 @@ set(EXECUTABLE                      ${CMAKE_PROJECT_NAME})
 #
 # Source files
 #
-set(linked_SRCS
-    ${PROJ_PATH}/../../drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_dma.c
+set(src_drivers_SRCS 
+	${PROJ_PATH}/../../drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_dma.c
 	${PROJ_PATH}/../../drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_exti.c
 	${PROJ_PATH}/../../drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_gpio.c
 	${PROJ_PATH}/../../drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_rcc.c
 	${PROJ_PATH}/../../drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usart.c
-	${PROJ_PATH}/../../drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_utils.c
-	${PROJ_PATH}/../../middlewares/lwrb/src/lwrb/lwrb.c
-)
-set(source_folder_Drivers_SRCS 
-	)
+	${PROJ_PATH}/../../drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_utils.c)
 
-set(source_folder_Src_SRCS 
+set(src_lwrb_SRCS 
+	${PROJ_PATH}/../../middlewares/lwrb/src/lwrb/lwrb.c)
+
+set(src_src_SRCS 
 	${PROJ_PATH}/Src/main.c
 	${PROJ_PATH}/Src/stm32h7xx_it.c
 	${PROJ_PATH}/Src/syscalls.c
 	${PROJ_PATH}/Src/sysmem.c
 	${PROJ_PATH}/Src/system_stm32h7xx.c)
 
-set(source_folder_Startup_SRCS 
+set(src_startup_SRCS 
 	${PROJ_PATH}/Startup/startup_stm32h743zitx.s)
-
-set(source_folder_lwrb_SRCS 
-	)
-
-# Source files in the same path as ".cproject/.project" but nowhere included in file descriptions
-set(all_project_dir_SRCS
-    
-)
 
 #
 # Include directories
@@ -119,13 +110,11 @@ link_directories(${EXECUTABLE} ${link_DIRS})
 #
 # Executable files
 #
-add_executable(${EXECUTABLE}
-    ${linked_SRCS}
-    ${all_project_dir_SRCS} 
-	${source_folder_Drivers_SRCS}
-	${source_folder_Src_SRCS}
-	${source_folder_Startup_SRCS}
-	${source_folder_lwrb_SRCS})
+add_executable(${EXECUTABLE} 
+	${src_drivers_SRCS}
+	${src_lwrb_SRCS}
+	${src_src_SRCS}
+	${src_startup_SRCS})
 
 #
 # Add linked libraries for linker
@@ -182,7 +171,9 @@ target_compile_options(${EXECUTABLE} PRIVATE
         #-Wsuggest-override
     >
     $<$<COMPILE_LANGUAGE:ASM>:
-
+        -x assembler-with-cpp
+        -MMD
+        -MP
     >
     $<$<CONFIG:Debug>:
         -Og -g3 -ggdb
