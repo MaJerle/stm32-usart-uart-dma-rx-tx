@@ -205,6 +205,13 @@ Example code to read data from memory and process it, for cases *A-D*
  */
 void
 usart_rx_check(void) {
+    /*
+     * Set old position variable as static.
+     *
+     * Linker should (with default C configuration) set this variable to `0`.
+     * It is used to keep latest read start position,
+     * transforming this function to not being reentrant or thread-safe
+     */
     static size_t old_pos;
     size_t pos;
 
@@ -255,6 +262,22 @@ usart_rx_check(void) {
     }
 }
 ```
+
+### Interrupt priorities are important
+
+Thanks to Cortex-M NVIC's (Nested Vectored Interrupt Controller) flexibility,
+user can configure priority level for each of the NVIC interrupt lines; it has full control over execution profile for each of the interrupt lines separately.
+
+There are `2` priority types in Cortex-M:
+- Preemption priority: Interrupt with higher logical priority level can preempt already running lower priority interrupt
+- Subpriority: Interrupt with higher subpriority (but same preemption priority) will execute first when `2` (or more) interrupt lines become active at the same time; such interrupt will also never stop currently executed interrupt (if any) by the CPU.
+
+STM32s have different interrupt lines (interrupt service routines later too) for DMA and UART, one for each peripheral and its priority could be software configurable.
+
+Function that gets called to process received data must keep position of *last read value*, hence processing function is not thread-safe or reentrant and requires special attention.
+
+> Application must assure, DMA and UART interrupts utilize same preemption priority level.
+> This is the only configuration to guarantee processing function never gets preempted by itself (DMA interrupt to preempty UART, or opposite), otherwise last-known read position may get corrupted and application will operate with wrong data.
 
 # Examples
 
