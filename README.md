@@ -150,26 +150,26 @@ This section describes `4` possible cases and one additional which explains why 
 
 ![DMA events](https://raw.githubusercontent.com/MaJerle/stm32-usart-uart-dma-rx-tx/master/docs/dma_events.svg?sanitize=true)
 
-Abbrevations used on image:
+Abbrevations used for the image:
 - `R`: `R`ead pointer, used by application to read data from memory. Later also used as `old_ptr`
 - `W`: `W`rite pointer, used by DMA to write next byte to. Increased every time DMA writes new byte. Later also used as `new_ptr`
 - `HT`: `H`alf-`T`ransfer Complete event triggered by DMA
-- `TC`: `T`ransfer-`C`omplete event triggered by DMA
-- `I`: `I`DLE line detection event triggered by USART
+- `TC`: `T`ransfer-`C`omplete event - triggered by DMA
+- `I`: `I`DLE line event - triggered by USART
 
 DMA configuration:
 - Circular mode
-- `20` bytes length memory
-    - `HT` event triggers at `10` bytes
-    - `TC` event triggers at `20` bytes
+- `20` bytes data length
+    - Consequently `HT` event gets triggered at `10` bytes being transmitted
+    - Consequently `TC` event gets triggered at `20` bytes being transmitted
 
-Possible cases:
-- Case *A*: DMA transfers `10` bytes. Application gets notification by `HT` event and may process received data
-- Case *B*: DMA transfers next `10` bytes. Application gets notification by `TC` event. Processing now starts from last known position until the end of memory
-    - DMA is in circular mode, thus it will continue from beginning of buffer to transfer next byte
+Possible cases during real-life execution:
+- Case *A*: DMA transfers `10` bytes. Application gets notification with `HT` event and may process received data
+- Case *B*: DMA transfers next `10` bytes. Application gets notification thanks to `TC` event. Processing now starts from last known position until the end of memory
+    - DMA is in circular mode, thus it will continue right from beginning of the buffer, on top of the picture
 - Case *C*: DMA transfers `10` bytes, but not aligned with `HT` nor `TC` events
-    - Application gets notification by `HT` event when first `6` bytes are transfered. Processing may start from last known read location
-    - Application gets `IDLE` event after next `4` bytes are successfully transfered
+    - Application gets notified with `HT` event when first `6` bytes are transfered. Processing may start from last known read location
+    - Application receives `IDLE` line event after next `4` bytes are successfully transfered to memory
 - Case *D*: DMA transfers `10` bytes in *overflow* mode and but not aligned with `HT` nor `TC` events
     - Application gets notification by `TC` event when first `4` bytes are transfered. Processing may start from last known read location
     - Application gets notification by `IDLE` event after next `6` bytes are transfered. Processing may start from beginning of buffer
