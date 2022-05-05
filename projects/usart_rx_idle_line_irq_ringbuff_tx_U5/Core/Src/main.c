@@ -259,7 +259,11 @@ usart_init(void) {
 
     /* Set first linked list address to DMA channel */
     LL_DMA_SetLinkedListBaseAddr(GPDMA1, LL_DMA_CHANNEL_0, (uint32_t)&Node_GPDMA1_Channel0);
+    LL_DMA_ConfigLinkUpdate(GPDMA1, LL_DMA_CHANNEL_0,
+            (LL_DMA_UPDATE_CTR1 | LL_DMA_UPDATE_CTR2 | LL_DMA_UPDATE_CBR1 | LL_DMA_UPDATE_CSAR | LL_DMA_UPDATE_CDAR | LL_DMA_UPDATE_CTR3 | LL_DMA_UPDATE_CBR2 | LL_DMA_UPDATE_CLLR),
+            (uint32_t)&Node_GPDMA1_Channel0);
     //LL_DMA_SetLinkedListAddrOffset(GPDMA1, LL_DMA_CHANNEL_0, (uint32_t)&Node_GPDMA1_Channel0);
+    //LL_DMA_ConfigLinkUpdate(DMAx, Channel, RegistersUpdate, LinkedListAddrOffset)
 
     /* Initialize linked list general setup for GPDMA CH0 */
     DMA_InitLinkedListStruct.Priority = LL_DMA_LOW_PRIORITY_LOW_WEIGHT;
