@@ -40,11 +40,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-UART_HandleTypeDef huart1;
-DMA_HandleTypeDef handle_GPDMA1_Channel1;
-DMA_NodeTypeDef Node_GPDMA1_Channel0;
-DMA_QListTypeDef List_GPDMA1_Channel0;
-DMA_HandleTypeDef handle_GPDMA1_Channel0;
+LL_DMA_LinkNodeTypeDef Node_GPDMA1_Channel0;
 
 /* USER CODE BEGIN PV */
 
@@ -79,7 +75,16 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+
+  /* System interrupt init*/
+  NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+
+  /* SysTick_IRQn interrupt configuration */
+  NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),15, 0));
+
+  /* Enable PWR clock interface */
+
+  LL_AHB3_GRP1_EnableClock(LL_AHB3_GRP1_PERIPH_PWR);
 
   /* USER CODE BEGIN Init */
 
@@ -97,13 +102,12 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_GPDMA1_Init();
-  MX_ICACHE_Init();
+
+  LL_ICACHE_SetMode(LL_ICACHE_1WAY);
+  LL_ICACHE_Enable();
+
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
-  HAL_UARTEx_ReceiveToIdle_DMA(&huart1, data_array, sizeof(data_array) / sizeof(data_array[0]));
-  HAL_UART_Transmit_DMA(&huart1, "Hello\r\n", 7);
 
   /* USER CODE END 2 */
 
@@ -124,135 +128,73 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-
-  /** Configure the main internal regulator output voltage
-  */
-  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
+  LL_FLASH_SetLatency(LL_FLASH_LATENCY_4);
+  while(LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_4)
   {
-    Error_Handler();
   }
 
-  /** Initializes the CPU, AHB and APB busses clocks
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
-  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-  RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_0;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
-  RCC_OscInitStruct.PLL.PLLMBOOST = RCC_PLLMBOOST_DIV4;
-  RCC_OscInitStruct.PLL.PLLM = 3;
-  RCC_OscInitStruct.PLL.PLLN = 10;
-  RCC_OscInitStruct.PLL.PLLP = 2;
-  RCC_OscInitStruct.PLL.PLLQ = 2;
-  RCC_OscInitStruct.PLL.PLLR = 1;
-  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLLVCIRANGE_1;
-  RCC_OscInitStruct.PLL.PLLFRACN = 0;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE1);
+  LL_RCC_MSIS_Enable();
+
+   /* Wait till MSIS is ready */
+  while(LL_RCC_MSIS_IsReady() != 1)
   {
-    Error_Handler();
   }
 
-  /** Initializes the CPU, AHB and APB busses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
-                              |RCC_CLOCKTYPE_PCLK3;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB3CLKDivider = RCC_HCLK_DIV1;
+  LL_RCC_MSI_EnableRangeSelection();
+  LL_RCC_MSIS_SetRange(LL_RCC_MSISRANGE_0);
+  LL_RCC_MSI_SetCalibTrimming(16, LL_RCC_MSI_OSCILLATOR_0);
+  LL_RCC_PLL1_ConfigDomain_SYS(LL_RCC_PLL1SOURCE_MSIS, 3, 10, 1);
+  LL_RCC_PLL1_EnableDomain_SYS();
+  LL_RCC_SetPll1EPodPrescaler(LL_RCC_PLL1MBOOST_DIV_4);
+  LL_RCC_PLL1_SetVCOInputRange(LL_RCC_PLLINPUTRANGE_8_16);
+  LL_RCC_PLL1_Enable();
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
+   /* Wait till PLL is ready */
+  while(LL_RCC_PLL1_IsReady() != 1)
   {
-    Error_Handler();
   }
+
+   /* Intermediate AHB prescaler 2 when target frequency clock is higher than 80 MHz */
+  LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_2);
+
+  LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL1);
+
+   /* Wait till System clock is ready */
+  while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL1)
+  {
+  }
+
+  /* Insure 1�s transition state at intermediate medium speed clock based on DWT*/
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+  DWT->CYCCNT = 0;
+  while(DWT->CYCCNT < 100);
+
+  LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+  LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
+  LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
+  LL_RCC_SetAPB3Prescaler(LL_RCC_APB3_DIV_1);
+
+  LL_Init1msTick(160000000);
+
+  LL_SetSystemCoreClock(160000000);
 }
 
 /**
   * @brief Power Configuration
   * @retval None
   */
-static void SystemPower_Config(void)
+static void
+SystemPower_Config(void)
 {
+  /* Disable the internal Pull-Up in Dead Battery pins of UCPD peripheral */
+  LL_PWR_DisableUCPDDeadBattery();
 
-  /*
-   * Disable the internal Pull-Up in Dead Battery pins of UCPD peripheral
-   */
-  HAL_PWREx_DisableUCPDDeadBattery();
-
-  /*
-   * Switch to SMPS regulator instead of LDO
-   */
-  if (HAL_PWREx_ConfigSupply(PWR_SMPS_SUPPLY) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
-
-/**
-  * @brief GPDMA1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPDMA1_Init(void)
-{
-
-  /* USER CODE BEGIN GPDMA1_Init 0 */
-
-  /* USER CODE END GPDMA1_Init 0 */
-
-  /* Peripheral clock enable */
-  __HAL_RCC_GPDMA1_CLK_ENABLE();
-
-  /* GPDMA1 interrupt Init */
-    HAL_NVIC_SetPriority(GPDMA1_Channel0_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(GPDMA1_Channel0_IRQn);
-    HAL_NVIC_SetPriority(GPDMA1_Channel1_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(GPDMA1_Channel1_IRQn);
-
-  /* USER CODE BEGIN GPDMA1_Init 1 */
-
-  /* USER CODE END GPDMA1_Init 1 */
-  /* USER CODE BEGIN GPDMA1_Init 2 */
-
-  /* USER CODE END GPDMA1_Init 2 */
-
-}
-
-/**
-  * @brief ICACHE Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ICACHE_Init(void)
-{
-
-  /* USER CODE BEGIN ICACHE_Init 0 */
-
-  /* USER CODE END ICACHE_Init 0 */
-
-  /* USER CODE BEGIN ICACHE_Init 1 */
-
-  /* USER CODE END ICACHE_Init 1 */
-
-  /** Enable instruction cache in 1-way (direct mapped cache)
-  */
-  if (HAL_ICACHE_ConfigAssociativityMode(ICACHE_1WAY) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_ICACHE_Enable() != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ICACHE_Init 2 */
-
-  /* USER CODE END ICACHE_Init 2 */
-
+  /* Switch to SMPS regulator instead of LDO */
+  LL_PWR_SetRegulatorSupply(LL_PWR_SMPS_SUPPLY);
+  while (!LL_PWR_IsActiveFlag_REGULATOR()) {}
 }
 
 /**
@@ -260,94 +202,175 @@ static void MX_ICACHE_Init(void)
   * @param None
   * @retval None
   */
-static void MX_USART1_UART_Init(void)
-{
+static void
+MX_USART1_UART_Init(void) {
+    LL_USART_InitTypeDef USART_InitStruct = {0};
+    LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+    LL_DMA_InitTypeDef DMA_InitStruct = {0};
+    LL_DMA_InitNodeTypeDef NodeConfig = {0};
+    LL_DMA_LinkNodeTypeDef Node_GPDMA1_Channel0 = {0};
+    LL_DMA_InitLinkedListTypeDef DMA_InitLinkedListStruct = {0};
 
-  /* USER CODE BEGIN USART1_Init 0 */
+    /* Set UART kernel clock */
+    LL_RCC_SetUSARTClockSource(LL_RCC_USART1_CLKSOURCE_PCLK2);
 
-  /* USER CODE END USART1_Init 0 */
+    /* Peripheral clock enable */
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPDMA1);
 
-  /* USER CODE BEGIN USART1_Init 1 */
+    /*
+     * USART1 GPIO Configuration
+     *
+     * PA9    ------> USART1_TX
+     * PA10   ------> USART1_RX
+     */
+    GPIO_InitStruct.Pin = LL_GPIO_PIN_9 | LL_GPIO_PIN_10;
+    GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+    GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+    GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+    GPIO_InitStruct.Alternate = LL_GPIO_AF_7;
+    LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART1_Init 2 */
 
-  /* USER CODE END USART1_Init 2 */
+    /*
+     * Configure GPDMA CH1 for USART TX operation
+     *
+     * - Normal mode - no linked list operation
+     * - Source address increase from memory
+     * - Destination address no-increase to peripheral (USART TDR)
+     * - Length set before channel enabled
+     * - Source address set before TX operation
+     * - Source uses PORT1 - fast port
+     * - Destination uses PORT0 - fast port for APB access
+     */
+    DMA_InitStruct.Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
+    DMA_InitStruct.BlkHWRequest = LL_DMA_HWREQUEST_SINGLEBURST;
+    DMA_InitStruct.DataAlignment = LL_DMA_DATA_ALIGN_ZEROPADD;
+    DMA_InitStruct.SrcBurstLength = 1;
+    DMA_InitStruct.DestBurstLength = 1;
+    DMA_InitStruct.SrcDataWidth = LL_DMA_SRC_DATAWIDTH_BYTE;
+    DMA_InitStruct.DestDataWidth = LL_DMA_DEST_DATAWIDTH_BYTE;
+    DMA_InitStruct.SrcIncMode = LL_DMA_SRC_INCREMENT;
+    DMA_InitStruct.DestIncMode = LL_DMA_DEST_FIXED;
+    DMA_InitStruct.Priority = LL_DMA_LOW_PRIORITY_MID_WEIGHT;
+    DMA_InitStruct.TriggerMode = LL_DMA_TRIGM_BLK_TRANSFER;
+    DMA_InitStruct.TriggerPolarity = LL_DMA_TRIG_POLARITY_MASKED;
+    DMA_InitStruct.TriggerSelection = 0x00000000U;
+    DMA_InitStruct.Request = LL_GPDMA1_REQUEST_USART1_TX;
+    DMA_InitStruct.TransferEventMode = LL_DMA_TCEM_BLK_TRANSFER;
+    DMA_InitStruct.SrcAllocatedPort = LL_DMA_SRC_ALLOCATED_PORT1;
+    DMA_InitStruct.DestAllocatedPort = LL_DMA_DEST_ALLOCATED_PORT0;
+    DMA_InitStruct.LinkAllocatedPort = LL_DMA_LINK_ALLOCATED_PORT1;
+    DMA_InitStruct.LinkStepMode = LL_DMA_LSM_FULL_EXECUTION;
+    DMA_InitStruct.LinkedListBaseAddr = 0x00000000U;
+    DMA_InitStruct.LinkedListAddrOffset = 0x00000000U;
+    /* Default settings */
+    DMA_InitStruct.SrcAddress = 0x00000000U;
+    DMA_InitStruct.DestAddress = LL_USART_DMA_GetRegAddr(USART1, LL_USART_DMA_REG_DATA_TRANSMIT);
+    DMA_InitStruct.BlkDataLength = 0x00000000U;
+    LL_DMA_Init(GPDMA1, LL_DMA_CHANNEL_1, &DMA_InitStruct);
+
+    /* Enable TC interrupt */
+    LL_DMA_EnableIT_TC(GPDMA1, LL_DMA_CHANNEL_1);
+
+    /* GPDMA1 interrupt Init */
+    NVIC_SetPriority(GPDMA1_Channel1_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 5, 0));
+    NVIC_EnableIRQ(GPDMA1_Channel1_IRQn);
+
+    /*
+     * Configure linked list structure for GPDMA CH0 - used for USART RX operation
+     *
+     * - Linked-List mode for circular operation
+     * - Source address fixed (USART RXD)
+     * - Destination address increased
+     * - Destination address set to start of raw buffer
+     * - Length set to raw buffer size
+     * - Destination uses PORT1 - fast port
+     * - Source uses PORT0 - fast port for APB access
+     */
+    NodeConfig.DestAllocatedPort = LL_DMA_DEST_ALLOCATED_PORT1;
+    NodeConfig.DestHWordExchange = LL_DMA_DEST_HALFWORD_PRESERVE;
+    NodeConfig.DestByteExchange = LL_DMA_DEST_BYTE_PRESERVE;
+    NodeConfig.DestBurstLength = 1;
+    NodeConfig.DestIncMode = LL_DMA_DEST_INCREMENT;
+    NodeConfig.DestDataWidth = LL_DMA_DEST_DATAWIDTH_BYTE;
+    NodeConfig.SrcAllocatedPort = LL_DMA_SRC_ALLOCATED_PORT0;
+    NodeConfig.SrcByteExchange = LL_DMA_SRC_BYTE_PRESERVE;
+    NodeConfig.DataAlignment = LL_DMA_DATA_ALIGN_ZEROPADD;
+    NodeConfig.SrcBurstLength = 1;
+    NodeConfig.SrcIncMode = LL_DMA_SRC_FIXED;
+    NodeConfig.SrcDataWidth = LL_DMA_SRC_DATAWIDTH_BYTE;
+    NodeConfig.TransferEventMode = LL_DMA_TCEM_BLK_TRANSFER;
+    NodeConfig.TriggerPolarity = LL_DMA_TRIG_POLARITY_MASKED;
+    NodeConfig.BlkHWRequest = LL_DMA_HWREQUEST_SINGLEBURST;
+    NodeConfig.Direction = LL_DMA_DIRECTION_PERIPH_TO_MEMORY;
+    NodeConfig.Request = LL_GPDMA1_REQUEST_USART1_RX;
+    NodeConfig.UpdateRegisters = (LL_DMA_UPDATE_CTR1 | LL_DMA_UPDATE_CTR2 | LL_DMA_UPDATE_CBR1 | LL_DMA_UPDATE_CSAR | LL_DMA_UPDATE_CDAR | LL_DMA_UPDATE_CTR3 | LL_DMA_UPDATE_CBR2 | LL_DMA_UPDATE_CLLR);
+    NodeConfig.NodeType = LL_DMA_GPDMA_LINEAR_NODE;
+    LL_DMA_CreateLinkNode(&NodeConfig, &Node_GPDMA1_Channel0);
+
+    /* Connect node to next node = to itself to achieve circular mode */
+    LL_DMA_ConnectLinkNode(&Node_GPDMA1_Channel0, LL_DMA_CLLR_OFFSET5, &Node_GPDMA1_Channel0, LL_DMA_CLLR_OFFSET5);
+
+    /* Set first linked list address to DMA channel */
+    LL_DMA_SetLinkedListBaseAddr(GPDMA1, LL_DMA_CHANNEL_0, (uint32_t)&Node_GPDMA1_Channel0);
+
+    DMA_InitLinkedListStruct.Priority = LL_DMA_LOW_PRIORITY_LOW_WEIGHT;
+    DMA_InitLinkedListStruct.LinkStepMode = LL_DMA_LSM_FULL_EXECUTION;
+    DMA_InitLinkedListStruct.LinkAllocatedPort = LL_DMA_LINK_ALLOCATED_PORT0;
+    DMA_InitLinkedListStruct.TransferEventMode = LL_DMA_TCEM_LAST_LLITEM_TRANSFER;
+    LL_DMA_List_Init(GPDMA1, LL_DMA_CHANNEL_0, &DMA_InitLinkedListStruct);
+
+    NVIC_SetPriority(GPDMA1_Channel0_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 5, 0));
+    NVIC_EnableIRQ(GPDMA1_Channel0_IRQn);
+
+
+
+    NVIC_SetPriority(USART1_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 5, 0));
+    NVIC_EnableIRQ(USART1_IRQn);
+    /* USER CODE BEGIN USART1_Init 1 */
+
+    /* USER CODE END USART1_Init 1 */
+    USART_InitStruct.PrescalerValue = LL_USART_PRESCALER_DIV1;
+    USART_InitStruct.BaudRate = 115200;
+    USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
+    USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
+    USART_InitStruct.Parity = LL_USART_PARITY_NONE;
+    USART_InitStruct.TransferDirection = LL_USART_DIRECTION_TX_RX;
+    USART_InitStruct.HardwareFlowControl = LL_USART_HWCONTROL_NONE;
+    USART_InitStruct.OverSampling = LL_USART_OVERSAMPLING_16;
+    LL_USART_Init(USART1, &USART_InitStruct);
+    LL_USART_SetTXFIFOThreshold(USART1, LL_USART_FIFOTHRESHOLD_1_8);
+    LL_USART_SetRXFIFOThreshold(USART1, LL_USART_FIFOTHRESHOLD_1_8);
+    LL_USART_DisableFIFO(USART1);
+    LL_USART_ConfigAsyncMode(USART1);
+    LL_USART_Enable(USART1);
+    /* USER CODE BEGIN USART1_Init 2 */
+    LL_USART_TransmitData8(USART1, 'a');
+    /* USER CODE END USART1_Init 2 */
+
+}
+
+
+/**
+  * @brief This function handles GPDMA1 Channel 0 global interrupt.
+  */
+void
+GPDMA1_Channel0_IRQHandler(void) {
 
 }
 
 /**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
+  * @brief This function handles GPDMA1 Channel 1 global interrupt.
   */
-static void MX_GPIO_Init(void)
-{
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOA_CLK_ENABLE();
+void
+GPDMA1_Channel1_IRQHandler(void) {
 
 }
 
-/* USER CODE BEGIN 4 */
+void
+USART1_IRQHandler(void) {
 
-/* USER CODE END 4 */
-
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
-  /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t *file, uint32_t line)
-{
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
-}
-#endif /* USE_FULL_ASSERT */
