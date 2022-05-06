@@ -48,13 +48,11 @@ usart_tx_dma_current_len;
 uint8_t
 usart_rx_dma_buffer[64];
 
-
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
-{
+ * \brief           The application entry point
+ */
+int
+main(void) {
     /* MCU Configuration */
 
     /* System interrupt init */
@@ -284,15 +282,18 @@ usart_init(void) {
     LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
     /*
-     * Configure GPDMA CH1 for USART TX operation
+     * Configure GPDMA CH1 for USART TX operation in normal mode
      *
      * - Normal mode - no linked list operation
      * - Source address increase from memory
      * - Destination address no-increase to peripheral (USART TDR)
      * - Length set before channel enabled
      * - Source address set before TX operation
-     * - Source uses PORT1 - fast port
-     * - Destination uses PORT0 - fast port for APB access
+     * - Source uses PORT1 - fast port to access RAM through bus matrix
+     * - Destination uses PORT0 - fast port for APB access bypassing bus matrix
+     * 
+     * Have a look at AN5593 for GPDMA1 use case.
+     * https://www.st.com/resource/en/application_note/an5593-how-to-use-the-gpdma-for-stm32u575585-microcontrollers-stmicroelectronics.pdf 
      */
     DMA_InitStruct.Direction = LL_DMA_DIRECTION_MEMORY_TO_PERIPH;
     DMA_InitStruct.BlkHWRequest = LL_DMA_HWREQUEST_SINGLEBURST;
@@ -315,9 +316,9 @@ usart_init(void) {
     DMA_InitStruct.LinkStepMode = LL_DMA_LSM_FULL_EXECUTION;
     DMA_InitStruct.LinkedListBaseAddr = 0x00000000U;
     DMA_InitStruct.LinkedListAddrOffset = 0x00000000U;
-    /* Default settings */
-    DMA_InitStruct.SrcAddress = 0x00000000U;
     DMA_InitStruct.DestAddress = LL_USART_DMA_GetRegAddr(USART1, LL_USART_DMA_REG_DATA_TRANSMIT);
+    /* Default settings - updated prior start of transmission */
+    DMA_InitStruct.SrcAddress = 0x00000000U;
     DMA_InitStruct.BlkDataLength = 0x00000000U;
     LL_DMA_Init(GPDMA1, LL_DMA_CHANNEL_1, &DMA_InitStruct);
 
@@ -333,11 +334,14 @@ usart_init(void) {
      *
      * - Linked-List mode for circular operation
      * - Source address fixed (USART RXD)
-     * - Destination address increased
+     * - Destination address increased after every received byte
      * - Destination address set to start of raw buffer
      * - Length set to raw buffer size
-     * - Destination uses PORT1 - fast port
-     * - Source uses PORT0 - fast port for APB access
+     * - Destination uses PORT1 - fast port to access RAM through bus matrix
+     * - Source uses PORT0 - fast port for APB access bypassing bus matrix
+     * 
+     * Have a look at AN5593 for GPDMA1 use case.
+     * https://www.st.com/resource/en/application_note/an5593-how-to-use-the-gpdma-for-stm32u575585-microcontrollers-stmicroelectronics.pdf 
      */
     NodeConfig.DestAllocatedPort = LL_DMA_DEST_ALLOCATED_PORT1;
     NodeConfig.DestHWordExchange = LL_DMA_DEST_HALFWORD_PRESERVE;
@@ -364,10 +368,15 @@ usart_init(void) {
     NodeConfig.BlkDataLength = ARRAY_LEN(usart_rx_dma_buffer);
     LL_DMA_CreateLinkNode(&NodeConfig, &Node_GPDMA1_Channel0);
 
-    /* Connect node to next node = to itself to achieve circular mode */
+    /* Connect node to next node = to itself to achieve circular mode with one configuration */
     LL_DMA_ConnectLinkNode(&Node_GPDMA1_Channel0, LL_DMA_CLLR_OFFSET5, &Node_GPDMA1_Channel0, LL_DMA_CLLR_OFFSET5);
 
-    /* Set first linked list address to DMA channel */
+    /* 
+     * Set first linked list address to DMA channel
+     *
+     * Set link update mechanism - DMA fetches first configuration from first node
+     * on the start of DMA operation
+     */
     LL_DMA_SetLinkedListBaseAddr(GPDMA1, LL_DMA_CHANNEL_0, (uint32_t)&Node_GPDMA1_Channel0);
     LL_DMA_ConfigLinkUpdate(GPDMA1, LL_DMA_CHANNEL_0,
             (LL_DMA_UPDATE_CTR1 | LL_DMA_UPDATE_CTR2 | LL_DMA_UPDATE_CBR1 | LL_DMA_UPDATE_CSAR | LL_DMA_UPDATE_CDAR | LL_DMA_UPDATE_CTR3 | LL_DMA_UPDATE_CBR2 | LL_DMA_UPDATE_CLLR),
@@ -380,7 +389,7 @@ usart_init(void) {
     DMA_InitLinkedListStruct.TransferEventMode = LL_DMA_TCEM_LAST_LLITEM_TRANSFER;
     LL_DMA_List_Init(GPDMA1, LL_DMA_CHANNEL_0, &DMA_InitLinkedListStruct);
 
-    /* Enable TC interrupt */
+    /* Enable HT&TC interrupt */
     LL_DMA_EnableIT_HT(GPDMA1, LL_DMA_CHANNEL_0);
     LL_DMA_EnableIT_TC(GPDMA1, LL_DMA_CHANNEL_0);
 
@@ -388,7 +397,7 @@ usart_init(void) {
     NVIC_SetPriority(GPDMA1_Channel0_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 5, 0));
     NVIC_EnableIRQ(GPDMA1_Channel0_IRQn);
 
-    /* Configure USART */
+    /* Enable USART interrupts */
     NVIC_SetPriority(USART1_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 5, 0));
     NVIC_EnableIRQ(USART1_IRQn);
 
@@ -406,13 +415,19 @@ usart_init(void) {
     LL_USART_SetRXFIFOThreshold(USART1, LL_USART_FIFOTHRESHOLD_1_8);
     LL_USART_DisableFIFO(USART1);
     LL_USART_ConfigAsyncMode(USART1);
+
+    /* Enable UART DMA requests */
     LL_USART_EnableDMAReq_RX(USART1);
     LL_USART_EnableDMAReq_TX(USART1);
+
+    /* Enable UART IDLE line interrupt */
     LL_USART_EnableIT_IDLE(USART1);
 
     /* Start UART and enable DMA channel for RX */
     LL_USART_Enable(USART1);
     LL_DMA_EnableChannel(GPDMA1, LL_DMA_CHANNEL_0);
+
+    /* TX DMA is started prior every transmission */
 }
 
 /**
