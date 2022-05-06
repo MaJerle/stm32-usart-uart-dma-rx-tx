@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>usart_dma_rx_idle_line_irq_ringbuff_tx_U5</name>
+	<name>usart_dma_rx_idle_line_irq_ringbuff_tx_loopback_U5</name>
 	<comment></comment>
 	<projects>
 	</projects>
