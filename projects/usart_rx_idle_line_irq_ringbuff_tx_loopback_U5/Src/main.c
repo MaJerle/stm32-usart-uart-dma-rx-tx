@@ -202,27 +202,28 @@ usart_start_tx_dma_transfer(void) {
      */
     primask = __get_PRIMASK();
     __disable_irq();
-#if 0
     if (usart_tx_dma_current_len == 0
             && (usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_rb)) > 0) {
         /* Disable channel if enabled */
-        LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_2);
+        LL_DMA_DisableChannel(GPDMA1, LL_DMA_CHANNEL_1);
 
         /* Clear all flags */
-        LL_DMA_ClearFlag_TC2(DMA1);
-        LL_DMA_ClearFlag_HT2(DMA1);
-        LL_DMA_ClearFlag_GI2(DMA1);
-        LL_DMA_ClearFlag_TE2(DMA1);
+        LL_DMA_ClearFlag_HT(GPDMA1, LL_DMA_CHANNEL_1);
+        LL_DMA_ClearFlag_DTE(GPDMA1, LL_DMA_CHANNEL_1);
+        LL_DMA_ClearFlag_SUSP(GPDMA1, LL_DMA_CHANNEL_1);
+        LL_DMA_ClearFlag_TC(GPDMA1, LL_DMA_CHANNEL_1);
+        LL_DMA_ClearFlag_TO(GPDMA1, LL_DMA_CHANNEL_1);
+        LL_DMA_ClearFlag_ULE(GPDMA1, LL_DMA_CHANNEL_1);
+        LL_DMA_ClearFlag_USE(GPDMA1, LL_DMA_CHANNEL_1);
 
         /* Prepare DMA data and length */
-        LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_2, usart_tx_dma_current_len);
-        LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_2, (uint32_t)lwrb_get_linear_block_read_address(&usart_tx_rb));
+        LL_DMA_SetBlkDataLength(GPDMA1, LL_DMA_CHANNEL_1, usart_tx_dma_current_len);
+        LL_DMA_SetSrcAddress(GPDMA1, LL_DMA_CHANNEL_1, (uint32_t)lwrb_get_linear_block_read_address(&usart_tx_rb));
 
         /* Start transfer */
-        LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_2);
+        LL_DMA_EnableChannel(GPDMA1, LL_DMA_CHANNEL_1);
         started = 1;
     }
-#endif
     __set_PRIMASK(primask);
     return started;
 }
@@ -250,10 +251,8 @@ usart_send_string(const char* str) {
 }
 
 /**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
+ * \brief           USART1 Initialization Function
+ */
 void
 usart_init(void) {
     LL_USART_InitTypeDef USART_InitStruct = {0};
@@ -411,12 +410,6 @@ usart_init(void) {
     LL_USART_EnableDMAReq_TX(USART1);
     LL_USART_EnableIT_IDLE(USART1);
 
-#if 0
-    LL_DMA_SetSrcAddress(GPDMA1, LL_DMA_CHANNEL_1, "Hello world\r\n");
-    LL_DMA_SetBlkDataLength(GPDMA1, LL_DMA_CHANNEL_1, 13);
-    LL_DMA_EnableChannel(GPDMA1, LL_DMA_CHANNEL_1);
-#endif
-
     /* Start UART and enable DMA channel for RX */
     LL_USART_Enable(USART1);
     LL_DMA_EnableChannel(GPDMA1, LL_DMA_CHANNEL_0);
@@ -453,8 +446,11 @@ GPDMA1_Channel1_IRQHandler(void) {
     if (LL_DMA_IsEnabledIT_TC(GPDMA1, LL_DMA_CHANNEL_1)
             && LL_DMA_IsActiveFlag_TC(GPDMA1, LL_DMA_CHANNEL_1)) {
         LL_DMA_ClearFlag_TC(GPDMA1, LL_DMA_CHANNEL_1);
-        /* TODO: Skip transmitted data from buffer */
-        /* TODO: Try to send more data */
+
+        /* Skip data in memory - mark it sent */
+        lwrb_skip(&usart_tx_rb, usart_tx_dma_current_len);
+        usart_tx_dma_current_len = 0;
+        usart_start_tx_dma_transfer();
     }
 
     /* Implement other events when needed */
@@ -475,75 +471,66 @@ USART1_IRQHandler(void) {
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
-  LL_FLASH_SetLatency(LL_FLASH_LATENCY_4);
-  while(LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_4)
-  {
-  }
+ * \brief           System Clock Configuration
+ */
+void
+SystemClock_Config(void) {
+    LL_FLASH_SetLatency(LL_FLASH_LATENCY_4);
+    while (LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_4) {}
 
-  LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE1);
-  LL_RCC_MSIS_Enable();
+    /* Set regulator voltage */
+    LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE1);
 
-   /* Wait till MSIS is ready */
-  while(LL_RCC_MSIS_IsReady() != 1)
-  {
-  }
+    /* Enable MSIS */
+    LL_RCC_MSIS_Enable();
+    while(LL_RCC_MSIS_IsReady() != 1) {}
 
-  LL_RCC_MSI_EnableRangeSelection();
-  LL_RCC_MSIS_SetRange(LL_RCC_MSISRANGE_0);
-  LL_RCC_MSI_SetCalibTrimming(16, LL_RCC_MSI_OSCILLATOR_0);
-  LL_RCC_PLL1_ConfigDomain_SYS(LL_RCC_PLL1SOURCE_MSIS, 3, 10, 1);
-  LL_RCC_PLL1_EnableDomain_SYS();
-  LL_RCC_SetPll1EPodPrescaler(LL_RCC_PLL1MBOOST_DIV_4);
-  LL_RCC_PLL1_SetVCOInputRange(LL_RCC_PLLINPUTRANGE_8_16);
-  LL_RCC_PLL1_Enable();
+    /* Configure MSI & PLL oscillators */
+    LL_RCC_MSI_EnableRangeSelection();
+    LL_RCC_MSIS_SetRange(LL_RCC_MSISRANGE_0);
+    LL_RCC_MSI_SetCalibTrimming(16, LL_RCC_MSI_OSCILLATOR_0);
+    LL_RCC_PLL1_ConfigDomain_SYS(LL_RCC_PLL1SOURCE_MSIS, 3, 10, 1);
+    LL_RCC_PLL1_EnableDomain_SYS();
+    LL_RCC_SetPll1EPodPrescaler(LL_RCC_PLL1MBOOST_DIV_4);
+    LL_RCC_PLL1_SetVCOInputRange(LL_RCC_PLLINPUTRANGE_8_16);
+    LL_RCC_PLL1_Enable();
 
-   /* Wait till PLL is ready */
-  while(LL_RCC_PLL1_IsReady() != 1)
-  {
-  }
+    /* Wait till PLL is ready */
+    while (!LL_RCC_PLL1_IsReady()) {}
 
-   /* Intermediate AHB prescaler 2 when target frequency clock is higher than 80 MHz */
-  LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_2);
+    /* Intermediate AHB prescaler 2 when target frequency clock is higher than 80 MHz */
+    LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_2);
+    LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL1);
 
-  LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL1);
+    /* Wait till System clock is ready */
+    while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL1) {}
 
-   /* Wait till System clock is ready */
-  while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL1)
-  {
-  }
+    /* Insure 1�s transition state at intermediate medium speed clock based on DWT*/
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
 
-  /* Insure 1�s transition state at intermediate medium speed clock based on DWT*/
-  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+    DWT->CYCCNT = 0;
+    while (DWT->CYCCNT < 100) {}
 
-  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-  DWT->CYCCNT = 0;
-  while(DWT->CYCCNT < 100);
+    /* Set prescalers */
+    LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+    LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
+    LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
+    LL_RCC_SetAPB3Prescaler(LL_RCC_APB3_DIV_1);
 
-  LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-  LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
-  LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
-  LL_RCC_SetAPB3Prescaler(LL_RCC_APB3_DIV_1);
-
-  LL_Init1msTick(160000000);
-
-  LL_SetSystemCoreClock(160000000);
+    LL_Init1msTick(160000000);
+    LL_SetSystemCoreClock(160000000);
 }
 
 /**
-  * @brief Power Configuration
-  * @retval None
-  */
+ * \brief           Power Configuration
+ */
 static void
 SystemPower_Config(void) {
-  /* Disable the internal Pull-Up in Dead Battery pins of UCPD peripheral */
-  LL_PWR_DisableUCPDDeadBattery();
+    /* Disable the internal Pull-Up in Dead Battery pins of UCPD peripheral */
+    LL_PWR_DisableUCPDDeadBattery();
 
-  /* Switch to SMPS regulator instead of LDO */
-  LL_PWR_SetRegulatorSupply(LL_PWR_SMPS_SUPPLY);
-  while (!LL_PWR_IsActiveFlag_REGULATOR()) {}
+    /* Switch to SMPS regulator instead of LDO */
+    LL_PWR_SetRegulatorSupply(LL_PWR_SMPS_SUPPLY);
+    while (!LL_PWR_IsActiveFlag_REGULATOR()) {}
 }
