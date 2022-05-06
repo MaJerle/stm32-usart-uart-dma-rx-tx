@@ -315,6 +315,18 @@ Common for all examples:
 
 Examples demonstrate different use cases for RX only or RX&TX combined.
 
+> Demos part of this repository are all based on Low-Level (LL) drivers to maximize user understanding - how to convert theory into practice.
+> Some STM32Cube firmware packages include same example using HAL drivers too. Some of them are (with link to example; list is not exhausted) listed below.
+> All examples are identified as *UART_ReceptionToIdle_CircularDMA* - you can search for it in your local Cube firmware repository.
+> * [STM32U5 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeU5/tree/main/Projects/NUCLEO-U575ZI-Q/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+> * [STM32L5 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeL5/tree/master/Projects/NUCLEO-L552ZE-Q/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+> * [STM32G4 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeG4/tree/master/Projects/NUCLEO-G474RE/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+> * [STM32F4 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeF4/tree/master/Projects/STM32446E-Nucleo/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+> * [STM32G0 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeG0/tree/master/Projects/STM32G0C1E-EV/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+> * [STM32L4 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeL4/tree/master/Projects/NUCLEO-L476RG/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+> * [STM32WB UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeWB/tree/master/Projects/P-NUCLEO-WB55.Nucleo/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+> * [STM32WL UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeWL/tree/main/Projects/NUCLEO-WL55JC/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+
 ## Examples for UART + DMA RX
 
 ### Polling for changes
