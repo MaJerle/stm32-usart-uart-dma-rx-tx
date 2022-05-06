@@ -299,14 +299,15 @@ Common for all examples:
 - DMA TX common configuration: Normal mode, `TC` event enabled
 - All RX examples implement loop-back functionality. Every character received by UART and transfered by DMA is sent back to same UART
 
-| STM32 family | Board name        | USART     | STM32 TX  | STM32 RX  | RX DMA settings                    | TX DMA settings                    |
-|--------------|-------------------|-----------|-----------|-----------|------------------------------------|------------------------------------|
-| STM32F1xx    | `BluePill-F103C8` | `USART1`  | `PA9`     | `PA10`    | *`DMA1`, `Channel 5`*              |                                    |
-| STM32F4xx    | `NUCLEO-F413ZH`   | `USART3`  | `PD8`     | `PD9`     | *`DMA1`, `Stream 1`, `Channel 4`*  | *`DMA1`, `Stream 3`, `Channel 4`*  |
-| STM32G0xx    | `NUCLEO-G071RB`   | `USART2`  | `PA2`     | `PA3`     | *`DMA1`, `Channel 1`*              |                                    |
-| STM32G4xx    | `NUCLEO-G474RE`   | `LPUART1` | `PA2`     | `PA3`     | *`DMA1`, `Channel 1`*              |                                    |
-| STM32L4xx    | `NUCLEO-L432KC`   | `USART2`  | `PA2`     | `PA15`    | *`DMA1`, `Channel 6`, `Request 2`* |                                    |
-| STM32H7xx    | `NUCLEO-H743ZI2*` | `USART3`  | `PD8`     | `PD9`     | *`DMA1`, `Stream 0`*               | *`DMA1`, `Stream 1`*               |
+| STM32 family | Board name         | USART     | STM32 TX  | STM32 RX  | RX DMA settings                    | TX DMA settings                    |
+|--------------|--------------------|-----------|-----------|-----------|------------------------------------|------------------------------------|
+| STM32F1xx    | `BluePill-F103C8`  | `USART1`  | `PA9`     | `PA10`    | *`DMA1`, `Channel 5`*              |                                    |
+| STM32F4xx    | `NUCLEO-F413ZH`    | `USART3`  | `PD8`     | `PD9`     | *`DMA1`, `Stream 1`, `Channel 4`*  | *`DMA1`, `Stream 3`, `Channel 4`*  |
+| STM32G0xx    | `NUCLEO-G071RB`    | `USART2`  | `PA2`     | `PA3`     | *`DMA1`, `Channel 1`*              |                                    |
+| STM32G4xx    | `NUCLEO-G474RE`    | `LPUART1` | `PA2`     | `PA3`     | *`DMA1`, `Channel 1`*              |                                    |
+| STM32L4xx    | `NUCLEO-L432KC`    | `USART2`  | `PA2`     | `PA15`    | *`DMA1`, `Channel 6`, `Request 2`* |                                    |
+| STM32H7xx    | `NUCLEO-H743ZI2*`  | `USART3`  | `PD8`     | `PD9`     | *`DMA1`, `Stream 0`*               | *`DMA1`, `Stream 1`*               |
+| STM32U5xx    | `NUCLEO-U575ZI-Q*` | `USART1`  | `PA9`     | `PA10`    | *`GPDMA1`, `Channel 0`*            | *`GPDMA1`, `Channel 1`*            |
 
 > * It is possible to run H743 (single-core) examples on dual-core STM32H7 Nucleo boards, NUCLEO-H745 or NUCLEO-H755.
 > Special care needs to be taken as dual-core H7 Nucleo boards use DCDC for MCU power hence
