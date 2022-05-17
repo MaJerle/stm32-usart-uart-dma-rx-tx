@@ -15,10 +15,14 @@ void usart_process_data(const void* data, size_t len);
 void usart_send_string(const char* str);
 uint8_t usart_start_tx_dma_transfer(void);
 
+#if defined(DEBUG)
+
 /**
  * \brief           Calculate length of statically allocated array
  */
 #define ARRAY_LEN(x)            (sizeof(x) / sizeof((x)[0]))
+
+#endif
 
 /* Static & global variable for linked list node */
 static LL_DMA_LinkNodeTypeDef Node_GPDMA1_Channel0;

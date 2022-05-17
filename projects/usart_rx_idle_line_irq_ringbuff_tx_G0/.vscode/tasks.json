@@ -5,7 +5,7 @@
             "type": "cppbuild",
             "label": "Build project",
             "command": "cmake",
-            "args": ["--build", "\"build\"", "-j", "8"],
+            "args": ["--build", "${command:cmake.buildDirectory}", "-j", "8"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
@@ -19,7 +19,7 @@
             "type": "shell",
             "label": "Re-build project",
             "command": "cmake",
-            "args": ["--build", "\"build\"", "--clean-first", "-v", "-j", "8"],
+            "args": ["--build", "${command:cmake.buildDirectory}", "--clean-first", "-v", "-j", "8"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
@@ -29,24 +29,7 @@
             "type": "shell",
             "label": "Clean project",
             "command": "cmake",
-            "args": ["--build", "\"build\"", "--target", "clean"],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": []
-        },
-        {
-            "type": "shell",
-            "label": "Run CMake configuration",
-            "command": "cmake",
-            "args": [
-                "--no-warn-unused-cli",
-                "-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE",
-                "-DCMAKE_BUILD_TYPE:STRING=Debug",
-                "-DCMAKE_TOOLCHAIN_FILE:FILEPATH=gcc-arm-none-eabi.cmake",
-                "-Bbuild",
-                "-G", "Ninja"
-            ],
+            "args": ["--build", "${command:cmake.buildDirectory}", "--target", "clean"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },

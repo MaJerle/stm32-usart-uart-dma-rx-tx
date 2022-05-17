@@ -14,10 +14,10 @@
             "device": "",                       //MCU used, ex. "STM32H735IG"
             "interface": "swd",
             "serialNumber": "",                 //Set ST-Link ID if you use multiple at the same time
-            "runToEntryPoint": "main",
+            "runToMain": true,
             "svdFile": "path/to/file.svd",      //Path to SVD file to see registers
             "v1": false,
-            "showDevDebugOutput": "both",
+            "showDevDebugOutput": true,
 
             /* Will get automatically detected if STM32CubeIDE is installed to default directory
                or it can be manually provided if necessary.. */

@@ -18,6 +18,8 @@ set(CMAKE_CXX_STANDARD              20)
 set(CMAKE_CXX_STANDARD_REQUIRED     ON)
 set(CMAKE_CXX_EXTENSIONS            ON)
 
+message("Config value ${CONFIG}")
+
 #
 # Core MCU flags, CPU, instruction set and FPU setup
 #
@@ -82,7 +84,6 @@ set(include_asm_DIRS
 # Symbols definition
 #
 set(symbols_c_SYMB
-    "DEBUG"
 	"STM32U575xx"
 	"USE_FULL_LL_DRIVER"
 	"HSE_VALUE=16000000"
@@ -99,7 +100,6 @@ set(symbols_cxx_SYMB
     
 )
 set(symbols_asm_SYMB
-    "DEBUG"
 )
 
 #
@@ -138,9 +138,7 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
     $<$<COMPILE_LANGUAGE:ASM>: ${symbols_asm_SYMB}>
 
     # Configuration specific
-    $<$<CONFIG:Debug>:
-        DEBUG
-    >
+    $<$<CONFIG:Debug>:DEBUG >
     $<$<CONFIG:Release>: >
 )
 
@@ -178,12 +176,6 @@ target_compile_options(${EXECUTABLE} PRIVATE
         -x assembler-with-cpp
         -MMD
         -MP
-    >
-    $<$<CONFIG:Debug>:
-        -Og -g3 -ggdb
-    >
-    $<$<CONFIG:Release>:
-        -Og -g0
     >
 )
 

@@ -134,9 +134,7 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
     $<$<COMPILE_LANGUAGE:ASM>: ${symbols_asm_SYMB}>
 
     # Configuration specific
-    $<$<CONFIG:Debug>:
-        DEBUG
-    >
+    $<$<CONFIG:Debug>:DEBUG>
     $<$<CONFIG:Release>: >
 )
 
@@ -174,12 +172,6 @@ target_compile_options(${EXECUTABLE} PRIVATE
         -x assembler-with-cpp
         -MMD
         -MP
-    >
-    $<$<CONFIG:Debug>:
-        -Og -g3 -ggdb
-    >
-    $<$<CONFIG:Release>:
-        -Og -g0
     >
 )
 
