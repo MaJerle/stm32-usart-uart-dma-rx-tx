@@ -2,7 +2,7 @@
     "version": 4,
     "configurations": [
         {
-            /* ms-vscode.cmake-tools plugin shall to be installed, which provides include paths and defines through CMake file */
+            /* ms-vscode.cmake-tools plugin should be installed; it provides include paths and defines through CMake file */
             "name": "STM32",
             "includePath": [],
             "defines": [],

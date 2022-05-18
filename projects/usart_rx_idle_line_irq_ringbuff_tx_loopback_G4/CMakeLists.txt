@@ -26,8 +26,8 @@ set(CPU_PARAMETERS
     # Other parameters
     # -mcpu, -mfloat, -mfloat-abi, ...
     -mcpu=cortex-m4
-	-mfpu=fpv4-sp-d16
-	-mfloat-abi=hard
+    -mfpu=fpv4-sp-d16
+    -mfloat-abi=hard
 )
 
 # Set linker script
@@ -38,34 +38,34 @@ set(EXECUTABLE                      ${CMAKE_PROJECT_NAME})
 # Source files
 #
 set(src_lwrb_SRCS 
-	${PROJ_PATH}/../../middlewares/lwrb/src/lwrb/lwrb.c)
+    ${PROJ_PATH}/../../middlewares/lwrb/src/lwrb/lwrb.c)
 
 set(src_drivers_stm32g4xx_hal_driver_SRCS 
-	${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_dma.c
-	${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_exti.c
-	${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_gpio.c
-	${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_lpuart.c
-	${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c
-	${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_rcc.c
-	${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_utils.c)
+    ${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_dma.c
+    ${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_exti.c
+    ${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_gpio.c
+    ${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_lpuart.c
+    ${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_pwr.c
+    ${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_rcc.c
+    ${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Src/stm32g4xx_ll_utils.c)
 
 set(src_src_SRCS 
-	${PROJ_PATH}/Src/main.c
-	${PROJ_PATH}/Src/stm32g4xx_it.c
-	${PROJ_PATH}/Src/system_stm32g4xx.c)
+    ${PROJ_PATH}/Src/main.c
+    ${PROJ_PATH}/Src/stm32g4xx_it.c
+    ${PROJ_PATH}/Src/system_stm32g4xx.c)
 
 set(src_startup_SRCS 
-	${PROJ_PATH}/Startup/startup_stm32g474retx.s)
+    ${PROJ_PATH}/Startup/startup_stm32g474retx.s)
 
 #
 # Include directories
 #
 set(include_c_DIRS
     ${PROJ_PATH}/Inc
-	${PROJ_PATH}/../../middlewares/lwrb/src/include
-	${PROJ_PATH}/../../drivers/CMSIS/Include
-	${PROJ_PATH}/../../drivers/CMSIS/Device/ST/STM32G4xx/Include
-	${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Inc
+    ${PROJ_PATH}/../../middlewares/lwrb/src/include
+    ${PROJ_PATH}/../../drivers/CMSIS/Include
+    ${PROJ_PATH}/../../drivers/CMSIS/Device/ST/STM32G4xx/Include
+    ${PROJ_PATH}/../../drivers/STM32G4xx_HAL_Driver/Inc
 )
 set(include_cxx_DIRS
     
@@ -79,19 +79,19 @@ set(include_asm_DIRS
 #
 set(symbols_c_SYMB
     "HSE_VALUE=8000000"
-	"LSI_VALUE=32000"
-	"HSE_STARTUP_TIMEOUT=100"
-	"HSI_VALUE=16000000"
-	"LSE_STARTUP_TIMEOUT=5000"
-	"DEBUG"
-	"LSE_VALUE=32768"
-	"DATA_CACHE_ENABLE=1"
-	"EXTERNAL_CLOCK_VALUE=12288000"
-	"VDD_VALUE=3300"
-	"INSTRUCTION_CACHE_ENABLE=1"
-	"STM32G474xx"
-	"USE_FULL_LL_DRIVER"
-	"PREFETCH_ENABLE=0"
+    "LSI_VALUE=32000"
+    "HSE_STARTUP_TIMEOUT=100"
+    "HSI_VALUE=16000000"
+    "LSE_STARTUP_TIMEOUT=5000"
+    "DEBUG"
+    "LSE_VALUE=32768"
+    "DATA_CACHE_ENABLE=1"
+    "EXTERNAL_CLOCK_VALUE=12288000"
+    "VDD_VALUE=3300"
+    "INSTRUCTION_CACHE_ENABLE=1"
+    "STM32G474xx"
+    "USE_FULL_LL_DRIVER"
+    "PREFETCH_ENABLE=0"
 )
 set(symbols_cxx_SYMB
     
@@ -113,10 +113,10 @@ link_directories(${EXECUTABLE} ${link_DIRS})
 # Executable files
 #
 add_executable(${EXECUTABLE} 
-	${src_lwrb_SRCS}
-	${src_drivers_stm32g4xx_hal_driver_SRCS}
-	${src_src_SRCS}
-	${src_startup_SRCS})
+    ${src_lwrb_SRCS}
+    ${src_drivers_stm32g4xx_hal_driver_SRCS}
+    ${src_src_SRCS}
+    ${src_startup_SRCS})
 
 #
 # Add linked libraries for linker
@@ -136,7 +136,9 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
     $<$<COMPILE_LANGUAGE:ASM>: ${symbols_asm_SYMB}>
 
     # Configuration specific
-    $<$<CONFIG:Debug>:DEBUG>
+    $<$<CONFIG:Debug>:
+        DEBUG
+    >
     $<$<CONFIG:Release>: >
 )
 
@@ -175,13 +177,20 @@ target_compile_options(${EXECUTABLE} PRIVATE
         -MMD
         -MP
     >
+    $<$<CONFIG:Debug>:
+        -Og -g3 -ggdb
+    >
+    $<$<CONFIG:Release>:
+        -Og -g0
+    >
 )
 
 # Setup linker parameters
 target_link_options(${EXECUTABLE} PRIVATE
-    -T${MCU_LINKER_SCRIPT}${linker_script_SRC}
+    -T${linker_script_SRC}
     ${CPU_PARAMETERS}
     -Wl,-Map=${CMAKE_PROJECT_NAME}.map
+    -u _printf_float              # STDIO float formatting support (remove if not used)
     --specs=nosys.specs
     -Wl,--start-group
     -lc
@@ -202,7 +211,7 @@ add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${EXECUTABLE}> ${EXECUTABLE}.hex
 )
 
-# Conver to bin file -> add conditional check?
+# Convert to bin file -> add conditional check?
 add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${EXECUTABLE}> ${EXECUTABLE}.bin
 )

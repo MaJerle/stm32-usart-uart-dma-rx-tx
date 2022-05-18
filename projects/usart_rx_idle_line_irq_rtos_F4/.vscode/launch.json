@@ -17,7 +17,7 @@
             "runToMain": true,
             "svdFile": "path/to/file.svd",      //Path to SVD file to see registers
             "v1": false,
-            "showDevDebugOutput": true,
+            "showDevDebugOutput": "both",
 
             /* Will get automatically detected if STM32CubeIDE is installed to default directory
                or it can be manually provided if necessary.. */

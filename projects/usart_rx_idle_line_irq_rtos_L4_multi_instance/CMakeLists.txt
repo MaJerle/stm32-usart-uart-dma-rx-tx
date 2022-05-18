@@ -26,8 +26,8 @@ set(CPU_PARAMETERS
     # Other parameters
     # -mcpu, -mfloat, -mfloat-abi, ...
     -mcpu=cortex-m4
-	-mfpu=fpv4-sp-d16
-	-mfloat-abi=hard
+    -mfpu=fpv4-sp-d16
+    -mfloat-abi=hard
 )
 
 # Set linker script
@@ -38,47 +38,47 @@ set(EXECUTABLE                      ${CMAKE_PROJECT_NAME})
 # Source files
 #
 set(src_drivers_stm32l4xx_hal_driver_SRCS 
-	${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_dma.c
-	${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_exti.c
-	${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_gpio.c
-	${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_rcc.c
-	${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_usart.c
-	${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_utils.c)
+    ${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_dma.c
+    ${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_exti.c
+    ${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_gpio.c
+    ${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_rcc.c
+    ${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_usart.c
+    ${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_utils.c)
 
 set(src_middleware_freertos_SRCS 
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/CMSIS_RTOS/cmsis_os2.c
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/croutine.c
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/event_groups.c
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/portable/MemMang/heap_4.c
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/list.c
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/queue.c
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/stream_buffer.c
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/tasks.c
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/timers.c)
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/CMSIS_RTOS/cmsis_os2.c
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/croutine.c
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/event_groups.c
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/portable/MemMang/heap_4.c
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/list.c
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/queue.c
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/stream_buffer.c
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/tasks.c
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/timers.c)
 
 set(src_src_SRCS 
-	${PROJ_PATH}/Src/main.c
-	${PROJ_PATH}/Src/stm32l4xx_it.c
-	${PROJ_PATH}/Src/system_stm32l4xx.c)
+    ${PROJ_PATH}/Src/main.c
+    ${PROJ_PATH}/Src/stm32l4xx_it.c
+    ${PROJ_PATH}/Src/system_stm32l4xx.c)
 
 set(src_startup_SRCS 
-	${PROJ_PATH}/startup/startup_stm32l432xx.s)
+    ${PROJ_PATH}/startup/startup_stm32l432xx.s)
 
 set(src__SRCS 
-	${PROJ_PATH}/syscalls.c)
+    ${PROJ_PATH}/syscalls.c)
 
 #
 # Include directories
 #
 set(include_c_DIRS
     ${PROJ_PATH}/Inc
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/Include
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/portable/GCC/ARM_CM4F
-	${PROJ_PATH}/../../middlewares/FreeRTOS/Source/CMSIS_RTOS
-	${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Inc
-	${PROJ_PATH}/../../drivers/CMSIS/Device/ST/STM32L4xx/Include
-	${PROJ_PATH}/../../drivers/CMSIS/Include
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/portable/GCC/ARM_CM4F
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/CMSIS_RTOS
+    ${PROJ_PATH}/../../drivers/STM32L4xx_HAL_Driver/Inc
+    ${PROJ_PATH}/../../drivers/CMSIS/Device/ST/STM32L4xx/Include
+    ${PROJ_PATH}/../../drivers/CMSIS/Include
+    ${PROJ_PATH}/../../middlewares/FreeRTOS/Source/include
 )
 set(include_cxx_DIRS
     
@@ -92,9 +92,9 @@ set(include_asm_DIRS
 #
 set(symbols_c_SYMB
     "USE_FULL_LL_DRIVER"
-	"__weak=__attribute__((weak))"
-	"__packed=__attribute__((__packed__))"
-	"STM32L432xx"
+    "__weak=__attribute__((weak))"
+    "__packed=__attribute__((__packed__))"
+    "STM32L432xx"
 )
 set(symbols_cxx_SYMB
     
@@ -116,11 +116,11 @@ link_directories(${EXECUTABLE} ${link_DIRS})
 # Executable files
 #
 add_executable(${EXECUTABLE} 
-	${src_drivers_stm32l4xx_hal_driver_SRCS}
-	${src_middleware_freertos_SRCS}
-	${src_src_SRCS}
-	${src_startup_SRCS}
-	${src__SRCS})
+    ${src_drivers_stm32l4xx_hal_driver_SRCS}
+    ${src_middleware_freertos_SRCS}
+    ${src_src_SRCS}
+    ${src_startup_SRCS}
+    ${src__SRCS})
 
 #
 # Add linked libraries for linker
@@ -140,7 +140,9 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
     $<$<COMPILE_LANGUAGE:ASM>: ${symbols_asm_SYMB}>
 
     # Configuration specific
-    $<$<CONFIG:Debug>:DEBUG>
+    $<$<CONFIG:Debug>:
+        DEBUG
+    >
     $<$<CONFIG:Release>: >
 )
 
@@ -179,13 +181,20 @@ target_compile_options(${EXECUTABLE} PRIVATE
         -MMD
         -MP
     >
+    $<$<CONFIG:Debug>:
+        -Og -g3 -ggdb
+    >
+    $<$<CONFIG:Release>:
+        -Og -g0
+    >
 )
 
 # Setup linker parameters
 target_link_options(${EXECUTABLE} PRIVATE
-    -T${MCU_LINKER_SCRIPT}${linker_script_SRC}
+    -T${linker_script_SRC}
     ${CPU_PARAMETERS}
     -Wl,-Map=${CMAKE_PROJECT_NAME}.map
+    -u _printf_float              # STDIO float formatting support (remove if not used)
     --specs=nosys.specs
     -Wl,--start-group
     -lc
@@ -206,7 +215,7 @@ add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${EXECUTABLE}> ${EXECUTABLE}.hex
 )
 
-# Conver to bin file -> add conditional check?
+# Convert to bin file -> add conditional check?
 add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${EXECUTABLE}> ${EXECUTABLE}.bin
 )
