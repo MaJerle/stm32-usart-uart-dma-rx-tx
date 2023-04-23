@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
 
-message("Entering ${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt")
-
 #
 # Core project settings
 #
@@ -207,5 +205,3 @@ add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
 add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${EXECUTABLE}> ${EXECUTABLE}.bin
 )
-
-message("Exiting ${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt")
