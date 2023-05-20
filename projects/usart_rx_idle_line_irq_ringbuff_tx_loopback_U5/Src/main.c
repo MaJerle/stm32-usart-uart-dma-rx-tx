@@ -1,8 +1,8 @@
 #include "main.h"
+#include "lwrb/lwrb.h"
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lwrb/lwrb.h"
 
 /* System private function */
 void SystemClock_Config(void);
@@ -15,42 +15,29 @@ void usart_process_data(const void* data, size_t len);
 void usart_send_string(const char* str);
 uint8_t usart_start_tx_dma_transfer(void);
 
-#if defined(DEBUG)
-
-/**
- * \brief           Calculate length of statically allocated array
- */
-#define ARRAY_LEN(x)            (sizeof(x) / sizeof((x)[0]))
-
-#endif
-
 /* Static & global variable for linked list node */
 static LL_DMA_LinkNodeTypeDef Node_GPDMA1_Channel0;
 
 /**
  * \brief           Ring buffer instance for TX data
  */
-lwrb_t
-usart_tx_rb;
+lwrb_t usart_tx_rb;
 
 /**
  * \brief           Ring buffer data array for TX DMA
  */
-uint8_t
-usart_tx_rb_data[128];
+uint8_t usart_tx_rb_data[128];
 
 /**
  * \brief           Length of currently active TX DMA transfer
  */
-volatile size_t
-usart_tx_dma_current_len;
+volatile size_t usart_tx_dma_current_len;
 
 /**
  * \brief           USART RX buffer for DMA to transfer every received byte
  * \note            Contains raw data that are about to be processed by different events
  */
-uint8_t
-usart_rx_dma_buffer[64];
+uint8_t usart_rx_dma_buffer[64];
 
 /**
  * \brief           The application entry point
@@ -120,9 +107,9 @@ usart_rx_check(void) {
     size_t pos;
 
     /* Calculate current position in buffer and check for new data available */
-    pos = ARRAY_LEN(usart_rx_dma_buffer) - LL_DMA_GetBlkDataLength(GPDMA1, LL_DMA_CHANNEL_0);
-    if (pos != old_pos) {                       /* Check change in received data */
-        if (pos > old_pos) {                    /* Current position is over previous one */
+    pos = sizeof(usart_rx_dma_buffer) - LL_DMA_GetBlkDataLength(GPDMA1, LL_DMA_CHANNEL_0);
+    if (pos != old_pos) {    /* Check change in received data */
+        if (pos > old_pos) { /* Current position is over previous one */
             /*
              * Processing is done in "linear" mode.
              *
@@ -157,12 +144,12 @@ usart_rx_check(void) {
              * [   7   ]            |                                 |
              * [ N - 1 ]            |---------------------------------|
              */
-            usart_process_data(&usart_rx_dma_buffer[old_pos], ARRAY_LEN(usart_rx_dma_buffer) - old_pos);
+            usart_process_data(&usart_rx_dma_buffer[old_pos], sizeof(usart_rx_dma_buffer) - old_pos);
             if (pos > 0) {
                 usart_process_data(&usart_rx_dma_buffer[0], pos);
             }
         }
-        old_pos = pos;                          /* Save current position as old for next transfers */
+        old_pos = pos; /* Save current position as old for next transfers */
     }
 }
 
@@ -205,7 +192,7 @@ usart_start_tx_dma_transfer(void) {
     primask = __get_PRIMASK();
     __disable_irq();
     if (usart_tx_dma_current_len == 0
-            && (usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_rb)) > 0) {
+        && (usart_tx_dma_current_len = lwrb_get_linear_block_read_length(&usart_tx_rb)) > 0) {
         /* Disable channel if enabled */
         LL_DMA_DisableChannel(GPDMA1, LL_DMA_CHANNEL_1);
 
@@ -238,8 +225,8 @@ usart_start_tx_dma_transfer(void) {
  */
 void
 usart_process_data(const void* data, size_t len) {
-    lwrb_write(&usart_tx_rb, data, len);        /* Write data to TX buffer for loopback */
-    usart_start_tx_dma_transfer();              /* Then try to start transfer */
+    lwrb_write(&usart_tx_rb, data, len); /* Write data to TX buffer for loopback */
+    usart_start_tx_dma_transfer();       /* Then try to start transfer */
 }
 
 /**
@@ -364,12 +351,14 @@ usart_init(void) {
     NodeConfig.BlkHWRequest = LL_DMA_HWREQUEST_SINGLEBURST;
     NodeConfig.Direction = LL_DMA_DIRECTION_PERIPH_TO_MEMORY;
     NodeConfig.Request = LL_GPDMA1_REQUEST_USART1_RX;
-    NodeConfig.UpdateRegisters = (LL_DMA_UPDATE_CTR1 | LL_DMA_UPDATE_CTR2 | LL_DMA_UPDATE_CBR1 | LL_DMA_UPDATE_CSAR | LL_DMA_UPDATE_CDAR | LL_DMA_UPDATE_CTR3 | LL_DMA_UPDATE_CBR2 | LL_DMA_UPDATE_CLLR);
+    NodeConfig.UpdateRegisters = (LL_DMA_UPDATE_CTR1 | LL_DMA_UPDATE_CTR2 | LL_DMA_UPDATE_CBR1 | LL_DMA_UPDATE_CSAR
+                                  | LL_DMA_UPDATE_CDAR | LL_DMA_UPDATE_CTR3 | LL_DMA_UPDATE_CBR2 | LL_DMA_UPDATE_CLLR);
     NodeConfig.NodeType = LL_DMA_GPDMA_LINEAR_NODE;
     /* Additional settings */
     NodeConfig.SrcAddress = LL_USART_DMA_GetRegAddr(USART1, LL_USART_DMA_REG_DATA_RECEIVE);
     NodeConfig.DestAddress = (uint32_t)usart_rx_dma_buffer;
-    NodeConfig.BlkDataLength = ARRAY_LEN(usart_rx_dma_buffer);
+    /* Size is always in bytes! Width is determined by source and destination numbers */
+    NodeConfig.BlkDataLength = sizeof(usart_rx_dma_buffer);
     LL_DMA_CreateLinkNode(&NodeConfig, &Node_GPDMA1_Channel0);
 
     /* Connect node to next node = to itself to achieve circular mode with one configuration */
@@ -383,8 +372,9 @@ usart_init(void) {
      */
     LL_DMA_SetLinkedListBaseAddr(GPDMA1, LL_DMA_CHANNEL_0, (uint32_t)&Node_GPDMA1_Channel0);
     LL_DMA_ConfigLinkUpdate(GPDMA1, LL_DMA_CHANNEL_0,
-            (LL_DMA_UPDATE_CTR1 | LL_DMA_UPDATE_CTR2 | LL_DMA_UPDATE_CBR1 | LL_DMA_UPDATE_CSAR | LL_DMA_UPDATE_CDAR | LL_DMA_UPDATE_CTR3 | LL_DMA_UPDATE_CBR2 | LL_DMA_UPDATE_CLLR),
-            (uint32_t)&Node_GPDMA1_Channel0);
+                            (LL_DMA_UPDATE_CTR1 | LL_DMA_UPDATE_CTR2 | LL_DMA_UPDATE_CBR1 | LL_DMA_UPDATE_CSAR
+                             | LL_DMA_UPDATE_CDAR | LL_DMA_UPDATE_CTR3 | LL_DMA_UPDATE_CBR2 | LL_DMA_UPDATE_CLLR),
+                            (uint32_t)&Node_GPDMA1_Channel0);
 
     /* Initialize linked list general setup for GPDMA CH0 - the way transfers are done */
     DMA_InitLinkedListStruct.Priority = LL_DMA_LOW_PRIORITY_LOW_WEIGHT;
@@ -440,17 +430,15 @@ usart_init(void) {
 void
 GPDMA1_Channel0_IRQHandler(void) {
     /* Check for half-transfer interrupt */
-    if (LL_DMA_IsEnabledIT_HT(GPDMA1, LL_DMA_CHANNEL_0)
-            && LL_DMA_IsActiveFlag_HT(GPDMA1, LL_DMA_CHANNEL_0)) {
+    if (LL_DMA_IsEnabledIT_HT(GPDMA1, LL_DMA_CHANNEL_0) && LL_DMA_IsActiveFlag_HT(GPDMA1, LL_DMA_CHANNEL_0)) {
         LL_DMA_ClearFlag_HT(GPDMA1, LL_DMA_CHANNEL_0);
-        usart_rx_check();                       /* Check for data to process */
+        usart_rx_check(); /* Check for data to process */
     }
 
     /* Check for transfer-complete interrupt */
-    if (LL_DMA_IsEnabledIT_TC(GPDMA1, LL_DMA_CHANNEL_0)
-            && LL_DMA_IsActiveFlag_TC(GPDMA1, LL_DMA_CHANNEL_0)) {
+    if (LL_DMA_IsEnabledIT_TC(GPDMA1, LL_DMA_CHANNEL_0) && LL_DMA_IsActiveFlag_TC(GPDMA1, LL_DMA_CHANNEL_0)) {
         LL_DMA_ClearFlag_TC(GPDMA1, LL_DMA_CHANNEL_0);
-        usart_rx_check();                       /* Check for data to process */
+        usart_rx_check(); /* Check for data to process */
     }
 
     /* Implement other events when needed */
@@ -462,8 +450,7 @@ GPDMA1_Channel0_IRQHandler(void) {
 void
 GPDMA1_Channel1_IRQHandler(void) {
     /* Check transfer complete interrupt */
-    if (LL_DMA_IsEnabledIT_TC(GPDMA1, LL_DMA_CHANNEL_1)
-            && LL_DMA_IsActiveFlag_TC(GPDMA1, LL_DMA_CHANNEL_1)) {
+    if (LL_DMA_IsEnabledIT_TC(GPDMA1, LL_DMA_CHANNEL_1) && LL_DMA_IsActiveFlag_TC(GPDMA1, LL_DMA_CHANNEL_1)) {
         LL_DMA_ClearFlag_TC(GPDMA1, LL_DMA_CHANNEL_1);
 
         /* Skip data in memory - mark it sent */
@@ -482,8 +469,8 @@ void
 USART1_IRQHandler(void) {
     /* Check for IDLE line interrupt */
     if (LL_USART_IsActiveFlag_IDLE(USART1)) {
-        LL_USART_ClearFlag_IDLE(USART1);        /* Clear IDLE flag */
-        usart_rx_check();                       /* Check for data to process */
+        LL_USART_ClearFlag_IDLE(USART1); /* Clear IDLE flag */
+        usart_rx_check();                /* Check for data to process */
     }
 
     /* Implement other events when needed */
@@ -495,14 +482,14 @@ USART1_IRQHandler(void) {
 void
 SystemClock_Config(void) {
     LL_FLASH_SetLatency(LL_FLASH_LATENCY_4);
-    while (LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_4) {}
+    while (LL_FLASH_GetLatency() != LL_FLASH_LATENCY_4) {}
 
     /* Set regulator voltage */
     LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE1);
 
     /* Enable MSIS */
     LL_RCC_MSIS_Enable();
-    while(LL_RCC_MSIS_IsReady() != 1) {}
+    while (LL_RCC_MSIS_IsReady() != 1) {}
 
     /* Configure MSI & PLL oscillators */
     LL_RCC_MSI_EnableRangeSelection();
