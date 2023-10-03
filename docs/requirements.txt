@@ -1,6 +1,6 @@
 sphinx>=3.5.1
 breathe>=4.9.1
-urllib3==1.26.15
+urllib3==1.26.17
 docutils==0.16
 colorama
 sphinx_rtd_theme>=1.0.0
