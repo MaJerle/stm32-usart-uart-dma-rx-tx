@@ -32,7 +32,7 @@ UART in STM32 allows configurion using different transmit (`TX`) and receive (`R
 - Polling mode (no DMA, no IRQ)
 	- P: Application is polling for status bits to check if any character has been transmitted/received and read it fast enough in order to not-miss any byte
 	- P: Easy to implement, simply few code lines
-	- C: Can easiy miss received data in complex application if CPU cannot read registers quickly enough
+	- C: Can easily miss received data in complex application if CPU cannot read registers quickly enough
 	- C: Works only for low baudrates, `9600` or lower
 - Interrupt mode (no DMA)
 	- P: UART triggers interrupt and CPU jumps to service routine to handle each received byte separately
