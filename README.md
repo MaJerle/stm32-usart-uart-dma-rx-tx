@@ -1,4 +1,59 @@
-# STM32 UART DMA RX and TX
+# STM32 UART DMA RX and TX (REFACTORED to C++17 from Shpegun60)
+
+## Example from Shpegun60 (Don't write complicated code, don't make life difficult for programmers)
+```cpp
+
+// uarts ---------------------
+extern UART_HandleTypeDef huart4;
+extern UART_HandleTypeDef huart5;
+
+RS485DmaCirc rs485;
+
+	{
+		gpio::Output de1 {RS485_DE1_GPIO_Port, RS485_DE1_Pin};
+		gpio::Output de2 {RS485_DE2_GPIO_Port, RS485_DE2_Pin};
+		rs485[0].init({&huart5, de1});
+		rs485[1].init({&huart4, de2});
+
+//		rs485[0].subscribeRxLoop([&](const u8* data, u16 size, const u32 time) -> u16 {
+//			std::memcpy(dataToSend, data, size < sizeof(dataToSend) ? size : sizeof(dataToSend));
+//			dataToSend[0] = 0xFF;
+//			rs485[0].send(dataToSend, sizeof(dataToSend));
+//			return size;
+//		});
+
+	}
+
+	
+
+	{
+		rs485.subscribeRxLoop([&](const u8* data, u16 size, const u32 time) -> u16 {
+			const u16 maxLen = size > 64 ? 64 : size;
+			bus.proceedIncomeBytes(data, maxLen);
+			++rx_cnt;
+			rx_len = size;
+			return maxLen;
+//			rs485.send(dataToSend, sizeof(dataToSend));
+//			return size;
+		});
+
+		rs485.subscribeTx([&](const status_t status) {
+			bus.proceedSendFinished(status == STATUS_OK);
+			if(status != STATUS_OK) {
+				++e_cnt;
+			}
+			++i_cnt;
+		});
+		rs485.subscribeError([&](const status_t status) {
+
+			if(status != static_cast<status_t>(StatusUART::ERROR_UART_RX)) {
+				bus.proceedSendFinished(false);
+			}
+
+			++e_cnt;
+		});
+	}
+```
 
 This application note contains explanation with examples for `2` distinct topics:
 
