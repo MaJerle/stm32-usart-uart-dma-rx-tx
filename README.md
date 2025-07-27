@@ -23,7 +23,7 @@ Github supports ToC by default. It is available in the top-left corner of this d
 
 ## General about UART
 
-> STM32 has peripherals such as USART, UART or LPUART. Difference between them is not relevant for this purpose since concept can be applied to all of them. In few words, USART supports synchronous operation on top of asynchronous (UART) and LPUART supports Low-Power operation in STOP mode. When synchronous mode or low-power mode is not used, USART, UART and LPUART can be consideted identical. For complete set of details, check product's reference manual and datasheet.
+> STM32 includes peripherals like USART, UART, and LPUART. For the purposes of this example, the specific differences between them aren’t important, since the same concept applies to all. In few words, USART supports synchronous operation on top of asynchronous (UART) and LPUART supports Low-Power operation in STOP mode. When synchronous mode or low-power mode is not used, USART, UART and LPUART can be consideted identical. For complete set of details, check product's reference manual and datasheet.
 
 > For the sake of this application note, we will only use term **UART**.
 
@@ -49,7 +49,7 @@ UART in STM32 allows configurion using different transmit (`TX`) and receive (`R
 	- C: Number of bytes to transfer must be known in advance by DMA hardware
 	- C: If communication fails, DMA may not notify application about all bytes transferred
 
-> This article focuses only on *DMA mode* for RX operation and explain how to handle unknown data length
+> This guide focuses only on DMA‑based RX operation and explains how to handle cases where data length is unknown
 
 Every STM32 has at least one (`1`) UART IP and at least one (`1`) DMA controller available in its DNA.
 This is all we need for successful data transmission.
@@ -60,7 +60,7 @@ Implementing DMA receive, application should understand number of received bytes
 
 ## Idle Line or Receiver Timeout events
 
-STM32s have capability in UART to detect when *RX* line has not been active for period of time. This is achieved using `2` methods:
+STM32 UART peripherals can detect when the *RX* line remains inactive for a certain period of time. This is achieved using `2` methods:
 - *IDLE LINE event*: Triggered when RX line has been in idle state (normally high state) for `1` frame time, after last received byte. Frame time is based on baudrate. Higher baudrate means lower frame time for single byte.
 - *RTO (Receiver Timeout) event*: Triggered when line has been in idle state for programmable time. It is fully configured by firmware.
 
@@ -146,13 +146,13 @@ hello_world_arr[] = "HelloWorld";
 
 ### DMA HT/TC and UART IDLE combination details
 
-This section describes `4` possible cases and one additional which explains why *HT/TC* events are necessary by application
+This section describes `4` possible cases and one additional which explains why *HT* and *TC* events are both necessary in the application
 
 ![DMA events](https://raw.githubusercontent.com/MaJerle/stm32-usart-uart-dma-rx-tx/master/docs/dma_events.svg?sanitize=true)
 
 Abbrevations used for the image:
-- `R`: `R`ead pointer, used by application to read data from memory. Later also used as `old_ptr`
-- `W`: `W`rite pointer, used by DMA to write next byte to. Increased every time DMA writes new byte. Later also used as `new_ptr`
+- `R`: `R`ead pointer, used by the application to read data from memory. Later also used as `old_ptr`
+- `W`: `W`rite pointer, used by the DMA to write next byte to. Increased every time DMA writes new byte. Later also used as `new_ptr`
 - `HT`: `H`alf-`T`ransfer Complete event triggered by DMA
 - `TC`: `T`ransfer-`C`omplete event - triggered by DMA
 - `I`: `I`DLE line event - triggered by USART
@@ -299,15 +299,15 @@ Common for all examples:
 - DMA TX common configuration: Normal mode, `TC` event enabled
 - All RX examples implement loop-back functionality. Every character received by UART and transfered by DMA is sent back to same UART
 
-| STM32 family | Board name         | USART     | STM32 TX  | STM32 RX  | RX DMA settings                    | TX DMA settings                    |
-|--------------|--------------------|-----------|-----------|-----------|------------------------------------|------------------------------------|
-| STM32F1xx    | `BluePill-F103C8`  | `USART1`  | `PA9`     | `PA10`    | *`DMA1`, `Channel 5`*              |                                    |
-| STM32F4xx    | `NUCLEO-F413ZH`    | `USART3`  | `PD8`     | `PD9`     | *`DMA1`, `Stream 1`, `Channel 4`*  | *`DMA1`, `Stream 3`, `Channel 4`*  |
-| STM32G0xx    | `NUCLEO-G071RB`    | `USART2`  | `PA2`     | `PA3`     | *`DMA1`, `Channel 1`*              |                                    |
-| STM32G4xx    | `NUCLEO-G474RE`    | `LPUART1` | `PA2`     | `PA3`     | *`DMA1`, `Channel 1`*              |                                    |
-| STM32L4xx    | `NUCLEO-L432KC`    | `USART2`  | `PA2`     | `PA15`    | *`DMA1`, `Channel 6`, `Request 2`* |                                    |
-| STM32H7xx    | `NUCLEO-H743ZI2*`  | `USART3`  | `PD8`     | `PD9`     | *`DMA1`, `Stream 0`*               | *`DMA1`, `Stream 1`*               |
-| STM32U5xx    | `NUCLEO-U575ZI-Q*` | `USART1`  | `PA9`     | `PA10`    | *`GPDMA1`, `Channel 0`*            | *`GPDMA1`, `Channel 1`*            |
+| STM32 family | Board name         | USART     | STM32 TX | STM32 RX | RX DMA settings                    | TX DMA settings                   |
+| ------------ | ------------------ | --------- | -------- | -------- | ---------------------------------- | --------------------------------- |
+| STM32F1xx    | `BluePill-F103C8`  | `USART1`  | `PA9`    | `PA10`   | *`DMA1`, `Channel 5`*              |                                   |
+| STM32F4xx    | `NUCLEO-F413ZH`    | `USART3`  | `PD8`    | `PD9`    | *`DMA1`, `Stream 1`, `Channel 4`*  | *`DMA1`, `Stream 3`, `Channel 4`* |
+| STM32G0xx    | `NUCLEO-G071RB`    | `USART2`  | `PA2`    | `PA3`    | *`DMA1`, `Channel 1`*              |                                   |
+| STM32G4xx    | `NUCLEO-G474RE`    | `LPUART1` | `PA2`    | `PA3`    | *`DMA1`, `Channel 1`*              |                                   |
+| STM32L4xx    | `NUCLEO-L432KC`    | `USART2`  | `PA2`    | `PA15`   | *`DMA1`, `Channel 6`, `Request 2`* |                                   |
+| STM32H7xx    | `NUCLEO-H743ZI2*`  | `USART3`  | `PD8`    | `PD9`    | *`DMA1`, `Stream 0`*               | *`DMA1`, `Stream 1`*              |
+| STM32U5xx    | `NUCLEO-U575ZI-Q*` | `USART1`  | `PA9`    | `PA10`   | *`GPDMA1`, `Channel 0`*            | *`GPDMA1`, `Channel 1`*           |
 
 > * It is possible to run H743 (single-core) examples on dual-core STM32H7 Nucleo boards, NUCLEO-H745 or NUCLEO-H755.
 > Special care needs to be taken as dual-core H7 Nucleo boards use DCDC for MCU power hence
