@@ -348,51 +348,53 @@ All examples are identified as *UART_ReceptionToIdle_CircularDMA* — you can se
 
 ### Examples for UART + DMA RX
 
-#### Polling for changes
+`P` = Pro, `C` = Con
 
-- DMA hardware takes care to transfer received data to memory
-- The application must constantly poll for new changes in DMA registers and read received data quick enough to make sure DMA will not overwrite data in buffer
-- Processing of received data is in thread mode (not in interrupt)
-- P: Easy to implement
-- P: No interrupts, no consideration of priority and race conditions
-- P: Fits for devices without *USART IDLE* line detection
-- C: Application takes care of data periodically
-- C: Not possible to put application to low-power mode (sleep mode)
+#### Polling for Changes
 
-#### Polling for changes with operating system
+- DMA hardware handles transferring received data to memory
+- The application must constantly poll for changes in DMA registers and read the received data quickly enough to ensure DMA does not overwrite data in the buffer
+- Processing of received data occurs in thread mode (not in an interrupt)
+- `P`: Easy to implement
+- `P`: No interrupts and no need to consider priority levels or race conditions
+- `P`: Suitable for devices without *USART IDLE* line detection
+- `C`: The application must periodically check for new data
+- `C`: The application cannot enter low-power mode (sleep mode)
 
-- Same as polling for changes but with dedicated thread in operating system to process data
-- P: Easy to implement to RTOS systems, uses single thread without additional RTOS features (no mutexes, semaphores, memory queues)
-- P: No interrupts, no consideration of priority and race conditions
-- P: Data processing always *on-time* with maximum delay given by thread delay, thus with known maximum latency between received character and processed time
-    - Unless system has higher priority threads
-- P: Fits for devices without *UART IDLE* line detection
-- C: Application takes care of data periodically
-- C: Uses memory resources dedicated for separate thread for data processing
-- C: Not possible to put application to low-power mode (sleep mode)
+#### Polling for Changes with an Operating System
 
-#### UART IDLE line detection + DMA HT&TC interrupts
+- Same as polling for changes, but with a dedicated thread in the operating system to process the data
+- `P`: Easy to implement in RTOS systems; uses a single thread without additional RTOS features (no mutexes, semaphores, or message queues)
+- `P`: No interrupts and no need to consider priority levels or race conditions
+- `P`: Data processing is always *on time* with a maximum delay determined by the thread delay, providing a known maximum latency between receiving a character and processing it
+  - Unless the system has higher-priority threads
+- `P`: Suitable for devices without *UART IDLE* line detection
+- `C`: The application must periodically check for new data
+- `C`: Uses additional memory resources for the dedicated data-processing thread
+- `C`: The application cannot enter low-power mode (sleep mode)
 
-- The application receives a notification by IDLE line detection or DMA TC/HT events
-- Application has to process data only when it receives any of the `3` interrupts
-- P: Application does not need to poll for new changes
-- P: The application receives interrupts on events
-- P: Application may enter low-power modes to increase battery life (if operated on battery)
-- C: Data are read (processed) in the interrupt. We strive to execute interrupt routine as fast as possible
-- C: Long interrupt execution may break other compatibility in the application
+#### UART IDLE Line Detection + DMA HT & TC Interrupts
 
-*Processing of incoming data is from 2 interrupt vectors, hence it is important that they do not preempt each-other. Set both to the same preemption priority!*
+- The application receives a notification through IDLE line detection or DMA `TC`/`HT` events
+- The application processes data only when one of the `3` interrupts occurs
+- `P`: The application does not need to poll for changes
+- `P`: The application receives interrupts when events occur
+- `P`: The application can enter low-power modes to increase battery life (when running on battery)
+- `C`: Data is read (processed) inside the interrupt handler. Interrupt routines should execute as quickly as possible
+- `C`: Long interrupt execution may affect compatibility with other parts of the application
 
-#### USART Idle line detection + DMA HT&TC interrupts with RTOS
+*Processing incoming data occurs from two interrupt vectors; therefore, it is important that they do not preempt each other. Set both to the same preemption priority!*
 
-- The application receives a notification by IDLE line detection or DMA TC/HT events
-- The application uses separate thread to process the data only when notified in one of interrupts
-- P: Processing is not in the interrupt but in separate thread
-- P: Interrupt only informs processing thread to process (or to wakeup)
-- P: Operating system may put processing thread to blocked state while waiting for event
-- C: Memory usage for separate thread + message queue (or semaphore)
+#### USART IDLE Line Detection + DMA HT & TC Interrupts with RTOS
 
-> This is the most preferred way to use and process UART received character
+- The application receives a notification through IDLE line detection or DMA `TC`/`HT` events
+- The application uses a separate thread to process data only when notified by one of these interrupts
+- `P`: Processing is performed in a separate thread instead of the interrupt
+- `P`: The interrupt only signals the processing thread to run (or wake up)
+- `P`: The operating system can place the processing thread in a blocked state while waiting for the event
+- `C`: Additional memory is required for the separate thread and a message queue (or semaphore)
+
+> This is the most preferred way to receive and process UART data.
 
 ### Examples for UART DMA for TX (and optionally included RX)
 
