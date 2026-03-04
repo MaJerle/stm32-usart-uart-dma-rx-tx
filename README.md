@@ -11,15 +11,15 @@ GitHub supports a ToC by default. It is available in the top-right corner of thi
 
 ## Abbreviations
 
-- DMA: Direct Memory Access controller in STM32
-- UART: Universal Asynchronous Receiver Transmitter
-- USART: Universal Synchronous Asynchronous Receiver Transmitter
-- TX: Transmit
-- RX: Receive
-- HT: Half-Transfer Complete DMA event/flag
-- TC: Transfer Complete DMA event/flag
-- RTO: Receiver Timeout UART event/flag
-- IRQ: Interrupt
+- `DMA`: Direct Memory Access controller in STM32
+- `UART`: Universal Asynchronous Receiver Transmitter
+- `USART`: Universal Synchronous Asynchronous Receiver Transmitter
+- `TX`: Transmit
+- `RX`: Receive
+- `HT`: Half-Transfer Complete DMA event/flag
+- `TC`: Transfer Complete DMA event/flag
+- `RTO`: Receiver Timeout UART event/flag
+- `IRQ`: Interrupt
 
 ## General about UART
 
