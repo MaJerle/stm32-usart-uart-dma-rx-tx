@@ -20,6 +20,7 @@ GitHub supports a ToC by default. It is available in the top-right corner of thi
 - `TC`: Transfer Complete DMA event/flag
 - `RTO`: Receiver Timeout UART event/flag
 - `IRQ`: Interrupt
+- `NVIC`: Nested Vectored Interrupt Controller
 
 ## General about UART
 
@@ -266,21 +267,21 @@ void usart_rx_check(void) {
 }
 ```
 
-### Interrupt priorities are important
+### Interrupt Priorities Are Important
 
-Thanks to Cortex-M NVIC's (Nested Vectored Interrupt Controller) flexibility,
-user can configure priority level for each of the NVIC interrupt lines; it has full control over execution profile for each of the interrupt lines separately.
+Thanks to the flexibility of the Cortex-M NVIC, the user can configure the priority level for each NVIC interrupt line. This provides full control over the execution behavior of each interrupt line individually.
 
 There are `2` priority types in Cortex-M:
-- Preemption priority: Interrupt with higher logical priority level can preempt already running lower priority interrupt
-- Subpriority: Interrupt with higher subpriority (but same preemption priority) will execute first when `2` (or more) interrupt lines become active at the same time; such interrupt will also never stop currently executed interrupt (if any) by the CPU.
 
-STM32s have different interrupt lines (interrupt service routines later too) for DMA and UART, one for each peripheral and its priority could be software configurable.
+- **Preemption priority**: An interrupt with a higher logical priority level can preempt a currently running interrupt with a lower priority.
+- **Subpriority**: An interrupt with a higher subpriority (but the same preemption priority) will execute first when `2` (or more) interrupt lines become active at the same time. Such an interrupt will never stop an interrupt that is already being executed by the CPU.
 
-Function that gets called to process received data must keep position of *last read value*, hence processing function is not thread-safe or reentrant and requires special attention.
+STM32 devices have separate interrupt lines (and corresponding interrupt service routines) for DMA and UART, one for each peripheral, and their priorities can be configured in software.
 
-> The application must assure, DMA and UART interrupts utilize same preemption priority level.
-> This is the only configuration to guarantee processing function never gets preempted by itself (DMA interrupt to preempty UART, or opposite), otherwise last-known read position may get corrupted and application will operate with wrong data.
+The function used to process received data must keep track of the position of the *last read value*. Therefore, the processing function is not thread-safe or reentrant and requires special attention.
+
+> The application must ensure that DMA and UART interrupts use the same preemption priority level.
+> This is the only configuration that guarantees the processing function will never be preempted by itself (DMA interrupt preempting UART, or vice versa). Otherwise, the last-known read position may become corrupted and the application may operate on incorrect data.
 
 # Examples
 
