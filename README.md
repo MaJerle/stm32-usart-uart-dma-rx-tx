@@ -87,24 +87,22 @@ This is a real experimental demonstration using *STM32F4* and the *IDLE LINE* ev
 - The *IDLE line* interrupt is triggered at the green arrow
 - The application echoes the data back from the interrupt context
 
-## General about DMA
+## General Information About DMA
 
-DMA in STM32 can be configured in `normal` or `circular` mode.
-For each mode, *DMA* requires number of *elements* to transfer before its events (half-transfer complete, transfer complete) are triggered.
+DMA in STM32 can be configured in `normal` or `circular` mode. For each mode, *DMA* requires the number of *elements* to transfer before its events (half-transfer complete, transfer complete) are triggered.
 
-- *Normal mode*: DMA starts with data transfer, once it transfers all elements, it stops and sets enable bit to `0`.
-    - Application is using this mode when transmitting data
-- *Circular mode*: DMA starts with transfer, once it transfers all elements (as written in corresponding length register), it starts from beginning of memory and transfers more
-    - Applicaton is using this mode when receiving data
+- *Normal mode*: DMA starts the data transfer, and once all elements are transferred, it stops and sets the enable bit to `0`.
+  - The application uses this mode when transmitting data
+- *Circular mode*: DMA starts the transfer, and once all elements are transferred (as specified in the corresponding length register), it starts again from the beginning of memory and continues transferring more data
+  - The application uses this mode when receiving data
 
-While transfer is active, `2` (among others) interrupts may be triggered:
+While the transfer is active, `2` (among others) interrupts may be triggered:
 
-- *Half-Transfer complete `HT`*: Triggers when DMA transfers half count of elements
-- *Transfer-Complete `TC`*: Triggers when DMA transfers all elements
+- *Half-Transfer complete `HT`*: Triggered when DMA transfers half of the configured elements
+- *Transfer-Complete `TC`*: Triggered when DMA transfers all configured elements
 
-> When DMA operates in *circular* mode, these interrupts are triggered periodically
-
-> Number of elements to transfer by DMA hardware must be written to relevant DMA register before start of transfer
+> When DMA operates in *circular* mode, these interrupts are triggered periodically.
+> The number of elements to transfer by the DMA hardware must be written to the relevant DMA register before starting the transfer.
 
 ### Combine UART + DMA for data reception
 
