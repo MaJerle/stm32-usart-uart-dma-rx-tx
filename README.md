@@ -104,26 +104,24 @@ While the transfer is active, `2` (among others) interrupts may be triggered:
 > When DMA operates in *circular* mode, these interrupts are triggered periodically.
 > The number of elements to transfer by the DMA hardware must be written to the relevant DMA register before starting the transfer.
 
-### Combine UART + DMA for data reception
+### Combine UART + DMA for Data Reception
 
-Now it is time to understand which features to use to receive data with UART and DMA to offload CPU.
-As for the sake of this example, we use memory buffer array of `20` bytes. DMA will transfer data received from UART to this buffer.
+Now it is time to understand which features should be used to receive data with UART and DMA in order to offload the CPU. For this example, we use a memory buffer array of `20` bytes. DMA will transfer the data received from UART to this buffer.
 
-Listed are steps to begin. Initial assumption is that UART has been initialized prior reaching this step, same for basic DMA setup, the rest:
+The steps to begin are listed below. The initial assumption is that UART has already been initialized before reaching this step, and that the basic DMA setup has also been completed.
 
-- The application writes `20` to relevant DMA register for data length
-- The application writes memory & peripheral addresses to relevant DMA registers
-- Application sets DMA direction to *peripheral-to-memory* mode
-- Application puts DMA to *circular* mode. This is to assure DMA does not stop transferring data after it reaches end of memory. Instead, it will roll over and continue with transferring possible more data from UART to memory
-- The application enables DMA & UART in reception mode. Receive can not start & DMA will wait UART to receive first character and transmit it to array. This is done for every received byte
-- The application is notified by DMA `HT` event (or interrupt) after first `10` have been transferred from UART to memory
-- The application is notified by DMA `TC` event (or interrupt) after `20` bytes are transferred from UART to memory
-- The application is notified by UART IDLE line (or RTO) in case of IDLE line or timeout detected on RX line
-- Application needs to reach on all of these events for most efficient receive
+- The application writes `20` to the relevant DMA register for the data length
+- The application writes the memory and peripheral addresses to the relevant DMA registers
+- The application sets the DMA direction to *peripheral-to-memory* mode
+- The application sets DMA to *circular* mode. This ensures that DMA does not stop transferring data after it reaches the end of memory. Instead, it wraps around and continues transferring additional data from UART to memory
+- The application enables DMA and UART in reception mode. Reception cannot start immediately; DMA waits for the UART to receive the first character and then transfers it to the array. This process repeats for every received byte
+- The application is notified by the DMA `HT` event (or interrupt) after the first `10` bytes have been transferred from UART to memory
+- The application is notified by the DMA `TC` event (or interrupt) after `20` bytes have been transferred from UART to memory
+- The application is notified by the UART IDLE line event (or RTO) if an IDLE condition or timeout is detected on the RX line
+- The application must handle all of these events for the most efficient receive operation
 
-> This configuration is important as we do not know length in advance. Application needs to assume it may be endless number of bytes received, therefore DMA must be operational endlessly.
-
-> We have used `20` bytes long array for demonstration purposes. In real app this size may need to be increased. It all depends on UART baudrate (higher speed, more data may be received in fixed window) and how fast application can process the received data (either using interrupt notification, RTOS, or polling mode)
+> This configuration is important because the data length is not known in advance. The application must assume that an unlimited number of bytes may be received; therefore, DMA must operate continuously.
+> For demonstration purposes, we used a `20`-byte array. In a real application, this size may need to be increased. It depends on the UART baud rate (higher speeds allow more data to be received within a fixed time window) and on how quickly the application can process the received data (using interrupt notifications, an RTOS, or polling).
 
 ### Combine UART + DMA for data transmission
 
