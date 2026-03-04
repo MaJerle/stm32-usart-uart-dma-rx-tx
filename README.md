@@ -64,28 +64,28 @@ The application uses the default features to implement a very efficient DMA-base
 While implementation is fairly straightforward for TX operations (set a pointer to the data, define its length, and start), this is not necessarily the case for reception.  
 When implementing DMA reception, the application must know the number of bytes that the DMA should receive before the transfer is considered *complete*. However, the UART protocol does not provide this information (it could be handled by a higher-level protocol, but that is a separate topic that we do not cover here. We assume a very reliable low-level communication protocol must be implemented).
 
-## Idle Line or Receiver Timeout events
+## Idle Line or Receiver Timeout Events
 
-STM32 UART peripherals can detect when the *RX* line remains inactive for a certain period of time. This is done using `2` methods:
-- *IDLE LINE event*: Triggered when RX line has been in idle state (normally high state) for `1` frame time, after last received byte. Frame time is based on baudrate. Higher baudrate means lower frame time for single byte.
-- *RTO (Receiver Timeout) event*: Triggered when line has been in idle state for programmable time. It is fully configured by firmware.
+STM32 UART peripherals can detect when the *RX* line remains inactive for a certain period of time. This can be done using `2` methods:
 
-Both events can trigger an interrupt which is an essential feature to allow effective receive operation
+- *IDLE LINE event*: Triggered when the RX line has been in the idle state (normally high) for `1` frame time after the last received byte. The frame time depends on the baud rate. A higher baud rate means a shorter frame time for a single byte.
+- *RTO (Receiver Timeout) event*: Triggered when the line has been in the idle state for a programmable period of time. It is fully configured by firmware.
 
-> Not all STM32 have *IDLE LINE* or *RTO* features available. When not available, examples concerning these features may not be used.
+Both events can trigger an interrupt, which is an essential feature for enabling efficient receive operation.
 
-An example: To transmit `1` byte at `115200` bauds, it takes approximately (for easier estimation purposes) `~100us`; for `3 bytes` it would be `~300us` in total.
-IDLE line event triggers an interrupt when line has been in idle state for `1` frame time (in this case `100us`), after third byte has been received.
+> Not all STM32 devices support the *IDLE LINE* or *RTO* features. If these features are not available, the related examples cannot be used.
+
+Example: To transmit `1` byte at `115200` baud, it takes approximately (for easier estimation) `~100 µs`; transmitting `3 bytes` would therefore take about `~300 µs` in total. The IDLE line event triggers an interrupt when the line has been in the idle state for `1` frame time (in this case `100 µs`) after the third byte has been received.
 
 ![IDLE LINE DEMO](docs/idle_line_demo.png)
 
-This is a real experiment demo using *STM32F4* and *IDLE LINE* event. After *IDLE event* is triggered, data are echoed back (loopback mode):
+This is a real experimental demonstration using *STM32F4* and the *IDLE LINE* event. After the *IDLE event* is triggered, the data is echoed back (loopback mode):
 
-- The application receives `3` bytes, takes approx `~300us` at `115200` bauds
-- *RX* goes to high state (yellow rectangle) and *UART RX* detects it has been idle for at least `1` frame time (approx `100us`)
-    - Width of yellow rectangle represents `1` frame time
-- *IDLE line* interrupt is triggered at green arrow
-- Application echoes data back from interrupt context
+- The application receives `3` bytes, which takes approximately `~300 µs` at `115200` baud
+- *RX* goes to the high state (yellow rectangle), and *UART RX* detects that it has been idle for at least `1` frame time (approximately `100 µs`)
+  - The width of the yellow rectangle represents `1` frame time
+- The *IDLE line* interrupt is triggered at the green arrow
+- The application echoes the data back from the interrupt context
 
 ## General about DMA
 
