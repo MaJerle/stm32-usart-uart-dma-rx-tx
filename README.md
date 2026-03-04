@@ -419,7 +419,7 @@ Results observed with this demo application on the **STM32F413-Nucleo** board:
 
 ---
 
-## How to use this repository
+## How to Use This Repository
 
-1. Run `git clone --recurse-submodules https://github.com/MaJerle/stm32-usart-dma-rx-tx` to clone repository including submodules
-2. Run examples from `projects` directory using [STM32CubeIDE IDE](https://www.st.com/en/development-tools/stm32cubeide.html)
+1. Run `git clone --recurse-submodules https://github.com/MaJerle/stm32-usart-dma-rx-tx` to clone the repository, including submodules
+2. Run the examples from the `projects` directory using [STM32CubeIDE IDE](https://www.st.com/en/development-tools/stm32cubeide.html)
