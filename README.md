@@ -5,9 +5,13 @@ This application note explains and provides examples for two distinct topics:
 - Receiving data via UART and DMA when the application does not now the number of incoming bytes in advance
 - Transmitting data via UART and DMA to prevent CPU blocking and allow the CPU to perform other tasks
 
+---
+
 ## Table of Contents
 
 GitHub supports a ToC by default. It is available in the top-right corner of this document.
+
+---
 
 ## Abbreviations
 
@@ -21,6 +25,8 @@ GitHub supports a ToC by default. It is available in the top-right corner of thi
 - `RTO`: Receiver Timeout UART event/flag
 - `IRQ`: Interrupt
 - `NVIC`: Nested Vectored Interrupt Controller
+
+---
 
 ## General about UART
 
@@ -65,6 +71,8 @@ The application uses the default features to implement a very efficient DMA-base
 While implementation is fairly straightforward for TX operations (set a pointer to the data, define its length, and start), this is not necessarily the case for reception.  
 When implementing DMA reception, the application must know the number of bytes that the DMA should receive before the transfer is considered *complete*. However, the UART protocol does not provide this information (it could be handled by a higher-level protocol, but that is a separate topic that we do not cover here. We assume a very reliable low-level communication protocol must be implemented).
 
+---
+
 ## Idle Line or Receiver Timeout Events
 
 STM32 UART peripherals can detect when the *RX* line remains inactive for a certain period of time. This can be done using `2` methods:
@@ -87,6 +95,8 @@ This is a real experimental demonstration using *STM32F4* and the *IDLE LINE* ev
   - The width of the yellow rectangle represents `1` frame time
 - The *IDLE line* interrupt is triggered at the green arrow
 - The application echoes the data back from the interrupt context
+
+---
 
 ## General Information About DMA
 
@@ -283,7 +293,9 @@ The function used to process received data must keep track of the position of th
 > The application must ensure that DMA and UART interrupts use the same preemption priority level.
 > This is the only configuration that guarantees the processing function will never be preempted by itself (DMA interrupt preempting UART, or vice versa). Otherwise, the last-known read position may become corrupted and the application may operate on incorrect data.
 
-# Examples
+---
+
+## Examples
 
 Examples can be used as reference code to implement your own DMA TX and RX functionality.
 
@@ -331,9 +343,9 @@ Examples demonstrate different use cases for RX only or RX&TX combined.
 > * [STM32WB UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeWB/tree/master/Projects/P-NUCLEO-WB55.Nucleo/Examples/UART/UART_ReceptionToIdle_CircularDMA)
 > * [STM32WL UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeWL/tree/main/Projects/NUCLEO-WL55JC/Examples/UART/UART_ReceptionToIdle_CircularDMA)
 
-## Examples for UART + DMA RX
+### Examples for UART + DMA RX
 
-### Polling for changes
+#### Polling for changes
 
 - DMA hardware takes care to transfer received data to memory
 - The application must constantly poll for new changes in DMA registers and read received data quick enough to make sure DMA will not overwrite data in buffer
@@ -344,7 +356,7 @@ Examples demonstrate different use cases for RX only or RX&TX combined.
 - C: Application takes care of data periodically
 - C: Not possible to put application to low-power mode (sleep mode)
 
-### Polling for changes with operating system
+#### Polling for changes with operating system
 
 - Same as polling for changes but with dedicated thread in operating system to process data
 - P: Easy to implement to RTOS systems, uses single thread without additional RTOS features (no mutexes, semaphores, memory queues)
@@ -356,7 +368,7 @@ Examples demonstrate different use cases for RX only or RX&TX combined.
 - C: Uses memory resources dedicated for separate thread for data processing
 - C: Not possible to put application to low-power mode (sleep mode)
 
-### UART IDLE line detection + DMA HT&TC interrupts
+#### UART IDLE line detection + DMA HT&TC interrupts
 
 - The application receives a notification by IDLE line detection or DMA TC/HT events
 - Application has to process data only when it receives any of the `3` interrupts
@@ -368,7 +380,7 @@ Examples demonstrate different use cases for RX only or RX&TX combined.
 
 *Processing of incoming data is from 2 interrupt vectors, hence it is important that they do not preempt each-other. Set both to the same preemption priority!*
 
-### USART Idle line detection + DMA HT&TC interrupts with RTOS
+#### USART Idle line detection + DMA HT&TC interrupts with RTOS
 
 - The application receives a notification by IDLE line detection or DMA TC/HT events
 - The application uses separate thread to process the data only when notified in one of interrupts
@@ -379,13 +391,13 @@ Examples demonstrate different use cases for RX only or RX&TX combined.
 
 > This is the most preferred way to use and process UART received character
 
-## Examples for UART DMA for TX (and optionally included RX)
+### Examples for UART DMA for TX (and optionally included RX)
 
 - Application is using DMA in normal mode to transfer data
 - Application is always using ringbuffer between high-level write and low-level transmit operation
 - DMA TC interrupt is triggered when transfer has finished. Application can then send more data
 
-### Demo application for debug messages
+#### Demo application for debug messages
 
 This is a demo application available in `projects` folder.
 Its purpose is to show how the application can implement output of debug messages without drastically affect CPU performance.
@@ -400,6 +412,8 @@ As a result of this demo application for STM32F413-Nucleo board, observations ar
 - With DMA disabled, CPU load was `14%`, in-line with time to transmit the data
 - With DMA enabled, CPU load was `0%`
 - DMA can be enabled/disabled with `USE_DMA_TX` macro configuration in `main.c`
+
+---
 
 ## How to use this repository
 
