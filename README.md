@@ -48,9 +48,9 @@ UART on STM32 can be configured using different  `TX` and  `RX` modes:
 
   - The UART triggers an interrupt, and the CPU jumps to a service routine to handle each received byte separately
   - `P`: A commonly used approach in embedded applications
-  * `P`: Works well with common baud rates, `115200` up to `~921600` baud
-  * `C`: The interrupt service routine is executed for every received character
-  * `C`: System performance may decrease if interrupts are triggered for every character at high baud rates
+  - `P`: Works well with common baud rates, `115200` up to `~921600` baud
+  - `C`: The interrupt service routine is executed for every received character
+  - `C`: System performance may decrease if interrupts are triggered for every character at high baud rates
 
 - **DMA mode**
   
