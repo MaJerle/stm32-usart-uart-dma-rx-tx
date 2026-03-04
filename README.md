@@ -7,7 +7,7 @@ This application note explains and provides examples for two distinct topics:
 
 ## Table of Contents
 
-Github supports ToC by default. It is available in the top-left corner of this document.
+GitHub supports a ToC by default. It is available in the top-right corner of this document.
 
 ## Abbreviations
 
