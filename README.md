@@ -396,27 +396,26 @@ All examples are identified as *UART_ReceptionToIdle_CircularDMA* — you can se
 
 > This is the most preferred way to receive and process UART data.
 
-### Examples for UART DMA for TX (and optionally included RX)
+### Examples for UART DMA TX (and optionally RX)
 
-- Application is using DMA in normal mode to transfer data
-- Application is always using ringbuffer between high-level write and low-level transmit operation
-- DMA TC interrupt is triggered when transfer has finished. Application can then send more data
+- The application uses DMA in normal mode to transfer data
+- The application always uses a ring buffer between the high-level write operation and the low-level transmit operation
+- A DMA `TC` interrupt is triggered when the transfer is complete. The application can then send additional data
 
-#### Demo application for debug messages
+#### Demo Application for Debug Messages
 
-This is a demo application available in `projects` folder.
-Its purpose is to show how the application can implement output of debug messages without drastically affect CPU performance.
-It is using DMA to transfer data (no CPU to wait for UART flags) and can achieve very high or very low data rates
+This is a demo application available in the `projects` folder. Its purpose is to demonstrate how an application can output debug messages without significantly affecting CPU performance. It uses DMA to transfer data (so the CPU does not wait for UART flags) and can support both very high and very low data rates.
 
-- All debug messages from application are written to intermediate ringbuffer
-- Application will try to start & configure DMA after every successfive write to ringbuffer
-- If transfer is on-going, next start is configured from DMA TC interrupt
+- All debug messages from the application are written to an intermediate ring buffer
+- The application attempts to start and configure DMA after every successful write to the ring buffer
+- If a transfer is already in progress, the next start is configured from the DMA `TC` interrupt
 
-As a result of this demo application for STM32F413-Nucleo board, observations are as following:
-- Demo code sends `1581` bytes every second at `115200` bauds, which is approx `142ms`.
-- With DMA disabled, CPU load was `14%`, in-line with time to transmit the data
+Results observed with this demo application on the **STM32F413-Nucleo** board:
+
+- The demo code sends `1581` bytes every second at `115200` baud, which takes approximately `142 ms`
+- With DMA disabled, CPU load was `14%`, which is consistent with the time required to transmit the data
 - With DMA enabled, CPU load was `0%`
-- DMA can be enabled/disabled with `USE_DMA_TX` macro configuration in `main.c`
+- DMA can be enabled or disabled using the `USE_DMA_TX` macro configuration in `main.c`
 
 ---
 
