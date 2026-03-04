@@ -297,23 +297,25 @@ The function used to process received data must keep track of the position of th
 
 ## Examples
 
-Examples can be used as reference code to implement your own DMA TX and RX functionality.
+These examples can be used as reference code to implement your own DMA TX and RX functionality.
 
 There are 2 sets of examples:
-- Examples for RX only
-    - Available in `projects` folder with `usart_rx_` prefix
-    - DMA is used to receive data, polling is used to echo data back
-- Examples for RX & TX
-    - DMA is used to receive data and to transmit data back
-    - It uses ring buffer to copy data from DMA buffer to application before it is sent back
 
-Common for all examples:
+- **Examples for RX only**
+  - Available in the `projects` folder with the `usart_rx_` prefix
+  - DMA is used to receive data, and polling is used to echo the data back
+- **Examples for RX & TX**
+  - DMA is used both to receive data and to transmit data back
+  - A ring buffer is used to copy data from the DMA buffer to the application before it is sent back
+
+**Common features for all examples:**
+
 - Developed in [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html) for easier evaluation on STM32 boards
-- Fully developed using LL drivers for various STM32 families
-- UART common configuration: `115200` bauds, `1` stop bit, no-parity
+- Fully implemented using LL drivers for various STM32 families
+- UART common configuration: `115200` baud, `1` stop bit, no parity
 - DMA RX common configuration: Circular mode, `TC` and `HT` events enabled
 - DMA TX common configuration: Normal mode, `TC` event enabled
-- All RX examples implement loop-back functionality. Every character received by UART and transfered by DMA is sent back to same UART
+- All RX examples implement loopback functionality. Every character received by UART and transferred by DMA is sent back to the same UART
 
 | STM32 family | Board name         | USART     | STM32 TX | STM32 RX | RX DMA settings                    | TX DMA settings                   |
 | ------------ | ------------------ | --------- | -------- | -------- | ---------------------------------- | --------------------------------- |
@@ -325,23 +327,24 @@ Common for all examples:
 | STM32H7xx    | `NUCLEO-H743ZI2*`  | `USART3`  | `PD8`    | `PD9`    | *`DMA1`, `Stream 0`*               | *`DMA1`, `Stream 1`*              |
 | STM32U5xx    | `NUCLEO-U575ZI-Q*` | `USART1`  | `PA9`    | `PA10`   | *`GPDMA1`, `Channel 0`*            | *`GPDMA1`, `Channel 1`*           |
 
-> * It is possible to run H743 (single-core) examples on dual-core STM32H7 Nucleo boards, NUCLEO-H745 or NUCLEO-H755.
-> Special care needs to be taken as dual-core H7 Nucleo boards use DCDC for MCU power hence
-> application must check clock configuration in main file and uncomment code to enable SMPS.
+> It is possible to run H743 (single-core) examples on dual-core STM32H7 Nucleo boards such as NUCLEO-H745 or NUCLEO-H755.
+> Special care is required because dual-core H7 Nucleo boards use a DCDC converter for MCU power.
+> The application must check the clock configuration in the main file and uncomment the code that enables SMPS.
 
-Examples demonstrate different use cases for RX only or RX&TX combined.
+Examples demonstrate different use cases for RX only or combined RX & TX.
 
-> Demos part of this repository are all based on Low-Level (LL) drivers to maximize user understanding - how to convert theory into practice.
-> Some STM32Cube firmware packages include same example using HAL drivers too. Some of them are (with link to example; list is not exhausted) listed below.
-> All examples are identified as *UART_ReceptionToIdle_CircularDMA* - you can search for it in your local Cube firmware repository.
-> * [STM32U5 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeU5/tree/main/Projects/NUCLEO-U575ZI-Q/Examples/UART/UART_ReceptionToIdle_CircularDMA)
-> * [STM32L5 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeL5/tree/master/Projects/NUCLEO-L552ZE-Q/Examples/UART/UART_ReceptionToIdle_CircularDMA)
-> * [STM32G4 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeG4/tree/master/Projects/NUCLEO-G474RE/Examples/UART/UART_ReceptionToIdle_CircularDMA)
-> * [STM32F4 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeF4/tree/master/Projects/STM32446E-Nucleo/Examples/UART/UART_ReceptionToIdle_CircularDMA)
-> * [STM32G0 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeG0/tree/master/Projects/STM32G0C1E-EV/Examples/UART/UART_ReceptionToIdle_CircularDMA)
-> * [STM32L4 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeL4/tree/master/Projects/NUCLEO-L476RG/Examples/UART/UART_ReceptionToIdle_CircularDMA)
-> * [STM32WB UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeWB/tree/master/Projects/P-NUCLEO-WB55.Nucleo/Examples/UART/UART_ReceptionToIdle_CircularDMA)
-> * [STM32WL UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeWL/tree/main/Projects/NUCLEO-WL55JC/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+The demos in this repository are all based on Low-Layer (LL) drivers to maximize user understanding of how to convert theory into practice.
+Some STM32Cube firmware packages also include the same example implemented with HAL drivers. A few of them are listed below (with links to the examples; the list is not exhaustive).
+All examples are identified as *UART_ReceptionToIdle_CircularDMA* — you can search for this name in your local Cube firmware repository.
+
+- [STM32U5 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeU5/tree/main/Projects/NUCLEO-U575ZI-Q/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+- [STM32L5 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeL5/tree/master/Projects/NUCLEO-L552ZE-Q/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+- [STM32G4 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeG4/tree/master/Projects/NUCLEO-G474RE/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+- [STM32F4 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeF4/tree/master/Projects/STM32446E-Nucleo/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+- [STM32G0 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeG0/tree/master/Projects/STM32G0C1E-EV/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+- [STM32L4 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeL4/tree/master/Projects/NUCLEO-L476RG/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+- [STM32WB UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeWB/tree/master/Projects/P-NUCLEO-WB55.Nucleo/Examples/UART/UART_ReceptionToIdle_CircularDMA)
+- [STM32WL UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeWL/tree/main/Projects/NUCLEO-WL55JC/Examples/UART/UART_ReceptionToIdle_CircularDMA)
 
 ### Examples for UART + DMA RX
 
