@@ -23,40 +23,46 @@ GitHub supports a ToC by default. It is available in the top-right corner of thi
 
 ## General about UART
 
-> STM32 includes peripherals like USART, UART, and LPUART. For the purposes of this example, the specific differences between them aren’t important, since the same concept applies to all. In few words, USART supports synchronous operation on top of asynchronous (UART) and LPUART supports Low-Power operation in STOP mode. When synchronous mode or low-power mode is not used, USART, UART and LPUART can be consideted identical. For complete set of details, check product's reference manual and datasheet.
+> STM32 includes peripherals such as USART, UART, and LPUART. For the purposes of this example, the specific differences between them are not important, since the same concept applies to all of them. In short, USART supports synchronous operation in addition to asynchronous operation (UART), and LPUART supports low-power operation in STOP mode. When synchronous mode or low-power mode is not used, USART, UART, and LPUART can be considered identical. For a complete set of details, refer to the product’s reference manual and data sheet.
+> For the purposes of this application note, we will use only the term **UART**.
 
-> For the sake of this application note, we will only use term **UART**.
+UART on STM32 can be configured using different  `TX` and  `RX` modes:
 
-UART in STM32 allows configurion using different transmit (`TX`) and receive (`RX`) modes:
+`P` = Pro, `C` = Con
 
-- Polling mode (no DMA, no IRQ)
-    - P: Application is polling for status bits to check if any character has been transmitted/received and read it fast enough in order to not-miss any byte
-    - P: Easy to implement, simply few code lines
-    - C: Can easily miss received data in complex application if CPU cannot read registers quickly enough
-    - C: Works only for low baudrates, `9600` or lower
-- Interrupt mode (no DMA)
-    - P: UART triggers interrupt and CPU jumps to service routine to handle each received byte separately
-    - P: Commonly used approach in embedded applications
-    - P: Works well with common baudrates, `115200`, up to `~921600` bauds
-    - C: Interrupt service routine is executed for every received character
-    - C: May decrease system performance if interrupts are triggered for every character for high-speed baudrates
-- DMA mode
-    - DMA is used to transfer data from USART RX data register to user memory on hardware level. No application interaction is needed at this point except processing received data by application once necessary
-    - P: Transfer from USART peripheral to memory is done on hardware level without CPU interaction
-    - P: Can work very easily with operating systems
-    - P: Optimized for highest baudrates `> 1Mbps` and low-power applications
-    - P: In case of big bursts of data, increasing data buffer size can improve functionality
-    - C: Number of bytes to transfer must be known in advance by DMA hardware
-    - C: If communication fails, DMA may not notify application about all bytes transferred
+- **Polling mode (no DMA, no IRQ)**
 
-> This guide focuses exclusively on DMA‑based RX operation and explains how to handle cases where data length is unknown
+  - The application polls status bits to check whether any character has been transmitted or received and must read it quickly enough to avoid missing any bytes
+  - `P`: Easy to implement, requiring only a few lines of code
+  - `C`: Received data can easily be missed in complex applications if the CPU cannot read the registers quickly enough
+  - `C`: Works only for low baud rates, `9600` or lower
 
-Every STM32 has at least one (`1`) UART IP and at least one (`1`) DMA controller available in its DNA.
-This is all we need for successful data transmission.
-The application uses default features to implement very efficient transmit system using DMA.
+- **Interrupt mode (no DMA)**
 
-While implementation happens to be pretty straight-forward for TX (set pointer to data, define its length and go) operation, this may not be the case for receive.
-When implementing DMA receive, the application should understand number of received bytes to process by DMA before its considered *done*. However, UART protocol does not offer such information (it could work with higher-level protocol, but that's way another story that we don't touch here. We assume we have to implement very reliable low-level communication protocol).
+  - The UART triggers an interrupt, and the CPU jumps to a service routine to handle each received byte separately
+  - `P`: A commonly used approach in embedded applications
+  * `P`: Works well with common baud rates, `115200` up to `~921600` baud
+  * `C`: The interrupt service routine is executed for every received character
+  * `C`: System performance may decrease if interrupts are triggered for every character at high baud rates
+
+- **DMA mode**
+  
+  - DMA transfers data from the USART RX data register to user memory at the hardware level. No application interaction is required at this stage except when processing the received data as needed
+  - `P`: Transfer from the USART peripheral to memory is performed at the hardware level without CPU interaction
+  - `P`: Can work very easily with operating systems
+  - `P`: Optimized for the highest baud rates (`> 1 Mbps`) and low-power applications
+  - `P`: For large bursts of data, increasing the data buffer size can improve functionality
+  - `C`: The number of bytes to transfer must be known in advance by the DMA hardware
+  - `C`: If communication fails, the DMA may not notify the application clearly about all bytes transferred
+
+> This guide focuses exclusively on DMA-based RX operation and explains how to handle cases where the data length is unknown.
+
+Every STM32 includes at least one (`1`) UART IP and at least one (`1`) DMA controller as part of its architecture.  
+This is all that is required for successful data transmission.  
+The application uses the default features to implement a very efficient DMA-based transmit system.
+
+While implementation is fairly straightforward for TX operations (set a pointer to the data, define its length, and start), this is not necessarily the case for reception.  
+When implementing DMA reception, the application must know the number of bytes that the DMA should receive before the transfer is considered *complete*. However, the UART protocol does not provide this information (it could be handled by a higher-level protocol, but that is a separate topic that we do not cover here. We assume a very reliable low-level communication protocol must be implemented).
 
 ## Idle Line or Receiver Timeout events
 
