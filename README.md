@@ -123,28 +123,26 @@ The steps to begin are listed below. The initial assumption is that UART has alr
 > This configuration is important because the data length is not known in advance. The application must assume that an unlimited number of bytes may be received; therefore, DMA must operate continuously.
 > For demonstration purposes, we used a `20`-byte array. In a real application, this size may need to be increased. It depends on the UART baud rate (higher speeds allow more data to be received within a fixed time window) and on how quickly the application can process the received data (using interrupt notifications, an RTOS, or polling).
 
-### Combine UART + DMA for data transmission
+### Combine UART + DMA for Data Transmission
 
-Everything gets simplier when application transmits data, length of data is known in advance and memory to transmit is ready.
-For the sake of this example, we use memory for `Helloworld` message. In *C language* it would be:
+Everything becomes simpler when the application transmits data because the length of the data is known in advance and the memory to transmit is already prepared. For this example, we use memory containing the `HelloWorld` message. In *C*, it would look like this:
 
-```c
-const char
-hello_world_arr[] = "HelloWorld";
+```C
+const char hello_world_arr[] = "HelloWorld";
 ```
 
-- The application writes number of bytes to transmit to relevant DMA register, that would be `strlen(hello_world_arr)` or `10`
-- The application writes memory & peripheral addresses to relevant DMA registers
-- Application sets DMA direction to *memory-to-peripheral* mode
-- Application sets DMA to *normal* mode. This effectively disables DMA once all the bytes are successfully transferred
-- The application enables DMA & UART in transmitter mode. Transmit starts immediately when UART requests first byte via DMA to be shifted to UART TX register
-- The application is notified by `TC` event (or interrupt) after all bytes have been transmitted from memory to UART via DMA
-- DMA is stopped and application may prepare next transfer immediately
+- The application writes the number of bytes to transmit to the relevant DMA register, which would be `strlen(hello_world_arr)` or `10`
+- The application writes the memory and peripheral addresses to the relevant DMA registers
+- The application sets the DMA direction to *memory-to-peripheral* mode
+- The application sets DMA to *normal* mode. This effectively disables DMA once all bytes have been successfully transferred
+- The application enables DMA and UART in transmitter mode. Transmission starts immediately when the UART requests the first byte via DMA to be moved to the UART TX register
+- The application is notified by the `TC` event (or interrupt) after all bytes have been transferred from memory to UART via DMA
+- DMA stops, and the application can immediately prepare the next transfer
 
-> Please note that `TC` event is triggered before last UART byte has been fully transmitted over UART.
-> That's because `TC` event is part of DMA and not part of UART.
-> It is triggered when DMA transfers all the bytes from point *A* to point *B*. That is, point *A* for DMA is memory, point *B* is UART data register.
-> Now it is up to UART to clock out byte to GPIO pin
+> Note that the `TC` event is triggered before the last UART byte has been fully transmitted over UART.
+> This is because the `TC` event is part of DMA, not UART.
+> It is triggered when DMA transfers all bytes from point *A* to point *B*. In this case, point *A* for DMA is memory, and point *B* is the UART data register.
+> After that, it is up to the UART to clock the byte out to the GPIO pin.
 
 ### DMA HT/TC and UART IDLE combination details
 
