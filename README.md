@@ -1,9 +1,9 @@
 # STM32 UART DMA RX and TX
 
-This application note contains explanation with examples for `2` distinct topics:
+This application note explains and provides examples for two distinct topics:
 
-- Data reception with UART and DMA when application does not know size of bytes to receive in advance
-- Data transmission with UART and DMA to avoid CPU stalling and use CPU for other purposes
+- Receiving data via UART and DMA when the application does not now the number of incoming bytes in advance
+- Transmitting data via UART and DMA to prevent CPU blocking and allow the CPU to perform other tasks
 
 ## Table of Contents
 
