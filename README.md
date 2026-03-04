@@ -144,86 +144,89 @@ const char hello_world_arr[] = "HelloWorld";
 > It is triggered when DMA transfers all bytes from point *A* to point *B*. In this case, point *A* for DMA is memory, and point *B* is the UART data register.
 > After that, it is up to the UART to clock the byte out to the GPIO pin.
 
-### DMA HT/TC and UART IDLE combination details
+### DMA HT/TC and UART IDLE Combination Details
 
-This section describes `4` possible cases and one additional which explains why *HT* and *TC* events are both necessary in the application
+This section describes `4` possible cases and one additional case that explains why both *HT* and *TC* events are necessary in the application.
 
 ![DMA events](https://raw.githubusercontent.com/MaJerle/stm32-usart-uart-dma-rx-tx/master/docs/dma_events.svg?sanitize=true)
 
-Abbrevations used for the image:
-- `R`: `R`ead pointer, used by the application to read data from memory. Later also used as `old_ptr`
-- `W`: `W`rite pointer, used by the DMA to write next byte to. Increased every time DMA writes new byte. Later also used as `new_ptr`
-- `HT`: `H`alf-`T`ransfer Complete event triggered by DMA
-- `TC`: `T`ransfer-`C`omplete event - triggered by DMA
-- `I`: `I`DLE line event - triggered by USART
+**Abbreviations used in the image:**
 
-DMA configuration:
+- `R`: Read pointer, used by the application to read data from memory. Later also referred to as `old_ptr`
+- `W`: Write pointer, used by DMA to write the next byte. It is incremented every time DMA writes a new byte. Later also referred to as `new_ptr`
+- `HT`: Half-Transfer Complete event triggered by DMA
+- `TC`: Transfer-Complete event triggered by DMA
+- `I`: IDLE line event triggered by USART
+
+**DMA configuration:**
+
 - Circular mode
 - `20` bytes data length
-    - Consequently `HT` event gets triggered at `10` bytes being transmitted
-    - Consequently `TC` event gets triggered at `20` bytes being transmitted
+  - Consequently, the `HT` event is triggered after `10` bytes are transferred
+  - Consequently, the `TC` event is triggered after `20` bytes are transferred
 
-Possible cases during real-life execution:
-- Case *A*: DMA transfers `10` bytes. The application receives a notification with `HT` event and may process received data
-- Case *B*: DMA transfers next `10` bytes. The application receives a notification thanks to `TC` event. Processing now starts from last known position until the end of memory
-    - DMA is in circular mode, thus it will continue right from beginning of the buffer, on top of the picture
-- Case *C*: DMA transfers `10` bytes, but not aligned with `HT` nor `TC` events
-    - Application gets notified with `HT` event when first `6` bytes are transfered. Processing may start from last known read location
-    - The application receives `IDLE` line event after next `4` bytes are successfully transfered to memory
-- Case *D*: DMA transfers `10` bytes in *overflow* mode and but not aligned with `HT` nor `TC` events
-    - The application receives a notification by `TC` event when first `4` bytes are transfered. Processing may start from last known read location
-    - The application receives a notification by `IDLE` event after next `6` bytes are transfered. Processing may start from beginning of buffer
-- Case *E*: Example what may happen when application relies only on `IDLE` event
-    - If application receives `30` bytes in burst, `10` bytes get overwritten by DMA as application did not process it quickly enough
-    - Application gets `IDLE` line event once there is steady RX line for `1` byte timeframe
-    - Red part of data represents first `10` received bytes from burst which were overwritten by last `10` bytes in burst
-    - Option to avoid such scenario is to poll for DMA changes quicker than burst of `20` bytes take; or by using `TC` and `HT` events
+**Possible cases during real-world operation:**
 
-Example code to read data from memory and process it, for cases *A-D*
+- **Case *A***: DMA transfers `10` bytes. The application receives a notification through the `HT` event and can process the received data.
+- **Case *B***: DMA transfers the next `10` bytes. The application receives a notification through the `TC` event. Processing now starts from the last known position until the end of memory.
+  - DMA operates in circular mode, so it continues from the beginning of the buffer (shown at the top of the image).
 
-```c
+- **Case *C***: DMA transfers `10` bytes, but the transfer is not aligned with either `HT` or `TC` events.
+  - The application receives an `HT` event when the first `6` bytes are transferred. Processing can start from the last known read location.
+  - The application receives an `IDLE` line event after the next `4` bytes are successfully transferred to memory.
+- **Case *D***: DMA transfers `10` bytes in *overflow* mode, but the transfer is not aligned with either `HT` or `TC` events.
+  - The application receives a notification through the `TC` event when the first `4` bytes are transferred. Processing can start from the last known read location.
+  - The application receives a notification through the `IDLE` event after the next `6` bytes are transferred. Processing can start from the beginning of the buffer.
+- **Case *E***: Example of what may happen when the application relies only on the `IDLE` event.
+  - If the application receives `30` bytes in a burst, `10` bytes may be overwritten by DMA because the application did not process the data quickly enough.
+  - The application receives the `IDLE` line event once the RX line remains steady for `1` byte time.
+  - The red portion of the data represents the first `10` received bytes from the burst, which were overwritten by the last `10` bytes in the burst.
+  - One way to avoid this scenario is to poll for DMA changes more frequently than the time required to receive a burst of `20` bytes, or to use the `TC` and `HT` events.
+
+Example code to read data from memory and process it for cases *A–D*.
+
+```C
 /**
  * \brief           Check for new data received with DMA
  *
- * User must select context to call this function from:
- * - Only interrupts (DMA HT, DMA TC, UART IDLE) with same preemption priority level
- * - Only thread context (outside interrupts)
+ * The user must select the context from which to call this function:
+ * - Interrupt context only (DMA HT, DMA TC, UART IDLE) with the same preemption priority level
+ * - Thread context only (outside interrupts)
  *
- * If called from both context-es, exclusive access protection must be implemented
- * This mode is not advised as it usually means architecture design problems
+ * If it is called from both contexts, exclusive access protection must be implemented.
+ * This mode is not recommended, as it usually indicates architectural design problems.
  *
- * When IDLE interrupt is not present, application must rely only on thread context,
- * by manually calling function as quickly as possible, to make sure
- * data are read from raw buffer and processed.
+ * When the IDLE interrupt is not available, the application must rely only on the thread context
+ * by manually calling this function as frequently as possible to ensure that
+ * data is read from the raw buffer and processed.
  *
- * Not doing reads fast enough may cause DMA to overflow unread received bytes,
- * hence application will lost useful data.
+ * If reads are not performed quickly enough, DMA may overwrite unread received bytes,
+ * causing the application to lose useful data.
  *
- * Solutions to this are:
- * - Improve architecture design to achieve faster reads
- * - Increase raw buffer size and allow DMA to write more data before this function is called
+ * Possible solutions:
+ * - Improve the architecture to allow faster reads
+ * - Increase the raw buffer size so DMA can write more data before this function is called
  */
-void
-usart_rx_check(void) {
+void usart_rx_check(void) {
     /*
-     * Set old position variable as static.
+     * Set the old position variable as static.
      *
-     * Linker should (with default C configuration) set this variable to `0`.
-     * It is used to keep latest read start position,
-     * transforming this function to not being reentrant or thread-safe
+     * The linker should (with the default C configuration) initialize this variable to `0`.
+     * It is used to keep the most recent read start position,
+     * which makes this function non-reentrant and not thread-safe.
      */
     static size_t old_pos;
     size_t pos;
 
-    /* Calculate current position in buffer and check for new data available */
+    /* Calculate the current position in the buffer and check for new data */
     pos = ARRAY_LEN(usart_rx_dma_buffer) - LL_DMA_GetDataLength(DMA1, LL_DMA_CHANNEL_5);
-    if (pos != old_pos) {                       /* Check change in received data */
-        if (pos > old_pos) {                    /* Current position is over previous one */
+    if (pos != old_pos) {                       /* Check for changes in received data */
+        if (pos > old_pos) {                    /* Current position is ahead of the previous one */
             /*
              * Processing is done in "linear" mode.
              *
-             * Application processing is fast with single data block,
-             * length is simply calculated by subtracting pointers
+             * Application processing is fast with a single data block.
+             * The length is calculated simply by subtracting the pointers.
              *
              * [   0   ]
              * [   1   ] <- old_pos |------------------------------------|
@@ -238,10 +241,10 @@ usart_rx_check(void) {
             usart_process_data(&usart_rx_dma_buffer[old_pos], pos - old_pos);
         } else {
             /*
-             * Processing is done in "overflow" mode..
+             * Processing is done in "overflow" mode.
              *
-             * The application must process data twice,
-             * since there are 2 linear memory blocks to handle
+             * The application must process the data twice,
+             * because there are two linear memory blocks to handle.
              *
              * [   0   ]            |---------------------------------|
              * [   1   ]            | Second block (len = pos)        |
@@ -258,7 +261,7 @@ usart_rx_check(void) {
                 usart_process_data(&usart_rx_dma_buffer[0], pos);
             }
         }
-        old_pos = pos;                          /* Save current position as old for next transfers */
+        old_pos = pos;                          /* Save the current position for the next transfer */
     }
 }
 ```
