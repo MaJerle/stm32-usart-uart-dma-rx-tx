@@ -1,27 +1,34 @@
+name: Create Release
+
 on:
   push:
     # Sequence of patterns matched against refs/tags
     tags:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
-name: Create Release
-
 jobs:
-  build:
-    name: Create Release
+  create-release:
+    name: Create GitHub Release
     runs-on: ubuntu-latest
+    
+    # Explicitly grant permission to create/write releases
+    permissions:
+      contents: write
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      # Step 1: Check out the repository code
+      # Fetch the full history to compare between tags
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: |
-            See the [CHANGELOG](CHANGELOG.md)
+          fetch-depth: 0
+
+      # Generate the release
+      - name: Generate and Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
           draft: false
           prerelease: false
