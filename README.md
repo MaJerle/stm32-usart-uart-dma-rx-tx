@@ -1,13 +1,13 @@
 # STM32 UART DMA RX and TX
 
-This application note contains explanation with examples for `2` distinct topics:
+This application note contains explanations with examples for `2` distinct topics:
 
-- Data reception with UART and DMA when application does not know size of bytes to receive in advance
+- Data reception with UART and DMA when the application does not know the number of bytes to receive in advance
 - Data transmission with UART and DMA to avoid CPU stalling and use CPU for other purposes
 
 ## Table of Contents
 
-Github supports ToC by default. It is available in the top-left corner of this document.
+GitHub supports ToC by default. It is available in the top-left corner of this document.
 
 ## Abbreviations
 
@@ -23,15 +23,15 @@ Github supports ToC by default. It is available in the top-left corner of this d
 
 ## General about UART
 
-> STM32 includes peripherals like USART, UART, and LPUART. For the purposes of this example, the specific differences between them aren’t important, since the same concept applies to all. In few words, USART supports synchronous operation on top of asynchronous (UART) and LPUART supports Low-Power operation in STOP mode. When synchronous mode or low-power mode is not used, USART, UART and LPUART can be consideted identical. For complete set of details, check product's reference manual and datasheet.
+> STM32 includes peripherals like USART, UART, and LPUART. For the purposes of this example, the specific differences between them aren’t important, since the same concept applies to all. In a few words, USART supports synchronous operation on top of asynchronous (UART) and LPUART supports Low-Power operation in STOP mode. When synchronous mode or low-power mode is not used, USART, UART and LPUART can be considered identical. For a complete set of details, check the product's reference manual and datasheet.
 
 > For the sake of this application note, we will only use term **UART**.
 
-UART in STM32 allows configurion using different transmit (`TX`) and receive (`RX`) modes:
+UART in STM32 allows configuration using different transmit (`TX`) and receive (`RX`) modes:
 
 - Polling mode (no DMA, no IRQ)
-    - P: Application is polling for status bits to check if any character has been transmitted/received and read it fast enough in order to not-miss any byte
-    - P: Easy to implement, simply few code lines
+    - P: Application is polling for status bits to check if any character has been transmitted/received and read it fast enough in order not to miss any byte
+    - P: Easy to implement, simply a few lines of code
     - C: Can easily miss received data in complex application if CPU cannot read registers quickly enough
     - C: Works only for low baudrates, `9600` or lower
 - Interrupt mode (no DMA)
@@ -41,9 +41,9 @@ UART in STM32 allows configurion using different transmit (`TX`) and receive (`R
     - C: Interrupt service routine is executed for every received character
     - C: May decrease system performance if interrupts are triggered for every character for high-speed baudrates
 - DMA mode
-    - DMA is used to transfer data from USART RX data register to user memory on hardware level. No application interaction is needed at this point except processing received data by application once necessary
+    - DMA is used to transfer data from the USART RX data register to user memory at the hardware level. No application interaction is needed at this point except for processing received data by the application when necessary
     - P: Transfer from USART peripheral to memory is done on hardware level without CPU interaction
-    - P: Can work very easily with operating systems
+    - P: Works well with operating systems
     - P: Optimized for highest baudrates `> 1Mbps` and low-power applications
     - P: In case of big bursts of data, increasing data buffer size can improve functionality
     - C: Number of bytes to transfer must be known in advance by DMA hardware
@@ -55,16 +55,16 @@ Every STM32 has at least one (`1`) UART IP and at least one (`1`) DMA controller
 This is all we need for successful data transmission.
 The application uses default features to implement very efficient transmit system using DMA.
 
-While implementation happens to be pretty straight-forward for TX (set pointer to data, define its length and go) operation, this may not be the case for receive.
-When implementing DMA receive, the application should understand number of received bytes to process by DMA before its considered *done*. However, UART protocol does not offer such information (it could work with higher-level protocol, but that's way another story that we don't touch here. We assume we have to implement very reliable low-level communication protocol).
+While the implementation is fairly straightforward for TX (set the pointer to data, define its length, and go) operation, this may not be the case for receive.
+When implementing DMA receive, the application needs to know the number of received bytes to be processed by DMA before it is considered *done*. However, UART protocol does not offer such information (it could work with higher-level protocol, but that is another story entirely that we will not cover here. We assume we have to implement a very reliable low-level communication protocol).
 
 ## Idle Line or Receiver Timeout events
 
 STM32 UART peripherals can detect when the *RX* line remains inactive for a certain period of time. This is done using `2` methods:
-- *IDLE LINE event*: Triggered when RX line has been in idle state (normally high state) for `1` frame time, after last received byte. Frame time is based on baudrate. Higher baudrate means lower frame time for single byte.
-- *RTO (Receiver Timeout) event*: Triggered when line has been in idle state for programmable time. It is fully configured by firmware.
+- *IDLE LINE event*: Triggered when RX line has been in idle state (normally high state) for `1` frame time, after the last received byte. Frame time is based on baudrate. Higher baudrate means lower frame time for single byte.
+- *RTO (Receiver Timeout) event*: Triggered when line has been in idle state for programmable time. It is fully configurable by firmware.
 
-Both events can trigger an interrupt which is an essential feature to allow effective receive operation
+Both events can trigger an interrupt, which is an essential feature for effective receive operation
 
 > Not all STM32 have *IDLE LINE* or *RTO* features available. When not available, examples concerning these features may not be used.
 
@@ -89,7 +89,7 @@ For each mode, *DMA* requires number of *elements* to transfer before its events
 - *Normal mode*: DMA starts with data transfer, once it transfers all elements, it stops and sets enable bit to `0`.
     - Application is using this mode when transmitting data
 - *Circular mode*: DMA starts with transfer, once it transfers all elements (as written in corresponding length register), it starts from beginning of memory and transfers more
-    - Applicaton is using this mode when receiving data
+    - Application is using this mode when receiving data
 
 While transfer is active, `2` (among others) interrupts may be triggered:
 
@@ -105,17 +105,17 @@ While transfer is active, `2` (among others) interrupts may be triggered:
 Now it is time to understand which features to use to receive data with UART and DMA to offload CPU.
 As for the sake of this example, we use memory buffer array of `20` bytes. DMA will transfer data received from UART to this buffer.
 
-Listed are steps to begin. Initial assumption is that UART has been initialized prior reaching this step, same for basic DMA setup, the rest:
+Listed are steps to begin. Initial assumption is that UART has been initialized prior to reaching this step, same for basic DMA setup, the rest:
 
 - The application writes `20` to relevant DMA register for data length
 - The application writes memory & peripheral addresses to relevant DMA registers
 - Application sets DMA direction to *peripheral-to-memory* mode
 - Application puts DMA to *circular* mode. This is to assure DMA does not stop transferring data after it reaches end of memory. Instead, it will roll over and continue with transferring possible more data from UART to memory
-- The application enables DMA & UART in reception mode. Receive can not start & DMA will wait UART to receive first character and transmit it to array. This is done for every received byte
-- The application is notified by DMA `HT` event (or interrupt) after first `10` have been transferred from UART to memory
+- The application enables DMA & UART in reception mode. Reception cannot start & DMA will wait for UART to receive first character and transmit it to array. This is done for every received byte
+- The application is notified by DMA `HT` event (or interrupt) after the first `10` bytes have been transferred from UART to memory
 - The application is notified by DMA `TC` event (or interrupt) after `20` bytes are transferred from UART to memory
-- The application is notified by UART IDLE line (or RTO) in case of IDLE line or timeout detected on RX line
-- Application needs to reach on all of these events for most efficient receive
+- The application is notified by UART IDLE line (or RTO) in case of IDLE line detection or timeout on the RX line
+- The application needs to rely on all of these events for most efficient receive
 
 > This configuration is important as we do not know length in advance. Application needs to assume it may be endless number of bytes received, therefore DMA must be operational endlessly.
 
@@ -123,7 +123,7 @@ Listed are steps to begin. Initial assumption is that UART has been initialized 
 
 ### Combine UART + DMA for data transmission
 
-Everything gets simplier when application transmits data, length of data is known in advance and memory to transmit is ready.
+Everything gets simpler when the application transmits data, the length of data is known in advance and the memory to transmit is ready.
 For the sake of this example, we use memory for `Helloworld` message. In *C language* it would be:
 
 ```c
@@ -139,8 +139,8 @@ hello_world_arr[] = "HelloWorld";
 - The application is notified by `TC` event (or interrupt) after all bytes have been transmitted from memory to UART via DMA
 - DMA is stopped and application may prepare next transfer immediately
 
-> Please note that `TC` event is triggered before last UART byte has been fully transmitted over UART.
-> That's because `TC` event is part of DMA and not part of UART.
+> Please note that the `TC` event is triggered before the last UART byte has been fully transmitted over UART.
+> That is because the `TC` event is part of DMA and not part of UART.
 > It is triggered when DMA transfers all the bytes from point *A* to point *B*. That is, point *A* for DMA is memory, point *B* is UART data register.
 > Now it is up to UART to clock out byte to GPIO pin
 
@@ -150,7 +150,7 @@ This section describes `4` possible cases and one additional which explains why 
 
 ![DMA events](https://raw.githubusercontent.com/MaJerle/stm32-usart-uart-dma-rx-tx/master/docs/dma_events.svg?sanitize=true)
 
-Abbrevations used for the image:
+Abbreviations used for the image:
 - `R`: `R`ead pointer, used by the application to read data from memory. Later also used as `old_ptr`
 - `W`: `W`rite pointer, used by the DMA to write next byte to. Increased every time DMA writes new byte. Later also used as `new_ptr`
 - `HT`: `H`alf-`T`ransfer Complete event triggered by DMA
@@ -164,20 +164,20 @@ DMA configuration:
     - Consequently `TC` event gets triggered at `20` bytes being transmitted
 
 Possible cases during real-life execution:
-- Case *A*: DMA transfers `10` bytes. The application receives a notification with `HT` event and may process received data
-- Case *B*: DMA transfers next `10` bytes. The application receives a notification thanks to `TC` event. Processing now starts from last known position until the end of memory
+- Case *A*: DMA transfers `10` bytes. The application receives a notification via the `HT` event and may process received data
+- Case *B*: DMA transfers next `10` bytes. The application receives a notification thanks to the `TC` event. Processing now starts from the last known position to the end of memory
     - DMA is in circular mode, thus it will continue right from beginning of the buffer, on top of the picture
-- Case *C*: DMA transfers `10` bytes, but not aligned with `HT` nor `TC` events
-    - Application gets notified with `HT` event when first `6` bytes are transfered. Processing may start from last known read location
-    - The application receives `IDLE` line event after next `4` bytes are successfully transfered to memory
-- Case *D*: DMA transfers `10` bytes in *overflow* mode and but not aligned with `HT` nor `TC` events
-    - The application receives a notification by `TC` event when first `4` bytes are transfered. Processing may start from last known read location
-    - The application receives a notification by `IDLE` event after next `6` bytes are transfered. Processing may start from beginning of buffer
-- Case *E*: Example what may happen when application relies only on `IDLE` event
+- Case *C*: DMA transfers `10` bytes, but not aligned with `HT` or `TC` events
+- Application gets notified with the `HT` event when the first `6` bytes are transferred. Processing may start from the last known read location
+- The application receives the `IDLE` line event after the next `4` bytes are successfully transferred to memory
+- Case *D*: DMA transfers `10` bytes in *overflow* mode and not aligned with `HT` or `TC` events
+- The application receives a notification by the `TC` event when the first `4` bytes are transferred. Processing may start from the last known read location
+- The application receives a notification by the `IDLE` event after the next `6` bytes are transferred. Processing may start from beginning of buffer
+- Case *E*: Example of what may happen when the application relies only on the `IDLE` event
     - If application receives `30` bytes in burst, `10` bytes get overwritten by DMA as application did not process it quickly enough
-    - Application gets `IDLE` line event once there is steady RX line for `1` byte timeframe
+    - The application gets the `IDLE` line event once the RX line is steady for `1` byte timeframe
     - Red part of data represents first `10` received bytes from burst which were overwritten by last `10` bytes in burst
-    - Option to avoid such scenario is to poll for DMA changes quicker than burst of `20` bytes take; or by using `TC` and `HT` events
+    - An option to avoid such a scenario is to poll for DMA changes quicker than a burst of `20` bytes takes; or by using `TC` and `HT` events
 
 Example code to read data from memory and process it, for cases *A-D*
 
@@ -189,7 +189,7 @@ Example code to read data from memory and process it, for cases *A-D*
  * - Only interrupts (DMA HT, DMA TC, UART IDLE) with same preemption priority level
  * - Only thread context (outside interrupts)
  *
- * If called from both context-es, exclusive access protection must be implemented
+ * If called from both contexts, exclusive access protection must be implemented
  * This mode is not advised as it usually means architecture design problems
  *
  * When IDLE interrupt is not present, application must rely only on thread context,
@@ -197,7 +197,7 @@ Example code to read data from memory and process it, for cases *A-D*
  * data are read from raw buffer and processed.
  *
  * Not doing reads fast enough may cause DMA to overflow unread received bytes,
- * hence application will lost useful data.
+ * hence the application will lose useful data.
  *
  * Solutions to this are:
  * - Improve architecture design to achieve faster reads
@@ -238,7 +238,7 @@ usart_rx_check(void) {
             usart_process_data(&usart_rx_dma_buffer[old_pos], pos - old_pos);
         } else {
             /*
-             * Processing is done in "overflow" mode..
+             * Processing is done in "overflow" mode.
              *
              * The application must process data twice,
              * since there are 2 linear memory blocks to handle
@@ -297,7 +297,7 @@ Common for all examples:
 - UART common configuration: `115200` bauds, `1` stop bit, no-parity
 - DMA RX common configuration: Circular mode, `TC` and `HT` events enabled
 - DMA TX common configuration: Normal mode, `TC` event enabled
-- All RX examples implement loop-back functionality. Every character received by UART and transfered by DMA is sent back to same UART
+- All RX examples implement loop-back functionality. Every character received by UART and transferred by DMA is sent back to the same UART
 
 | STM32 family | Board name         | USART     | STM32 TX | STM32 RX | RX DMA settings                    | TX DMA settings                   |
 | ------------ | ------------------ | --------- | -------- | -------- | ---------------------------------- | --------------------------------- |
@@ -316,7 +316,7 @@ Common for all examples:
 Examples demonstrate different use cases for RX only or RX&TX combined.
 
 > Demos part of this repository are all based on Low-Level (LL) drivers to maximize user understanding - how to convert theory into practice.
-> Some STM32Cube firmware packages include same example using HAL drivers too. Some of them are (with link to example; list is not exhausted) listed below.
+> Some STM32Cube firmware packages include same example using HAL drivers too. Some of them are (with link to example; list is not exhaustive) listed below.
 > All examples are identified as *UART_ReceptionToIdle_CircularDMA* - you can search for it in your local Cube firmware repository.
 > * [STM32U5 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeU5/tree/main/Projects/NUCLEO-U575ZI-Q/Examples/UART/UART_ReceptionToIdle_CircularDMA)
 > * [STM32L5 UART_ReceptionToIdle_CircularDMA](https://github.com/STMicroelectronics/STM32CubeL5/tree/master/Projects/NUCLEO-L552ZE-Q/Examples/UART/UART_ReceptionToIdle_CircularDMA)
@@ -384,11 +384,11 @@ Examples demonstrate different use cases for RX only or RX&TX combined.
 ### Demo application for debug messages
 
 This is a demo application available in `projects` folder.
-Its purpose is to show how the application can implement output of debug messages without drastically affect CPU performance.
+Its purpose is to show how the application can implement output of debug messages without drastically affecting CPU performance.
 It is using DMA to transfer data (no CPU to wait for UART flags) and can achieve very high or very low data rates
 
 - All debug messages from application are written to intermediate ringbuffer
-- Application will try to start & configure DMA after every successfive write to ringbuffer
+- Application will try to start & configure DMA after every successive write to ringbuffer
 - If transfer is on-going, next start is configured from DMA TC interrupt
 
 As a result of this demo application for STM32F413-Nucleo board, observations are as following:
