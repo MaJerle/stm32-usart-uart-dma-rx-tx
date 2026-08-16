@@ -40,5 +40,19 @@
                 "BOARD_NAME": "NUCLEO_C5A3ZG"
             }
         }
+    ],
+    "buildPresets": [
+        {
+            "name": "NUCLEO_C562RE",
+            "configurePreset": "NUCLEO_C562RE"
+        },
+        {
+            "name": "NUCLEO_C542RC",
+            "configurePreset": "NUCLEO_C542RC"
+        },
+        {
+            "name": "NUCLEO_C5A3ZG",
+            "configurePreset": "NUCLEO_C5A3ZG"
+        }
     ]
 }
