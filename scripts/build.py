@@ -102,13 +102,18 @@ def main() -> None:
             )
             results.append((project_name, preset, build_ok))
 
-    print(f"\n{'=' * 70}\nSummary\n{'=' * 70}")
+    # Print the summary out
+    if results:
+        name_width = max(len(name) for name, _, _ in results)
+        preset_width = max(len(preset) for _, preset, _ in results)
+
+    # Title
+    print(f"\n{'=' * (name_width + preset_width + 10)}\nSummary\n{'=' * (name_width + preset_width + 10)}")
     if not results:
         print("Nothing was built.")
         sys.exit(1)
 
-    name_width = max(len(name) for name, _, _ in results)
-    preset_width = max(len(preset) for _, preset, _ in results)
+    # Content
     failed = 0
     for project_name, preset, ok in results:
         status = "PASS" if ok else "FAIL"

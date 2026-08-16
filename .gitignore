@@ -1,3 +1,5 @@
+_build_outputs/
+
 #Build Keil files
 *.rar
 *.o

@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 # Core project settings
 #
 set(PROJ_PATH                       ${CMAKE_CURRENT_SOURCE_DIR})
-project(usart_dma_rx_idle_line_irq_G0)
+project(usart_rx_idle_line_irq_G0_${BOARD_NAME})
 enable_language(C CXX ASM)
 message("Build type: "              ${CMAKE_BUILD_TYPE})
 
@@ -28,8 +28,7 @@ set(CPU_PARAMETERS
 )
 
 # Set linker script
-set(linker_script_SRC               ${PROJ_PATH}/STM32G071RB_FLASH.ld)
-set(EXECUTABLE                      ${CMAKE_PROJECT_NAME})
+set(linker_script_SRC               ${PROJ_PATH}/linker/STM32G071RB_FLASH.ld)
 
 #
 # Source files
@@ -104,12 +103,12 @@ set(symbols_asm_SYMB
 set(link_DIRS
     
 )
-link_directories(${EXECUTABLE} ${link_DIRS})
+link_directories(${CMAKE_PROJECT_NAME} ${link_DIRS})
 
 #
 # Executable files
 #
-add_executable(${EXECUTABLE} 
+add_executable(${CMAKE_PROJECT_NAME} 
     ${src_drivers_SRCS}
     ${src_src_SRCS}
     ${src_startup_SRCS}
@@ -121,12 +120,12 @@ add_executable(${EXECUTABLE}
 set(link_LIBS
     
 )
-target_link_libraries(${EXECUTABLE} ${link_LIBS})
+target_link_libraries(${CMAKE_PROJECT_NAME} ${link_LIBS})
 
 #
 # Project symbols
 #
-target_compile_definitions(${EXECUTABLE} PRIVATE
+target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Language specific only
     $<$<COMPILE_LANGUAGE:C>: ${symbols_c_SYMB}>
     $<$<COMPILE_LANGUAGE:CXX>: ${symbols_cxx_SYMB}>
@@ -142,7 +141,7 @@ target_compile_definitions(${EXECUTABLE} PRIVATE
 #
 # Add include paths for each of the compiler
 #
-target_include_directories(${EXECUTABLE} PRIVATE
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Language specific only
     $<$<COMPILE_LANGUAGE:C>: ${include_c_DIRS}>
     $<$<COMPILE_LANGUAGE:CXX>: ${include_cxx_DIRS}>
@@ -154,7 +153,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
 )
 
 # Compiler and linker options
-target_compile_options(${EXECUTABLE} PRIVATE
+target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE
     ${CPU_PARAMETERS}
     -Wall
     -Wextra
@@ -183,7 +182,7 @@ target_compile_options(${EXECUTABLE} PRIVATE
 )
 
 # Setup linker parameters
-target_link_options(${EXECUTABLE} PRIVATE
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -T${linker_script_SRC}
     ${CPU_PARAMETERS}
     -Wl,-Map=${CMAKE_PROJECT_NAME}.map
@@ -198,17 +197,19 @@ target_link_options(${EXECUTABLE} PRIVATE
     -Wl,--print-memory-usage
 )
 
-# Execute post-build to print size
-add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
-    COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${EXECUTABLE}>
-)
+# Output generated files
+set(FILE_ELF $<TARGET_FILE:${CMAKE_PROJECT_NAME}>)
+set(FILE_HEX $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}.hex)
+set(FILE_BIN $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}.bin)
+set(FILE_OBJDUMPED $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}_objdump.txt)
 
-# Convert output to hex and binary
-add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${EXECUTABLE}> ${EXECUTABLE}.hex
-)
-
-# Convert to bin file -> add conditional check?
-add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${EXECUTABLE}> ${EXECUTABLE}.bin
+# Output files in the build folder
+set(BUILD_OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/../../_build_outputs)
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${CMAKE_PROJECT_NAME}>
+    COMMAND ${CMAKE_OBJCOPY} -O ihex ${FILE_ELF} ${FILE_HEX}
+    COMMAND ${CMAKE_OBJCOPY} -O binary ${FILE_ELF} ${FILE_BIN}
+    COMMAND ${CMAKE_OBJDUMP} -S ${FILE_ELF} > ${FILE_OBJDUMPED}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_OUTPUT_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${FILE_ELF} ${BUILD_OUTPUT_DIR}/${CMAKE_PROJECT_NAME}.elf
 )
