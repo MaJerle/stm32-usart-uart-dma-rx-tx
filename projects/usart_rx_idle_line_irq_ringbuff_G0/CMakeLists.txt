@@ -45,7 +45,6 @@ set(files_SRCS ${files_SRCS}
     ${CMAKE_CURRENT_LIST_DIR}/../../drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_rcc.c
     ${CMAKE_CURRENT_LIST_DIR}/../../drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_usart.c
     ${CMAKE_CURRENT_LIST_DIR}/../../drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_utils.c
-    ${CMAKE_CURRENT_LIST_DIR}/syscalls.c
 )
 
 # Include directories

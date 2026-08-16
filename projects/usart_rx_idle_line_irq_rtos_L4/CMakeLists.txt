@@ -53,7 +53,6 @@ set(files_SRCS ${files_SRCS}
     ${CMAKE_CURRENT_LIST_DIR}/../../middlewares/FreeRTOS/Source/queue.c
     ${CMAKE_CURRENT_LIST_DIR}/../../middlewares/FreeRTOS/Source/tasks.c
     ${CMAKE_CURRENT_LIST_DIR}/../../middlewares/FreeRTOS/Source/timers.c
-    ${CMAKE_CURRENT_LIST_DIR}/syscalls.c
 )
 
 # Include directories
