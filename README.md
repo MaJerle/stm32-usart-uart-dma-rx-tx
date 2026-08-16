@@ -110,7 +110,7 @@ Listed are steps to begin. Initial assumption is that UART has been initialized 
 - The application writes `20` to relevant DMA register for data length
 - The application writes memory & peripheral addresses to relevant DMA registers
 - Application sets DMA direction to *peripheral-to-memory* mode
-- Application puts DMA to *circular* mode. This is to assure DMA does not stop transferring data after it reaches end of memory. Instead, it will roll over and continue with transferring possible more data from UART to memory
+- Application puts DMA to *circular* mode. This is to ensure DMA does not stop transferring data after it reaches end of memory. Instead, it will roll over and continue with transferring possible more data from UART to memory
 - The application enables DMA & UART in reception mode. Reception cannot start & DMA will wait for UART to receive first character and transmit it to array. This is done for every received byte
 - The application is notified by DMA `HT` event (or interrupt) after the first `10` bytes have been transferred from UART to memory
 - The application is notified by DMA `TC` event (or interrupt) after `20` bytes are transferred from UART to memory
@@ -276,8 +276,8 @@ STM32s have different interrupt lines (interrupt service routines later too) for
 
 Function that gets called to process received data must keep position of *last read value*, hence processing function is not thread-safe or reentrant and requires special attention.
 
-> The application must assure, DMA and UART interrupts utilize same preemption priority level.
-> This is the only configuration to guarantee processing function never gets preempted by itself (DMA interrupt to preempty UART, or opposite), otherwise last-known read position may get corrupted and application will operate with wrong data.
+> The application must ensure DMA and UART interrupts utilize same preemption priority level.
+> This is the only configuration to guarantee processing function never gets preempted by itself (DMA interrupt to preempt UART, or opposite), otherwise last-known read position may get corrupted and application will operate with wrong data.
 
 # Examples
 
@@ -308,6 +308,9 @@ Common for all examples:
 | STM32L4xx    | `NUCLEO-L432KC`    | `USART2`  | `PA2`    | `PA15`   | *`DMA1`, `Channel 6`, `Request 2`* |                                   |
 | STM32H7xx    | `NUCLEO-H743ZI2*`  | `USART3`  | `PD8`    | `PD9`    | *`DMA1`, `Stream 0`*               | *`DMA1`, `Stream 1`*              |
 | STM32U5xx    | `NUCLEO-U575ZI-Q*` | `USART1`  | `PA9`    | `PA10`   | *`GPDMA1`, `Channel 0`*            | *`GPDMA1`, `Channel 1`*           |
+| STM32C5xx    | `NUCLEO-C562RE`    | `USART2`  | `PA2`    | `PA3`    | *`LPDMA1`, `Channel 0`*            | *`LPDMA1`, `Channel 1`*           |
+| STM32C5xx    | `NUCLEO-C542RC`    | `USART2`  | `PA2`    | `PA3`    | *`LPDMA1`, `Channel 0`*            | *`LPDMA1`, `Channel 1`*           |
+| STM32C5xx    | `NUCLEO-C5A3ZG`    | `USART2`  | `PA2`    | `PA3`    | *`LPDMA1`, `Channel 0`*            | *`LPDMA1`, `Channel 1`*           |
 
 > * It is possible to run H743 (single-core) examples on dual-core STM32H7 Nucleo boards, NUCLEO-H745 or NUCLEO-H755.
 > Special care needs to be taken as dual-core H7 Nucleo boards use DCDC for MCU power hence
@@ -332,7 +335,7 @@ Examples demonstrate different use cases for RX only or RX&TX combined.
 ### Polling for changes
 
 - DMA hardware takes care to transfer received data to memory
-- The application must constantly poll for new changes in DMA registers and read received data quick enough to make sure DMA will not overwrite data in buffer
+- The application must constantly poll for new changes in DMA registers and read received data quickly enough to make sure DMA will not overwrite data in buffer
 - Processing of received data is in thread mode (not in interrupt)
 - P: Easy to implement
 - P: No interrupts, no consideration of priority and race conditions
@@ -362,7 +365,7 @@ Examples demonstrate different use cases for RX only or RX&TX combined.
 - C: Data are read (processed) in the interrupt. We strive to execute interrupt routine as fast as possible
 - C: Long interrupt execution may break other compatibility in the application
 
-*Processing of incoming data is from 2 interrupt vectors, hence it is important that they do not preempt each-other. Set both to the same preemption priority!*
+*Processing of incoming data is from 2 interrupt vectors, hence it is important that they do not preempt each other. Set both to the same preemption priority!*
 
 ### USART Idle line detection + DMA HT&TC interrupts with RTOS
 
@@ -393,7 +396,7 @@ It is using DMA to transfer data (no CPU to wait for UART flags) and can achieve
 
 As a result of this demo application for STM32F413-Nucleo board, observations are as following:
 - Demo code sends `1581` bytes every second at `115200` bauds, which is approx `142ms`.
-- With DMA disabled, CPU load was `14%`, in-line with time to transmit the data
+- With DMA disabled, CPU load was `14%`, in line with time to transmit the data
 - With DMA enabled, CPU load was `0%`
 - DMA can be enabled/disabled with `USE_DMA_TX` macro configuration in `main.c`
 
