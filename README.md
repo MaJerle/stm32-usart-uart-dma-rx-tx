@@ -372,7 +372,7 @@ Examples demonstrate different use cases for RX only or RX&TX combined.
 - Advantages:
     - Application does not need to poll for new changes
     - The application receives interrupts on events
-    - Application may enter low-power modes to increase battery life (if operated on battery)
+    - Application may enter low-power modes to reduce power
 - Disadvantages:
     - Data are read (processed) in the interrupt. We strive to execute interrupt routine as fast as possible
     - Long interrupt execution may break other compatibility in the application
@@ -416,5 +416,11 @@ As a result of this demo application for STM32F413-Nucleo board, observations ar
 
 ## How to use this repository
 
-1. Run `git clone --recurse-submodules https://github.com/MaJerle/stm32-usart-dma-rx-tx` to clone repository including submodules
-2. Run examples from `projects` directory using [STM32CubeIDE IDE](https://www.st.com/en/development-tools/stm32cubeide.html)
+1. Clone the repository: `git clone https://github.com/MaJerle/stm32-usart-uart-dma-rx-tx`
+2. Install *CMake*, *Ninja* and the *ARM GCC compiler* (`arm-none-eabi-gcc`) and make sure they are available on your `PATH`
+3. Build every example at once with the helper script: `python3 scripts/build.py` (add `--clean` for a clean rebuild, or `--path projects/<name>` to build a single example)
+4. Alternatively, build a single example by hand from its project folder:
+    - `cmake --list-presets` to see the available board presets
+    - `cmake --preset <preset_name>` to configure
+    - `cmake --build --preset <preset_name>` to build
+5. For editing and debugging, open any project folder directly in *VS Code* — each one ships with recommended extensions and CMake Tools integration

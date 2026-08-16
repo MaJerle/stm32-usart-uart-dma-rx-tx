@@ -7,7 +7,7 @@ enable_language(C CXX ASM)
 if(${BOARD_NAME} STREQUAL "NUCLEO_U575ZI_Q")
     message(STATUS "Build configuration for board: NUCLEO_U575ZI_Q")
     set(linker_script_SRC ${CMAKE_CURRENT_LIST_DIR}/linker/STM32U575ZITXQ_FLASH.ld)
-    set(startup_SRC ${CMAKE_CURRENT_LIST_DIR}/Startup/startup_stm32u575zitxq.s)
+    set(startup_SRC ${CMAKE_CURRENT_LIST_DIR}/startup/startup_stm32u575zitxq.s)
 else()
     message(FATAL_ERROR "Error, invalid board")
 endif()
@@ -16,7 +16,7 @@ message(STATUS "Linker script: " ${linker_script_SRC})
 
 # Start by scanning all sources in the root of this project
 file(GLOB_RECURSE files_SRCS
-    ${CMAKE_CURRENT_LIST_DIR}/Src/*.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/*.c
 )
 
 # Add startup file and additional driver/middleware sources
@@ -36,7 +36,7 @@ set(files_SRCS ${files_SRCS}
 
 # Include directories
 set(include_DIRS ${include_DIRS}
-    ${CMAKE_CURRENT_LIST_DIR}/Inc
+    ${CMAKE_CURRENT_LIST_DIR}/inc
     ${CMAKE_CURRENT_LIST_DIR}/../../drivers/STM32U5xx_HAL_Driver/Inc
     ${CMAKE_CURRENT_LIST_DIR}/../../drivers/CMSIS/Device/ST/STM32U5xx/Include
     ${CMAKE_CURRENT_LIST_DIR}/../../drivers/CMSIS/Include

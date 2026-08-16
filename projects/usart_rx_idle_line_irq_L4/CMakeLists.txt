@@ -16,7 +16,7 @@ message(STATUS "Linker script: " ${linker_script_SRC})
 
 # Start by scanning all sources in the root of this project
 file(GLOB_RECURSE files_SRCS
-    ${CMAKE_CURRENT_LIST_DIR}/Src/*.c
+    ${CMAKE_CURRENT_LIST_DIR}/src/*.c
 )
 
 # Add startup file and additional driver/middleware sources
@@ -33,7 +33,7 @@ set(files_SRCS ${files_SRCS}
 
 # Include directories
 set(include_DIRS ${include_DIRS}
-    ${CMAKE_CURRENT_LIST_DIR}/Inc
+    ${CMAKE_CURRENT_LIST_DIR}/inc
     ${CMAKE_CURRENT_LIST_DIR}/../../middlewares/FreeRTOS/Source/include
     ${CMAKE_CURRENT_LIST_DIR}/../../middlewares/FreeRTOS/Source/portable/GCC/ARM_CM4F
     ${CMAKE_CURRENT_LIST_DIR}/../../middlewares/FreeRTOS/Source/CMSIS_RTOS
