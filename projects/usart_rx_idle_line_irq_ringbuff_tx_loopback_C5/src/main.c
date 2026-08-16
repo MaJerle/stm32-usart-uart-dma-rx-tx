@@ -71,15 +71,6 @@
 #error "Invalid board"
 #endif
 
-void
-LL_GPIO_SetAFPin(GPIO_TypeDef* GPIOx, uint32_t pin, uint32_t alternate) {
-    if (pin > LL_GPIO_PIN_7) {
-        LL_GPIO_SetAFPin_8_15(GPIOx, pin, alternate);
-    } else {
-        LL_GPIO_SetAFPin_0_7(GPIOx, pin, alternate);
-    }
-}
-
 /* System private function */
 static void systemclock_config(void);
 
