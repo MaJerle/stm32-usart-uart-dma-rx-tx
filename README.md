@@ -30,24 +30,30 @@ GitHub supports ToC by default. It is available in the top-left corner of this d
 UART in STM32 allows configuration using different transmit (`TX`) and receive (`RX`) modes:
 
 - Polling mode (no DMA, no IRQ)
-    - P: Application is polling for status bits to check if any character has been transmitted/received and read it fast enough in order not to miss any byte
-    - P: Easy to implement, simply a few lines of code
-    - C: Can easily miss received data in complex application if CPU cannot read registers quickly enough
-    - C: Works only for low baudrates, `9600` or lower
+    - Advantages:
+        - Application is polling for status bits to check if any character has been transmitted/received and read it fast enough in order not to miss any byte
+        - Easy to implement, simply a few lines of code
+    - Disadvantages:
+        - Can easily miss received data in complex application if CPU cannot read registers quickly enough
+        - Works only for low baudrates, `9600` or lower
 - Interrupt mode (no DMA)
-    - P: UART triggers interrupt and CPU jumps to service routine to handle each received byte separately
-    - P: Commonly used approach in embedded applications
-    - P: Works well with common baudrates, `115200`, up to `~921600` bauds
-    - C: Interrupt service routine is executed for every received character
-    - C: May decrease system performance if interrupts are triggered for every character for high-speed baudrates
+    - Advantages:
+        - UART triggers interrupt and CPU jumps to service routine to handle each received byte separately
+        - Commonly used approach in embedded applications
+        - Works well with common baudrates, `115200`, up to `~921600` bauds
+    - Disadvantages:
+        - Interrupt service routine is executed for every received character
+        - May decrease system performance if interrupts are triggered for every character for high-speed baudrates
 - DMA mode
     - DMA is used to transfer data from the USART RX data register to user memory at the hardware level. No application interaction is needed at this point except for processing received data by the application when necessary
-    - P: Transfer from USART peripheral to memory is done on hardware level without CPU interaction
-    - P: Works well with operating systems
-    - P: Optimized for highest baudrates `> 1Mbps` and low-power applications
-    - P: In case of big bursts of data, increasing data buffer size can improve functionality
-    - C: Number of bytes to transfer must be known in advance by DMA hardware
-    - C: If communication fails, DMA may not notify application about all bytes transferred
+    - Advantages:
+        - Transfer from USART peripheral to memory is done on hardware level without CPU interaction
+        - Works well with operating systems
+        - Optimized for highest baudrates `> 1Mbps` and low-power applications
+        - In case of big bursts of data, increasing data buffer size can improve functionality
+    - Disadvantages:
+        - Number of bytes to transfer must be known in advance by DMA hardware
+        - If communication fails, DMA may not notify application about all bytes transferred
 
 > This guide focuses exclusively on DMA‑based RX operation and explains how to handle cases where data length is unknown
 
@@ -337,33 +343,39 @@ Examples demonstrate different use cases for RX only or RX&TX combined.
 - DMA hardware takes care to transfer received data to memory
 - The application must constantly poll for new changes in DMA registers and read received data quickly enough to make sure DMA will not overwrite data in buffer
 - Processing of received data is in thread mode (not in interrupt)
-- P: Easy to implement
-- P: No interrupts, no consideration of priority and race conditions
-- P: Fits for devices without *USART IDLE* line detection
-- C: Application takes care of data periodically
-- C: Not possible to put application to low-power mode (sleep mode)
+- Advantages:
+    - Easy to implement
+    - No interrupts, no consideration of priority and race conditions
+    - Fits for devices without *USART IDLE* line detection
+- Disadvantages:
+    - Application takes care of data periodically
+    - Not possible to put application to low-power mode (sleep mode)
 
 ### Polling for changes with operating system
 
 - Same as polling for changes but with dedicated thread in operating system to process data
-- P: Easy to implement to RTOS systems, uses single thread without additional RTOS features (no mutexes, semaphores, memory queues)
-- P: No interrupts, no consideration of priority and race conditions
-- P: Data processing always *on-time* with maximum delay given by thread delay, thus with known maximum latency between received character and processed time
-    - Unless system has higher priority threads
-- P: Fits for devices without *UART IDLE* line detection
-- C: Application takes care of data periodically
-- C: Uses memory resources dedicated for separate thread for data processing
-- C: Not possible to put application to low-power mode (sleep mode)
+- Advantages:
+    - Easy to implement to RTOS systems, uses single thread without additional RTOS features (no mutexes, semaphores, memory queues)
+    - No interrupts, no consideration of priority and race conditions
+    - Data processing always *on-time* with maximum delay given by thread delay, thus with known maximum latency between received character and processed time
+        - Unless system has higher priority threads
+    - Fits for devices without *UART IDLE* line detection
+- Disadvantages:
+    - Application takes care of data periodically
+    - Uses memory resources dedicated for separate thread for data processing
+    - Not possible to put application to low-power mode (sleep mode)
 
 ### UART IDLE line detection + DMA HT&TC interrupts
 
 - The application receives a notification by IDLE line detection or DMA TC/HT events
 - Application has to process data only when it receives any of the `3` interrupts
-- P: Application does not need to poll for new changes
-- P: The application receives interrupts on events
-- P: Application may enter low-power modes to increase battery life (if operated on battery)
-- C: Data are read (processed) in the interrupt. We strive to execute interrupt routine as fast as possible
-- C: Long interrupt execution may break other compatibility in the application
+- Advantages:
+    - Application does not need to poll for new changes
+    - The application receives interrupts on events
+    - Application may enter low-power modes to increase battery life (if operated on battery)
+- Disadvantages:
+    - Data are read (processed) in the interrupt. We strive to execute interrupt routine as fast as possible
+    - Long interrupt execution may break other compatibility in the application
 
 *Processing of incoming data is from 2 interrupt vectors, hence it is important that they do not preempt each other. Set both to the same preemption priority!*
 
@@ -371,10 +383,12 @@ Examples demonstrate different use cases for RX only or RX&TX combined.
 
 - The application receives a notification by IDLE line detection or DMA TC/HT events
 - The application uses separate thread to process the data only when notified in one of interrupts
-- P: Processing is not in the interrupt but in separate thread
-- P: Interrupt only informs processing thread to process (or to wakeup)
-- P: Operating system may put processing thread to blocked state while waiting for event
-- C: Memory usage for separate thread + message queue (or semaphore)
+- Advantages:
+    - Processing is not in the interrupt but in separate thread
+    - Interrupt only informs processing thread to process (or to wakeup)
+    - Operating system may put processing thread to blocked state while waiting for event
+- Disadvantages:
+    - Memory usage for separate thread + message queue (or semaphore)
 
 > This is the most preferred way to use and process UART received character
 
