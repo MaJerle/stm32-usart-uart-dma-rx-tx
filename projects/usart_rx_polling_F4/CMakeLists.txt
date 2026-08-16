@@ -1,78 +1,62 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.19)
 
-#
-# Core project settings
-#
-set(PROJ_PATH                       ${CMAKE_CURRENT_SOURCE_DIR})
 project(usart_rx_polling_F4_${BOARD_NAME})
 enable_language(C CXX ASM)
-message("Build type: "              ${CMAKE_BUILD_TYPE})
 
-# Setup compiler settings
-set(CMAKE_C_STANDARD                11)
-set(CMAKE_C_STANDARD_REQUIRED       ON)
-set(CMAKE_C_EXTENSIONS              ON)
-set(CMAKE_CXX_STANDARD              20)
-set(CMAKE_CXX_STANDARD_REQUIRED     ON)
-set(CMAKE_CXX_EXTENSIONS            ON)
+# Board-specific linker script and startup file
+if(${BOARD_NAME} STREQUAL "NUCLEO_F413ZH")
+    message(STATUS "Build configuration for board: NUCLEO_F413ZH")
+    set(linker_script_SRC ${CMAKE_CURRENT_LIST_DIR}/linker/STM32F413ZH_FLASH.ld)
+    set(startup_SRC ${CMAKE_CURRENT_LIST_DIR}/startup/startup_stm32f413xx.s)
+else()
+    message(FATAL_ERROR "Error, invalid board")
+endif()
 
-#
-# Core MCU flags, CPU, instruction set and FPU setup
-#
-set(CPU_PARAMETERS
-    -mthumb
-    # Other parameters
-    # -mcpu, -mfloat, -mfloat-abi, ...
-    -mcpu=cortex-m4
-    -mfpu=fpv4-sp-d16
-    -mfloat-abi=hard
+message(STATUS "Linker script: " ${linker_script_SRC})
+
+# Compilation flags for the CPU and for the for best performance (and development support)
+set(cpu_PARAMS -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard)
+set(cxx_flags -Wno-deprecated -Wno-volatile -Wno-deprecated-enum-float-conversion -Wno-missing-field-initializers)
+set(asm_flags -x assembler-with-cpp -MMD -MP)
+set(debug_flags -Og -g3 -ggdb)
+set(release_flags -Og -O3 -g0)
+add_compile_options(
+    ${cpu_PARAMS}
+    -Wall -Wextra -Wpedantic -Wno-unused-parameter
+    "$<$<COMPILE_LANGUAGE:CXX>:${cxx_flags}>"
+    "$<$<COMPILE_LANGUAGE:ASM>:${asm_flags}>"
+    "$<$<CONFIG:Debug>:${debug_flags}>"
+    "$<$<CONFIG:Release>:${release_flags}>"
 )
 
-# Set linker script
-set(linker_script_SRC               ${PROJ_PATH}/linker/STM32F413ZH_FLASH.ld)
+# Start by scanning all sources in the root of this project
+file(GLOB_RECURSE files_SRCS
+    ${CMAKE_CURRENT_LIST_DIR}/Src/*.c
+)
 
-#
-# Source files
-#
-set(src_drivers_stm32f4xx_hal_driver_SRCS 
-    ${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_dma.c
-    ${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_exti.c
-    ${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_gpio.c
-    ${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_rcc.c
-    ${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usart.c
-    ${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_utils.c)
+# Add startup file and additional driver/middleware sources
+set(files_SRCS ${files_SRCS}
+    ${startup_SRC}
 
-set(src_src_SRCS 
-    ${PROJ_PATH}/Src/main.c
-    ${PROJ_PATH}/Src/stm32f4xx_it.c
-    ${PROJ_PATH}/Src/system_stm32f4xx.c)
+    ${CMAKE_CURRENT_LIST_DIR}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_dma.c
+    ${CMAKE_CURRENT_LIST_DIR}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_exti.c
+    ${CMAKE_CURRENT_LIST_DIR}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_gpio.c
+    ${CMAKE_CURRENT_LIST_DIR}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_rcc.c
+    ${CMAKE_CURRENT_LIST_DIR}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usart.c
+    ${CMAKE_CURRENT_LIST_DIR}/../../drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_utils.c
+    ${CMAKE_CURRENT_LIST_DIR}/syscalls.c
+)
 
-set(src_startup_SRCS 
-    ${PROJ_PATH}/startup/startup_stm32f413xx.s)
-
-set(src__SRCS 
-    ${PROJ_PATH}/syscalls.c)
-
-#
 # Include directories
-#
-set(include_c_DIRS
-    ${PROJ_PATH}/Inc
-    ${PROJ_PATH}/../../drivers/STM32F4xx_HAL_Driver/Inc
-    ${PROJ_PATH}/../../drivers/CMSIS/Device/ST/STM32F4xx/Include
-    ${PROJ_PATH}/../../drivers/CMSIS/Include
-)
-set(include_cxx_DIRS
-    
-)
-set(include_asm_DIRS
-    
+set(include_DIRS ${include_DIRS}
+    ${CMAKE_CURRENT_LIST_DIR}/Inc
+    ${CMAKE_CURRENT_LIST_DIR}/../../drivers/STM32F4xx_HAL_Driver/Inc
+    ${CMAKE_CURRENT_LIST_DIR}/../../drivers/CMSIS/Device/ST/STM32F4xx/Include
+    ${CMAKE_CURRENT_LIST_DIR}/../../drivers/CMSIS/Include
 )
 
-#
-# Symbols definition
-#
-set(symbols_c_SYMB
+# Symbols for compilation
+set(symbols_SYMB ${symbols_SYMB}
     "USE_FULL_LL_DRIVER"
     "HSE_VALUE=25000000"
     "HSE_STARTUP_TIMEOUT=100"
@@ -89,102 +73,17 @@ set(symbols_c_SYMB
     "__packed=__attribute__((__packed__))"
     "STM32F413xx"
 )
-set(symbols_cxx_SYMB
-    
-)
-set(symbols_asm_SYMB
-    
-)
 
-#
-# Link directories setup
-# Must be before executable is added
-#
-set(link_DIRS
-    
-)
-link_directories(${CMAKE_PROJECT_NAME} ${link_DIRS})
-
-#
-# Executable files
-#
-add_executable(${CMAKE_PROJECT_NAME} 
-    ${src_drivers_stm32f4xx_hal_driver_SRCS}
-    ${src_src_SRCS}
-    ${src_startup_SRCS}
-    ${src__SRCS})
-
-#
-# Add linked libraries for linker
-#
-set(link_LIBS
-    
-)
-target_link_libraries(${CMAKE_PROJECT_NAME} ${link_LIBS})
-
-#
-# Project symbols
-#
-target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
-    # Language specific only
-    $<$<COMPILE_LANGUAGE:C>: ${symbols_c_SYMB}>
-    $<$<COMPILE_LANGUAGE:CXX>: ${symbols_cxx_SYMB}>
-    $<$<COMPILE_LANGUAGE:ASM>: ${symbols_asm_SYMB}>
-
-    # Configuration specific
-    $<$<CONFIG:Debug>:
-        DEBUG
-    >
-    $<$<CONFIG:Release>: >
-)
-
-#
-# Add include paths for each of the compiler
-#
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    # Language specific only
-    $<$<COMPILE_LANGUAGE:C>: ${include_c_DIRS}>
-    $<$<COMPILE_LANGUAGE:CXX>: ${include_cxx_DIRS}>
-    $<$<COMPILE_LANGUAGE:ASM>: ${include_asm_DIRS}>
-
-    # Configuration specific
-    $<$<CONFIG:Debug>: >
-    $<$<CONFIG:Release>: >
-)
-
-# Compiler and linker options
-target_compile_options(${CMAKE_PROJECT_NAME} PRIVATE
-    ${CPU_PARAMETERS}
-    -Wall
-    -Wextra
-    -Wpedantic
-    -Wno-unused-parameter
-    $<$<COMPILE_LANGUAGE:C>:
-
-    >
-    $<$<COMPILE_LANGUAGE:CXX>:
-        #-Wno-volatile
-        #-Wold-style-cast
-        #-Wuseless-cast
-        #-Wsuggest-override
-    >
-    $<$<COMPILE_LANGUAGE:ASM>:
-        -x assembler-with-cpp
-        -MMD
-        -MP
-    >
-    $<$<CONFIG:Debug>:
-        -Og -g3 -ggdb
-    >
-    $<$<CONFIG:Release>:
-        -Og -g0
-    >
-)
+# Add executable
+add_executable(${CMAKE_PROJECT_NAME})
+target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC ${symbols_SYMB})
+target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${include_DIRS})
+target_sources(${CMAKE_PROJECT_NAME} PUBLIC ${files_SRCS})
 
 # Setup linker parameters
 target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -T${linker_script_SRC}
-    ${CPU_PARAMETERS}
+    ${cpu_PARAMS}
     -Wl,-Map=${CMAKE_PROJECT_NAME}.map
     -u _printf_float              # STDIO float formatting support (remove if not used)
     --specs=nosys.specs
@@ -197,19 +96,13 @@ target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -Wl,--print-memory-usage
 )
 
-# Output generated files
-set(FILE_ELF $<TARGET_FILE:${CMAKE_PROJECT_NAME}>)
-set(FILE_HEX $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}.hex)
-set(FILE_BIN $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}.bin)
-set(FILE_OBJDUMPED $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}_objdump.txt)
-
 # Output files in the build folder
 set(BUILD_OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/../../_build_outputs)
 add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${CMAKE_PROJECT_NAME}>
-    COMMAND ${CMAKE_OBJCOPY} -O ihex ${FILE_ELF} ${FILE_HEX}
-    COMMAND ${CMAKE_OBJCOPY} -O binary ${FILE_ELF} ${FILE_BIN}
-    COMMAND ${CMAKE_OBJDUMP} -S ${FILE_ELF} > ${FILE_OBJDUMPED}
+    COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${CMAKE_PROJECT_NAME}> $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}.hex
+    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${CMAKE_PROJECT_NAME}> $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}.bin
+    COMMAND ${CMAKE_OBJDUMP} -S $<TARGET_FILE:${CMAKE_PROJECT_NAME}> > $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}_objdump.txt
     COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_OUTPUT_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy ${FILE_ELF} ${BUILD_OUTPUT_DIR}/${CMAKE_PROJECT_NAME}.elf
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${BUILD_OUTPUT_DIR}/${CMAKE_PROJECT_NAME}.elf
 )

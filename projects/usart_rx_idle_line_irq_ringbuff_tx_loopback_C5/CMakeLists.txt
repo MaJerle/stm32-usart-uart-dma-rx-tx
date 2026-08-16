@@ -32,7 +32,7 @@ set(asm_flags -x assembler-with-cpp -MMD -MP)
 set(debug_flags -Og -g3 -ggdb)
 set(release_flags -Og -O3 -g0)
 add_compile_options(
-    ${cpu_PARAMS} # CPU parameters are defined in the cortex-cmake file before this file is included
+    ${cpu_PARAMS}
     -Wall -Wextra -Wpedantic -Wno-unused-parameter
     "$<$<COMPILE_LANGUAGE:CXX>:${cxx_flags}>"
     "$<$<COMPILE_LANGUAGE:ASM>:${asm_flags}>"
@@ -100,19 +100,13 @@ target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -Wl,--print-memory-usage
 )
 
-# Output generated files
-set(FILE_ELF $<TARGET_FILE:${CMAKE_PROJECT_NAME}>)
-set(FILE_HEX $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}.hex)
-set(FILE_BIN $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}.bin)
-set(FILE_OBJDUMPED $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}_objdump.txt)
-
 # Output files in the build folder
 set(BUILD_OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/../../_build_outputs)
 add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${CMAKE_PROJECT_NAME}>
-    COMMAND ${CMAKE_OBJCOPY} -O ihex ${FILE_ELF} ${FILE_HEX}
-    COMMAND ${CMAKE_OBJCOPY} -O binary ${FILE_ELF} ${FILE_BIN}
-    COMMAND ${CMAKE_OBJDUMP} -S ${FILE_ELF} > ${FILE_OBJDUMPED}
+    COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${CMAKE_PROJECT_NAME}> $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}.hex
+    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${CMAKE_PROJECT_NAME}> $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}.bin
+    COMMAND ${CMAKE_OBJDUMP} -S $<TARGET_FILE:${CMAKE_PROJECT_NAME}> > $<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/${CMAKE_PROJECT_NAME}_objdump.txt
     COMMAND ${CMAKE_COMMAND} -E make_directory ${BUILD_OUTPUT_DIR}
-    COMMAND ${CMAKE_COMMAND} -E copy ${FILE_ELF} ${BUILD_OUTPUT_DIR}/${CMAKE_PROJECT_NAME}.elf
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${BUILD_OUTPUT_DIR}/${CMAKE_PROJECT_NAME}.elf
 )
