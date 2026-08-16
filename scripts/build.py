@@ -66,6 +66,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
         type=Path,
         help="Build only this single project directory instead of scanning projects/",
     )
+    parser.add_argument(
+        "--clean",
+        action="store_true",
+        help="Run 'cmake --build --target clean' for each preset before building it",
+    )
     return parser
 
 
@@ -97,6 +102,8 @@ def main() -> None:
         for preset in presets:
             print(f"\n--- {project_name} :: {preset} ---")
             configure_ok = run_streamed(["cmake", "--preset", preset], project_dir)
+            if configure_ok and args.clean:
+                run_streamed(["cmake", "--build", "--preset", preset, "--target", "clean"], project_dir)
             build_ok = configure_ok and run_streamed(
                 ["cmake", "--build", "--preset", preset], project_dir
             )
