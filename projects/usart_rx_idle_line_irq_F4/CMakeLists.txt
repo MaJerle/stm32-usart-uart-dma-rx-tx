@@ -42,20 +42,8 @@ set(include_DIRS ${include_DIRS}
 # Symbols for compilation
 set(symbols_SYMB ${symbols_SYMB}
     "USE_FULL_LL_DRIVER"
-    "HSE_VALUE=25000000"
-    "HSE_STARTUP_TIMEOUT=100"
-    "LSE_STARTUP_TIMEOUT=5000"
-    "LSE_VALUE=32768"
-    "EXTERNAL_CLOCK_VALUE=12288000"
-    "HSI_VALUE=16000000"
-    "LSI_VALUE=32000"
-    "VDD_VALUE=3300"
-    "PREFETCH_ENABLE=1"
-    "INSTRUCTION_CACHE_ENABLE=1"
-    "DATA_CACHE_ENABLE=1"
-    "__weak=__attribute__((weak))"
-    "__packed=__attribute__((__packed__))"
     "STM32F413xx"
+    "${BOARD_NAME}"
 )
 
 # Core MCU flags, CPU, instruction set and FPU setup

@@ -41,17 +41,10 @@ set(include_DIRS ${include_DIRS}
 
 # Symbols for compilation
 set(symbols_SYMB ${symbols_SYMB}
-    "EXTERNAL_CLOCK_VALUE=12288000"
-    "VDD_VALUE=3300"
-    "LSI_VALUE=32000"
-    "HSI_VALUE=64000000"
-    "HSE_VALUE=8000000"
-    "HSE_STARTUP_TIMEOUT=100"
     "USE_FULL_LL_DRIVER"
-    "DEBUG"
-    "LSE_STARTUP_TIMEOUT=5000"
     "STM32H743xx"
-    "LSE_VALUE=32768"
+    "${BOARD_NAME}"
+    "HSE_VALUE=8000000" # Board HSE via ST-LINK MCO is 8 MHz, not the 25 MHz default
 )
 
 # Core MCU flags, CPU, instruction set and FPU setup

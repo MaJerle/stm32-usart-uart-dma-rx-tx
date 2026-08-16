@@ -42,20 +42,9 @@ set(include_DIRS ${include_DIRS}
 
 # Symbols for compilation
 set(symbols_SYMB ${symbols_SYMB}
-    "HSE_VALUE=8000000"
-    "LSI_VALUE=32000"
-    "HSE_STARTUP_TIMEOUT=100"
-    "HSI_VALUE=16000000"
-    "LSE_STARTUP_TIMEOUT=5000"
-    "DEBUG"
-    "LSE_VALUE=32768"
-    "DATA_CACHE_ENABLE=1"
-    "EXTERNAL_CLOCK_VALUE=12288000"
-    "VDD_VALUE=3300"
-    "INSTRUCTION_CACHE_ENABLE=1"
-    "STM32G474xx"
     "USE_FULL_LL_DRIVER"
-    "PREFETCH_ENABLE=0"
+    "STM32G474xx"
+    "${BOARD_NAME}"
 )
 
 # Core MCU flags, CPU, instruction set and FPU setup

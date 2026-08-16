@@ -31,7 +31,7 @@
 #include "stm32c5xx_ll_utils.h"
 
 /* Define the USART variables */
-#if NUCLEO_C562RE > 0
+#if defined(NUCLEO_C562RE)
 #define USART_INSTANCE            USART2
 #define USART_INSTANCE_IRQn       USART2_IRQn
 #define USART_INSTANCE_IRQHandler USART2_IRQHandler
@@ -43,7 +43,7 @@
 #define USART_RX_AF               LL_GPIO_AF_7
 #define USART_TX_DMA_REQUEST      LL_LPDMA1_REQUEST_USART2_TX
 #define USART_RX_DMA_REQUEST      LL_LPDMA1_REQUEST_USART2_RX
-#elif NUCLEO_C542RC
+#elif defined(NUCLEO_C542RC)
 #define USART_INSTANCE            USART2
 #define USART_INSTANCE_IRQn       USART2_IRQn
 #define USART_INSTANCE_IRQHandler USART2_IRQHandler
@@ -55,7 +55,7 @@
 #define USART_RX_AF               LL_GPIO_AF_7
 #define USART_TX_DMA_REQUEST      LL_LPDMA1_REQUEST_USART2_TX
 #define USART_RX_DMA_REQUEST      LL_LPDMA1_REQUEST_USART2_RX
-#elif NUCLEO_C5A3ZG
+#elif defined(NUCLEO_C5A3ZG)
 #define USART_INSTANCE            USART2
 #define USART_INSTANCE_IRQn       USART2_IRQn
 #define USART_INSTANCE_IRQHandler USART2_IRQHandler
@@ -460,8 +460,11 @@ systemclock_config(void) {
     while (LL_RCC_HSE_IsReady() != 1U) {}
 
     /* Configure and enable PSI oscillator */
-    LL_RCC_ConfigPSI(LL_RCC_PSIFREQ_144MHZ, NUCLEO_C5A3ZG ? LL_RCC_PSIREF_48MHZ : LL_RCC_PSIREF_24MHZ,
-                     LL_RCC_PSISOURCE_HSE);
+#if defined(NUCLEO_C5A3ZG)
+    LL_RCC_ConfigPSI(LL_RCC_PSIFREQ_144MHZ, LL_RCC_PSIREF_48MHZ, LL_RCC_PSISOURCE_HSE);
+#else
+    LL_RCC_ConfigPSI(LL_RCC_PSIFREQ_144MHZ, LL_RCC_PSIREF_24MHZ, LL_RCC_PSISOURCE_HSE);
+#endif
     LL_RCC_PSIS_Enable();
     while (LL_RCC_PSIS_IsReady() != 1U) {}
 

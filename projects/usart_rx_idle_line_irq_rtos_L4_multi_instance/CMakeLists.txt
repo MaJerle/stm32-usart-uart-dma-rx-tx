@@ -55,9 +55,8 @@ set(include_DIRS ${include_DIRS}
 # Symbols for compilation
 set(symbols_SYMB ${symbols_SYMB}
     "USE_FULL_LL_DRIVER"
-    "__weak=__attribute__((weak))"
-    "__packed=__attribute__((__packed__))"
     "STM32L432xx"
+    "${BOARD_NAME}"
 )
 
 # Core MCU flags, CPU, instruction set and FPU setup

@@ -44,18 +44,10 @@ set(include_DIRS ${include_DIRS}
 
 # Symbols for compilation
 set(symbols_SYMB ${symbols_SYMB}
-    "DEBUG"
-    "STM32U575xx"
     "USE_FULL_LL_DRIVER"
-    "HSE_VALUE=16000000"
-    "HSE_STARTUP_TIMEOUT=100"
-    "LSE_STARTUP_TIMEOUT=5000"
-    "LSE_VALUE=32768"
-    "MSI_VALUE=48000000"
-    "EXTERNALSAI1_CLOCK_VALUE=48000"
-    "HSI_VALUE=16000000"
-    "LSI_VALUE=32000"
-    "VDD_VALUE=3300"
+    "STM32U575xx"
+    "${BOARD_NAME}"
+    "MSI_VALUE=48000000" # Board MSI trim is 48 MHz, not the 4 MHz default
 )
 
 # Core MCU flags, CPU, instruction set and FPU setup

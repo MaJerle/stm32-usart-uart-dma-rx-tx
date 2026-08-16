@@ -4,17 +4,17 @@ project(usart_rx_idle_line_irq_ringbuff_tx_loopback_C5_${BOARD_NAME})
 enable_language(C CXX ASM)
 
 # Source files from src directory
-if(${NUCLEO_C562RE})
+if(${BOARD_NAME} STREQUAL "NUCLEO_C562RE")
     message(STATUS "Build configuration for board: NUCLEO_C562RE")
     set(linker_script_SRC ${CMAKE_CURRENT_LIST_DIR}/linker/stm32c562xe_flash.ld)
     set(startup_SRC ${CMAKE_CURRENT_LIST_DIR}/startup/startup_stm32c562xx.c)
     set(CPU_DEFINE "STM32C562xx")
-elseif(${NUCLEO_C542RC})
-    message(STATUS "Build configuration for board: NUCLEO_C542RE")
+elseif(${BOARD_NAME} STREQUAL "NUCLEO_C542RC")
+    message(STATUS "Build configuration for board: NUCLEO_C542RC")
     set(linker_script_SRC ${CMAKE_CURRENT_LIST_DIR}/linker/stm32c542xc_flash.ld)
     set(startup_SRC ${CMAKE_CURRENT_LIST_DIR}/startup/startup_stm32c542xx.c)
     set(CPU_DEFINE "STM32C542xx")
-elseif(${NUCLEO_C5A3ZG})
+elseif(${BOARD_NAME} STREQUAL "NUCLEO_C5A3ZG")
     message(STATUS "Build configuration for board: NUCLEO_C5A3ZG")
     set(linker_script_SRC ${CMAKE_CURRENT_LIST_DIR}/linker/stm32c5a3xg_flash.ld)
     set(startup_SRC ${CMAKE_CURRENT_LIST_DIR}/startup/startup_stm32c5a3xx.c)
@@ -51,11 +51,7 @@ set(include_DIRS ${include_DIRS}
 set(symbols_SYMB ${symbols_SYMB}
     "STM32C5xx"
     "${CPU_DEFINE}" # STM32C562xx or equilvalent
-
-    # Board defines
-    "NUCLEO_C562RE=${NUCLEO_C562RE}"
-    "NUCLEO_C542RC=${NUCLEO_C542RC}"
-    "NUCLEO_C5A3ZG=${NUCLEO_C5A3ZG}"
+    "${BOARD_NAME}"
 )
 
 # Core MCU flags, CPU, instruction set and FPU setup

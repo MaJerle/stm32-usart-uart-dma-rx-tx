@@ -10,9 +10,6 @@
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "CMAKE_BUILD_TYPE": "Debug",
-                "NUCLEO_C562RE": "0",
-                "NUCLEO_C542RC": "0",
-                "NUCLEO_C5A3ZG": "0",
                 "BOARD_NAME": ""
             }
         },
@@ -20,7 +17,6 @@
             "name": "NUCLEO_C562RE",
             "inherits": "default",
             "cacheVariables": {
-                "NUCLEO_C562RE": "1",
                 "BOARD_NAME": "NUCLEO_C562RE"
             }
         },
@@ -28,7 +24,6 @@
             "name": "NUCLEO_C542RC",
             "inherits": "default",
             "cacheVariables": {
-                "NUCLEO_C542RC": "1",
                 "BOARD_NAME": "NUCLEO_C542RC"
             }
         },
@@ -36,7 +31,6 @@
             "name": "NUCLEO_C5A3ZG",
             "inherits": "default",
             "cacheVariables": {
-                "NUCLEO_C5A3ZG": "1",
                 "BOARD_NAME": "NUCLEO_C5A3ZG"
             }
         }
