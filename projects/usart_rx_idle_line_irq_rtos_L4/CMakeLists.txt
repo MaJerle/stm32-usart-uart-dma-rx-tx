@@ -14,21 +14,6 @@ endif()
 
 message(STATUS "Linker script: " ${linker_script_SRC})
 
-# Compilation flags for the CPU and for the for best performance (and development support)
-set(cpu_PARAMS -mthumb -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard)
-set(cxx_flags -Wno-deprecated -Wno-volatile -Wno-deprecated-enum-float-conversion -Wno-missing-field-initializers)
-set(asm_flags -x assembler-with-cpp -MMD -MP)
-set(debug_flags -Og -g3 -ggdb)
-set(release_flags -Og -O3 -g0)
-add_compile_options(
-    ${cpu_PARAMS}
-    -Wall -Wextra -Wpedantic -Wno-unused-parameter
-    "$<$<COMPILE_LANGUAGE:CXX>:${cxx_flags}>"
-    "$<$<COMPILE_LANGUAGE:ASM>:${asm_flags}>"
-    "$<$<CONFIG:Debug>:${debug_flags}>"
-    "$<$<CONFIG:Release>:${release_flags}>"
-)
-
 # Start by scanning all sources in the root of this project
 file(GLOB_RECURSE files_SRCS
     ${CMAKE_CURRENT_LIST_DIR}/Src/*.c
@@ -73,6 +58,10 @@ set(symbols_SYMB ${symbols_SYMB}
     "__packed=__attribute__((__packed__))"
     "STM32L432xx"
 )
+
+# Core MCU flags, CPU, instruction set and FPU setup
+# Set the global compilation flags for all units
+include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/compiler-flags-cortex-m4.cmake)
 
 # Add executable
 add_executable(${CMAKE_PROJECT_NAME})
