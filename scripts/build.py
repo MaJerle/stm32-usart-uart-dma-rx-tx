@@ -4,6 +4,7 @@ import argparse
 import re
 import subprocess
 import sys
+import time, datetime
 from pathlib import Path
 from typing import List, Optional, Tuple, Final
 
@@ -88,6 +89,7 @@ def main() -> None:
     results: List[Tuple[str, str, bool]] = []
 
     # Process all projects and compile the project
+    start_time = time.time()
     for project_dir in projects:
         project_name = project_dir.name
         print(f"\n{'=' * 70}\n{project_name}\n{'=' * 70}")
@@ -108,6 +110,7 @@ def main() -> None:
                 ["cmake", "--build", "--preset", preset], project_dir
             )
             results.append((project_name, preset, build_ok))
+    total_time = time.time() - start_time
 
     # Print the summary out
     if results:
@@ -129,6 +132,7 @@ def main() -> None:
 
     total = len(results)
     print(f"\n{total - failed}/{total} builds passed")
+    print(f"Total time: {datetime.timedelta(seconds=total_time)}")
     sys.exit(1 if failed else 0)
 
 
