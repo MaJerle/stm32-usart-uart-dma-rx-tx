@@ -112,6 +112,8 @@ main(void) {
     systemclock_config();
 
     /* Enable instruction cache */
+    LL_ICACHE_SetMode(ICACHE, LL_ICACHE_2WAYS);
+    LL_ICACHE_Enable(ICACHE);
 
     /* Initialize ringbuff */
     lwrb_init(&ctx.usart_tx_rb, ctx.usart_tx_rb_data, sizeof(ctx.usart_tx_rb_data));
