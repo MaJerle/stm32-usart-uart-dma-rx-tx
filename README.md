@@ -5,6 +5,31 @@ This application note contains explanations with examples for two distinct topic
 - Data reception with UART and DMA when the application does not know the number of bytes to receive in advance
 - Data transmission with UART and DMA to avoid CPU stalling and free the CPU for other tasks
 
+## How to use this repository
+
+> We start with the examples instructions. The most attractive part of the repository.
+
+All examples are developed with *CMake* build system generation, *Ninja* build system and *GCC* compiler.
+Each example comes with `.vscode` folder and provides basic set of files for recommended extensions, simple tasks, launch/debug config and C/C++ extension intellisense configuration for *CMake* data provider.
+
+1. Clone the repository: `git clone https://github.com/MaJerle/stm32-usart-uart-dma-rx-tx` or download the zip package.
+2. Install *CMake*, *Ninja* and the *ARM GCC compiler* (`arm-none-eabi-gcc`) and make sure they are available on your `PATH`. Either install each of them separately or download and install [STM32CubeCLT](https://www.st.com/en/development-tools/stm32cubeclt.html), CLI tools for STM32 development.
+3. Open the project folder with *Visual Studio code* or use command line tool to build the project with cmake
+
+To build all examples at once with python helper script: 
+```
+python3 scripts/build.py [--clean] [--path projects/project-folder]
+```
+
+To manually build selected project with cmake
+
+```
+cd projects/projects-folder
+cmake --list-presets
+cmake --preset <preset_name>
+cmake --build --preset <preset_name>
+```
+
 ## Table of Contents
 
 GitHub automatically generates a table of contents, available in the top-left corner of this document.
@@ -413,14 +438,3 @@ As a result of running this demo application on an STM32F413-Nucleo board, the f
 - With DMA disabled, CPU load was `14%`, in line with the time needed to transmit the data
 - With DMA enabled, CPU load was `0%`
 - DMA can be enabled/disabled via the `USE_DMA_TX` macro configuration in `main.c`
-
-## How to use this repository
-
-1. Clone the repository: `git clone https://github.com/MaJerle/stm32-usart-uart-dma-rx-tx`
-2. Install *CMake*, *Ninja* and the *ARM GCC compiler* (`arm-none-eabi-gcc`) and make sure they are available on your `PATH`
-3. Build every example at once with the helper script: `python3 scripts/build.py` (add `--clean` for a clean rebuild, or `--path projects/<name>` to build a single example)
-4. Alternatively, build a single example by hand from its project folder:
-    - `cmake --list-presets` to see the available board presets
-    - `cmake --preset <preset_name>` to configure
-    - `cmake --build --preset <preset_name>` to build
-5. For editing and debugging, open any project folder directly in *VS Code* — each one ships with recommended extensions and CMake Tools integration
