@@ -56,7 +56,7 @@ set(symbols_SYMB ${symbols_SYMB}
 
 # Core MCU flags, CPU, instruction set and FPU setup
 # Set the global compilation flags for all units
-include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/compiler-flags-cortex-m33.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/compiler-gcc-cortex-m33.cmake)
 
 # Add executable
 add_executable(${CMAKE_PROJECT_NAME})
@@ -71,7 +71,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC lwrb)
 # Setup linker parameters
 target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -T${linker_script_SRC}
-    ${cpu_PARAMS}
     -Wl,-Map=${CMAKE_PROJECT_NAME}.map
 
     -Wl,--start-group

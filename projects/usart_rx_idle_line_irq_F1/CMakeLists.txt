@@ -49,7 +49,7 @@ set(symbols_SYMB ${symbols_SYMB}
 
 # Core MCU flags, CPU, instruction set and FPU setup
 # Set the global compilation flags for all units
-include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/compiler-flags-cortex-m3.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/compiler-gcc-cortex-m3.cmake)
 
 # Add executable
 add_executable(${CMAKE_PROJECT_NAME})
@@ -60,7 +60,6 @@ target_sources(${CMAKE_PROJECT_NAME} PUBLIC ${files_SRCS})
 # Setup linker parameters
 target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
     -T${linker_script_SRC}
-    ${cpu_PARAMS}
     -Wl,-Map=${CMAKE_PROJECT_NAME}.map
     -u _printf_float              # STDIO float formatting support (remove if not used)
     --specs=nosys.specs
